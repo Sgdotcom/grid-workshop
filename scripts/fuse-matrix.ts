@@ -202,9 +202,6 @@ function comboCase(
   const { paths, a, b } = fuseTwo(defA, defB, sizeA, sizeB, softness, corner, layout)
   const flags: string[] = []
   const sub = subpaths(paths)
-  const holey =
-    (defA.kind === 'preset' && defA.preset === 'ring') ||
-    (defB.kind === 'preset' && defB.preset === 'ring')
   const diag = layout === 'SE' || layout === 'NE'
   const expectJoin = pairCanFuse(a, b, softness, diag)
   if (expectJoin && paths.length > 1) flags.push('multi-outline')

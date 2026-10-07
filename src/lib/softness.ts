@@ -50,8 +50,6 @@ export interface SoftStamp {
   id: string
   cx: number
   cy: number
-  /** Size-based envelope radius used for distance gating. */
-  r: number
   size: number
   rotation?: number
   col: number
@@ -96,12 +94,6 @@ export function softnessExpandStroke(_size: number, _softness: number): number {
   void _size
   void _softness
   return 0
-}
-
-/** Envelope radius from module size — larger stamps reach farther. */
-export function stampEnvelopeRadius(size: number, _circular = false): number {
-  void _circular
-  return size * 0.48
 }
 
 function stampArmWidth(def: ShapeDef, size: number): number {
@@ -181,7 +173,6 @@ export function makeSoftStamp(
     id,
     cx,
     cy,
-    r: stampEnvelopeRadius(size, circular),
     size,
     rotation,
     col,
@@ -227,10 +218,6 @@ export function stampBlobs(s: SoftStamp): boolean {
   if (s.pointy || s.forked) return false
   if (s.arm < s.size * 0.22) return false
   return s.roundness >= 0.4
-}
-
-export function facingSidesMatch(a: SoftStamp, b: SoftStamp): boolean {
-  return a.family === b.family
 }
 
 /**

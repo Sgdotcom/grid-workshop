@@ -112,10 +112,6 @@ export function regionKey(col: number, row: number, mode: 'ink' | 'cutout' = 'in
   return mode === 'cutout' ? `a:${col}:${row}:cutout` : `a:${col}:${row}:shape`
 }
 
-export function newShapeId() {
-  return `shape-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
-}
-
 export function shapeLabel(def: ShapeDef): string {
   if (def.kind === 'preset') return def.label
   if (def.kind === 'polygon') {

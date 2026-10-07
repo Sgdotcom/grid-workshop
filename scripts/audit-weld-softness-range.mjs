@@ -8,8 +8,6 @@ const jiti = createJiti(import.meta.url, { alias: { '@': path.resolve(root, 'src
 
 const { PRESET_SHAPES } = await jiti.import('../src/lib/types.ts')
 const { compareJoin, JOIN_CASES } = await jiti.import('../src/lib/joinExperiments.ts')
-const { makeSoftStamp, organicWeld } = await jiti.import('../src/lib/softness.ts')
-const { toPolygon, unionPolygons, multiPolygonToPathList } = await jiti.import('../src/lib/polyBool.ts')
 
 // The user's preferred weld cases from their JSON:
 const userWeldCases = [

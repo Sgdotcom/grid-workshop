@@ -3,7 +3,6 @@ import type { JoinMethod } from './joinExperiments'
 
 export const SHAPE_JOIN_STORAGE_KEY = 'gridz-shape-join-methods-v2'
 export const JOIN_ENGINE_STORAGE_KEY = 'gridz-active-join-engine-mode'
-export const WORKSHOP_OVERRIDE_KEY = 'gridz-workshop-join-override-active'
 /** Presets that never grow a Softness melt neck (overlap still boolean-unions). */
 export const MELT_OFF_STORAGE_KEY = 'gridz-melt-off-presets-v1'
 
@@ -15,11 +14,7 @@ export const MELT_OFF_STORAGE_KEY = 'gridz-melt-off-presets-v1'
  */
 export type JoinEngineMode = 'main' | 'fork-weld' | 'fork-current'
 
-/**
- * Circle and Ring are locked to metaball welding per project specification.
- */
-export const LOCKED_METABALL_SHAPES: readonly PresetShapeId[] = ['circle', 'ring'] as const
-
+/** Circle and Ring are locked to metaball welding per project specification. */
 export function isShapeLockedMetaball(shapeId: string): boolean {
   return (
     shapeId === 'circle' ||
@@ -137,15 +132,6 @@ export function setJoinEngineMode(mode: JoinEngineMode): void {
   } catch {
     // Ignore storage quota errors
   }
-}
-
-/** Check if workshop override is active (deprecated alias for non-main mode) */
-export function isWorkshopOverrideActive(): boolean {
-  return getJoinEngineMode() === 'main'
-}
-
-export function setWorkshopOverrideActive(active: boolean): void {
-  setJoinEngineMode(active ? 'main' : 'fork-current')
 }
 
 /**

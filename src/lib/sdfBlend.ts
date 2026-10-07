@@ -1,14 +1,7 @@
 /**
- * Smooth-min SDF blend of two module silhouettes.
- * min(dA, dB) is a sharp boolean union; smin rounds the facing valley so the
- * shapes themselves melt together instead of growing a separate bridge.
+ * Polygon signed-distance sampling and marching squares at sdf = 0.
+ * Field melts in `fieldExperiments.ts` build on these.
  */
-
-export function smin(a: number, b: number, k: number): number {
-  if (k <= 0.05) return Math.min(a, b)
-  const h = Math.max(k - Math.abs(a - b), 0) / k
-  return Math.min(a, b) - h * h * k * 0.5
-}
 
 function distToSeg(
   px: number,
@@ -65,27 +58,6 @@ export function sdfRings(x: number, y: number, rings: [number, number][][]): num
   if (!rings.length) return 1e6
   const d = minEdgeDist(x, y, rings)
   return evenOddInside(x, y, rings) ? -d : d
-}
-
-function ringBBox(rings: [number, number][][]): {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
-} {
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  for (const ring of rings) {
-    for (const [x, y] of ring) {
-      if (x < minX) minX = x
-      if (y < minY) minY = y
-      if (x > maxX) maxX = x
-      if (y > maxY) maxY = y
-    }
-  }
-  return { minX, minY, maxX, maxY }
 }
 
 function lerpZero(
@@ -256,114 +228,4 @@ function ringArea(ring: [number, number][]): number {
     a += ring[i][0] * ring[j][1] - ring[j][0] * ring[i][1]
   }
   return Math.abs(a) / 2
-}
-
-export function blendK(meanSize: number, softness: number, gap: number): number {
-  const melt = meanSize * (0.12 + softness * 0.4)
-  const cap = meanSize * 0.55
-  // Polynomial smin pulls k/2, so k must be ≥ gap to close a surface gap.
-  const close = Math.max(0, gap) + meanSize * 0.1 * softness
-  return Math.max(4, Math.min(cap, melt), close)
-}
-
-/** Melted outline of two stamps as polygon ring groups (outer first, then holes). */
-export function blendStampRings(
-  ringsA: [number, number][][],
-  ringsB: [number, number][][],
-  k: number,
-): [number, number][][][] {
-  const ba = ringBBox(ringsA)
-  const bb = ringBBox(ringsB)
-  const pad = k + 6
-  const minX = Math.min(ba.minX, bb.minX) - pad
-  const minY = Math.min(ba.minY, bb.minY) - pad
-  const maxX = Math.max(ba.maxX, bb.maxX) + pad
-  const maxY = Math.max(ba.maxY, bb.maxY) + pad
-  const step = Math.max(1.05, Math.min(1.7, 1.15 + k * 0.02))
-  const cols = Math.max(8, Math.ceil((maxX - minX) / step))
-  const rows = Math.max(8, Math.ceil((maxY - minY) / step))
-  const values = new Array((cols + 1) * (rows + 1))
-  for (let y = 0; y <= rows; y++) {
-    const py = minY + y * step
-    for (let x = 0; x <= cols; x++) {
-      const px = minX + x * step
-      const da = sdfRings(px, py, ringsA)
-      const db = sdfRings(px, py, ringsB)
-      values[y * (cols + 1) + x] = smin(da, db, k)
-    }
-  }
-  const grouped = groupOutersAndHoles(
-    marchingSquares(values, cols, rows, minX, minY, step).map((ring) => chaikin(ring, 2)),
-  )
-  grouped.sort((a, b) => Math.abs(ringArea(b[0] ?? [])) - Math.abs(ringArea(a[0] ?? [])))
-  const kept = grouped.length > 1 ? grouped.slice(0, 1) : grouped
-  return kept
-}
-
-/** Corner-cutting so marching-squares melts aren't stair-stepped. */
-function chaikin(ring: [number, number][], rounds: number): [number, number][] {
-  let pts = ring
-  for (let r = 0; r < rounds; r++) {
-    if (pts.length < 4) break
-    const next: [number, number][] = []
-    const n = pts.length
-    for (let i = 0; i < n; i++) {
-      const a = pts[i]
-      const b = pts[(i + 1) % n]
-      next.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25])
-      next.push([a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75])
-    }
-    pts = next
-  }
-  return pts
-}
-
-function pointInRing(x: number, y: number, ring: [number, number][]): boolean {
-  return evenOddInside(x, y, [ring])
-}
-
-function centroid(ring: [number, number][]): [number, number] {
-  let x = 0
-  let y = 0
-  for (const p of ring) {
-    x += p[0]
-    y += p[1]
-  }
-  const n = ring.length || 1
-  return [x / n, y / n]
-}
-
-function groupOutersAndHoles(rings: [number, number][][]): [number, number][][][] {
-  if (!rings.length) return []
-  const scored = rings.map((ring) => ({ ring, area: signedRingArea(ring) }))
-  scored.sort((a, b) => Math.abs(b.area) - Math.abs(a.area))
-  const outers: { ring: [number, number][]; holes: [number, number][][] }[] = []
-  for (const item of scored) {
-    const ring = item.area >= 0 ? item.ring : [...item.ring].reverse()
-    const [cx, cy] = centroid(ring)
-    let parent = -1
-    for (let i = 0; i < outers.length; i++) {
-      if (pointInRing(cx, cy, outers[i].ring)) {
-        parent = i
-        break
-      }
-    }
-    if (parent === -1) {
-      outers.push({ ring, holes: [] })
-    } else {
-      const hole = signedRingArea(ring) > 0 ? [...ring].reverse() : ring
-      outers[parent].holes.push(hole)
-    }
-  }
-  return outers.map((o) => [o.ring, ...o.holes])
-}
-
-function signedRingArea(ring: [number, number][]): number {
-  let a = 0
-  const n = ring.length
-  for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n
-    a += ring[i][0] * ring[j][1] - ring[j][0] * ring[i][1]
-  }
-  return a / 2
 }
