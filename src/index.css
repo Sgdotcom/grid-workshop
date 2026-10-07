@@ -311,8 +311,9 @@
   color: black;
   padding: 3vh 3vw;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) 12vh;
-  gap: 3vh;
+  /* heading · compact join · alphabet/live · specimen */
+  grid-template-rows: auto auto minmax(0, 1fr) 12vh;
+  gap: 1.2vh;
   overflow: hidden;
 }
 .festival-wall-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; }
@@ -384,9 +385,9 @@ body.install-view {
   color: #000;
   padding: clamp(8px, 1.8vh, 20px) clamp(10px, 2.5vw, 28px);
   display: grid;
-  /* heading · alphabet (fills) · specimen */
-  grid-template-rows: auto minmax(0, 1.2fr) minmax(0, 0.9fr);
-  gap: clamp(8px, 1.5vh, 18px);
+  /* heading · compact join · alphabet (fills) · specimen */
+  grid-template-rows: auto auto minmax(0, 1.2fr) minmax(0, 0.9fr);
+  gap: clamp(6px, 1.2vh, 14px);
   overflow: hidden;
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -994,9 +995,61 @@ body.install-view {
   font-size: 12px;
   color: #666;
 }
+/* Wall/projection: tiny session chip — must not steal a flex/fr row. */
 .cinematic-live-join,
 .festival-live-join {
-  width: 100%;
+  width: fit-content;
+  max-width: min(360px, 100%);
+  margin: 0;
+  padding: 3px 6px;
+  gap: 4px 8px;
+  align-self: start;
+  border: 1px solid #0000ee33;
+  background: #fff;
+  font-size: 11px;
+}
+.cinematic-live-join .live-session-join-row,
+.festival-live-join .live-session-join-row {
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+}
+.cinematic-live-join .live-session-join-row label,
+.festival-live-join .live-session-join-row label {
+  flex: 0 1 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #444;
+}
+.cinematic-live-join .live-session-join-row input,
+.festival-live-join .live-session-join-row input {
+  width: 120px;
+  min-width: 0;
+  min-height: 24px;
+  height: 24px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.cinematic-live-join .live-session-join-row button,
+.festival-live-join .live-session-join-row button {
+  min-height: 24px;
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cinematic-live-join .live-session-join-status,
+.festival-live-join .live-session-join-status {
+  flex: 0 1 auto;
+  font-size: 10px;
+  color: #666;
+  line-height: 1.2;
 }
 
 /* Narrow: stack canvas, then tools, then alphabet strip. */
