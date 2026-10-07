@@ -17,7 +17,7 @@ Phone-first **shape-grid** letter tool for the Beckmans festival. Stamp modules 
 
 1. **Mixed-shape welding** — preview-approved methods wired into production `blendPairPolygons`.
 2. **Per-shape melt-off** — UI toggle so Softness does not grow necks for chosen brushes.
-3. **Install layouts** — `?view=studio` / `?view=wall` (same session; no multiplayer yet).
+3. **Install layouts** — `?view=studio` / `?view=wall` + Cloudflare live room for cross-machine sync.
 4. **Ring holes vs Gaps** — Gaps fill/solid must not seal ring centres.
 
 ---
@@ -105,11 +105,11 @@ Same-preset circle/ring: always dedicated metaball / ring join.
 | `/?view=wall` | Specimen + alphabet ribbon |
 | `/?view=projection` | Classic projection |
 
-Same `localStorage` session. Two windows on the **same browser profile**. Cross-machine sync is **not** implemented.
+`localStorage` is the cache. With `VITE_LIVE_SESSION_URL`, desks **PUT** (debounced) and wall **GET**-polls a Cloudflare Durable Object room (`workers/live-session/`). Alphabet tiles: published SVG → else draft/live SVG. Facilitator Options: room, write token, station, copy wall link, clear room, sync status.
 
 Studio details worth knowing: resizable tools rail (`gridz-studio-tools-width`), grouped tools (Draw / Show / Mode / Look / Shape), melt-off chip under Softness.
 
-Festival ops: [`docs/festival.md`](docs/festival.md). Visitor one-pager: [`docs/classmate-howto.md`](docs/classmate-howto.md).
+Festival ops: [`docs/festival.md`](docs/festival.md). Worker deploy: [`workers/live-session/README.md`](workers/live-session/README.md). Visitor one-pager: [`docs/classmate-howto.md`](docs/classmate-howto.md).
 
 ---
 

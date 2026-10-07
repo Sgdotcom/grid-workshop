@@ -1,23 +1,21 @@
 /**
  * Installation cinematic wall — specimen-first layout.
- * Same localStorage session as the workshop / studio desk (same browser profile).
- * Cross-machine sync is deferred.
+ * Polls the Cloudflare live room when configured; falls back to localStorage.
  */
 import { useEffect, useState } from 'react'
-import { ALPHABET, FESTIVAL_KEY, latestContributions, readSession, svgImage } from '@/lib/festival'
+import { ALPHABET, FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
+import {
+  createLiveSyncController,
+  letterPreviewSvg,
+  readLocalSessionSafe,
+  type LiveRoomState,
+} from '@/lib/liveSession'
 
 const SPECIMEN = 'vi formar tillsammans'
 
-function loadSession() {
-  try {
-    return readSession()
-  } catch {
-    return null
-  }
-}
-
 export function CinematicWall() {
-  const [session, setSession] = useState(loadSession)
+  const [session, setSession] = useState<FestivalSession | null>(() => readLocalSessionSafe())
+  const [room, setRoom] = useState<LiveRoomState | null>(null)
   const [canFullscreen] = useState(
     () => typeof document.documentElement.requestFullscreen === 'function',
   )
@@ -26,36 +24,49 @@ export function CinematicWall() {
     document.title = 'Wall · grid workshop'
     document.documentElement.classList.add('install-view')
     document.body.classList.add('install-view')
-    const refresh = () =>
-      setSession((previous) => {
-        const next = loadSession()
-        return next && previous && next.updatedAt === previous.updatedAt
-          ? previous
-          : (next ?? previous)
-      })
+
+    const applyLocal = () => {
+      const next = readLocalSessionSafe()
+      setSession((previous) =>
+        next && previous && next.updatedAt === previous.updatedAt ? previous : (next ?? previous),
+      )
+    }
+
+    const controller = createLiveSyncController({
+      getSession: () => readLocalSessionSafe(),
+      onRoom: (liveRoom, nextSession) => {
+        setRoom(liveRoom)
+        setSession(nextSession)
+      },
+    })
+    controller.start(1500)
+
     const onStorage = (event: StorageEvent) => {
-      if (event.key === null || event.key === FESTIVAL_KEY) refresh()
+      if (event.key === null || event.key === FESTIVAL_KEY) applyLocal()
     }
     window.addEventListener('storage', onStorage)
-    window.addEventListener('focus', refresh)
-    document.addEventListener('visibilitychange', refresh)
-    const poll = window.setInterval(refresh, 2000)
+    window.addEventListener('focus', applyLocal)
+    document.addEventListener('visibilitychange', applyLocal)
+
     return () => {
+      controller.stop()
       document.documentElement.classList.remove('install-view')
       document.body.classList.remove('install-view')
       window.removeEventListener('storage', onStorage)
-      window.removeEventListener('focus', refresh)
-      document.removeEventListener('visibilitychange', refresh)
-      window.clearInterval(poll)
+      window.removeEventListener('focus', applyLocal)
+      document.removeEventListener('visibilitychange', applyLocal)
     }
   }, [])
 
-  const published = latestContributions(session?.contributions ?? [])
-  const activeChar = session?.active.char ?? 'a'
+  const contributions = session?.contributions ?? []
+  const published = latestContributions(contributions)
+  const draftSvgs = room?.draftSvgs ?? {}
+  const liveCue = room?.liveCue
+  const activeChar = liveCue?.char ?? session?.active.char ?? 'a'
   const upper = activeChar !== activeChar.toLowerCase()
   const letters = ALPHABET.map((char) => (upper ? char.toUpperCase() : char))
   const complete = letters.filter((char) => published.has(char)).length
-  const liveReady = !!(session?.liveSvg && session.active.filled.length)
+  const liveReady = !!(liveCue?.liveSvg || (session?.liveSvg && session.active.filled.length))
 
   return (
     <main className="cinematic-wall" data-testid="cinematic-wall">
@@ -77,15 +88,15 @@ export function CinematicWall() {
 
       <section className="cinematic-ribbon" aria-label="Alphabet">
         {letters.map((char) => {
-          const contribution = published.get(char)
+          const preview = letterPreviewSvg(char, contributions, draftSvgs, liveCue)
           const isActive = char === activeChar
           return (
             <div
               key={char}
-              className={`cinematic-ribbon-letter${isActive ? ' is-active' : ''}${contribution ? ' is-done' : ''}`}
+              className={`cinematic-ribbon-letter${isActive ? ' is-active' : ''}${preview.kind === 'published' ? ' is-done' : ''}${preview.kind === 'draft' || preview.kind === 'live' ? ' is-draft' : ''}`}
             >
-              {contribution ? (
-                <img src={svgImage(contribution.svg)} alt={char} />
+              {preview.svg ? (
+                <img src={svgImage(preview.svg)} alt={char} />
               ) : (
                 <span>{char}</span>
               )}

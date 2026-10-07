@@ -1,6 +1,6 @@
 # Grid workshop — context for Claude Code
 
-Modular letter-design workshop (Beckmans festival). Visitors stamp shapes on a grid, Softness melts neighbours into one silhouette, letters are added to a shared typeface, and a wall projection shows the alphabet. No backend — session is `localStorage`.
+Modular letter-design workshop (Beckmans festival). Visitors stamp shapes on a grid, Softness melts neighbours into one silhouette, letters are added to a shared typeface, and a wall projection shows the alphabet. Session is `localStorage` plus an optional Cloudflare Worker live room (`VITE_LIVE_SESSION_URL`).
 
 **Authoritative handover for humans / Claude Code:** [`HANDOVER.md`](HANDOVER.md). Older handovers live under [`docs/archive/handovers/`](docs/archive/handovers/).
 
@@ -24,7 +24,7 @@ Views: `/` workshop · `/?view=studio` desk · `/?view=wall` cinematic wall · `
 4. **Ring centres must survive Gaps fill/solid.** Use `filterPolygonHolesPreserving` + `intentionalHoleCutters`, not bare `filterPolygonHoles`.
 5. **Anything that changes a fuse must update `finishCacheKey`** in `src/lib/softness.ts` (includes Softness, joins, hole mode, engine mode, join prefs, melt-off prefs, stamp outlines). Treat returned polygons as read-only.
 6. **Preserve uncommitted / unrelated work.** Do not reset, force-push, or casually rewrite git history.
-7. **Install streaming is not this repo.** Studio/wall are localStorage-only; multiplayer relay is deferred.
+7. **Live room Worker lives in `workers/live-session/`.** Do not break GET/PUT merge rules or require auth on GET (wall is public). App client: `src/lib/liveSession.ts` + `useLiveSession`.
 
 ## Softness / welding map (read this first)
 
@@ -40,6 +40,8 @@ Views: `/` workshop · `/?view=studio` desk · `/?view=wall` cinematic wall · `
 | `src/components/Canvas.tsx` | Live paint + Softness display |
 | `src/components/StudioDesk.tsx` | Install studio (`?view=studio`) |
 | `src/components/CinematicWall.tsx` | Install wall (`?view=wall`) |
+| `src/lib/liveSession.ts` | Live room client (pull/push/merge) |
+| `workers/live-session/` | Cloudflare Worker + Durable Object |
 
 ### Dispatch summary
 
@@ -55,8 +57,9 @@ Views: `/` workshop · `/?view=studio` desk · `/?view=wall` cinematic wall · `
 ## Install views
 
 - Studio: canvas | **resizable tools rail** | alphabet. Tools width: `gridz-studio-tools-width`.
-- Wall: alphabet ribbon above specimen.
-- Same festival session key as the default workshop. Two windows, **same browser profile**.
+- Wall: alphabet ribbon above specimen (published else draft/live SVG).
+- Same festival session key as the default workshop; optional shared room via Worker.
+- Deploy live Worker + set `VITE_LIVE_SESSION_URL` — see `workers/live-session/README.md` and `docs/festival.md`.
 
 ## Previews (Vite serves `public/docs/`)
 

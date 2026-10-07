@@ -13,6 +13,9 @@
     "smoke:func": "node scripts/smoke-functionality.mjs",
     "smoke:improvements": "node scripts/smoke-improvements.mjs",
     "smoke:install": "node scripts/smoke-install-views.mjs",
+    "smoke:live": "node scripts/smoke-live-session.mjs",
+    "smoke:live-client": "node scripts/smoke-live-client.mjs",
+    "smoke:live-e2e": "node scripts/smoke-live-e2e.mjs",
     "fuse:matrix": "vite-node scripts/fuse-matrix.ts"
   },
   "dependencies": {

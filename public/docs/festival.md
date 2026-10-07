@@ -14,17 +14,34 @@ Additive layouts for the public GitHub site and the installation desk/wall setup
 | Cinematic wall | `/?view=wall` |
 | Classic projection | `/?view=projection` |
 
-**Studio desk** is a three-column layout: large Paint canvas · **tools rail** (drag the left edge to resize) · mini shared alphabet. Tools are grouped (Draw / Show / Mode / Look / Shape). Softness includes a **Melt on / No melt** toggle for the active brush. Facilitator gear: backup, restore, links to wall / classic projection / default workshop.
+**Studio desk** is a three-column layout: large Paint canvas · **tools rail** (drag the left edge to resize) · mini shared alphabet. Tools are grouped (Draw / Show / Mode / Look / Shape). Softness includes a **Melt on / No melt** toggle for the active brush. Facilitator gear: live room / token / station, copy wall link, clear shared room, backup, restore, links to wall / classic projection / default workshop.
 
-**Cinematic wall** is specimen-first (large phrase), with a compact alphabet ribbon and a subtle “drawing now” cue. Prefer this on the public screen; keep `?view=projection` as the older split wall if needed.
+**Cinematic wall** is specimen-first (large phrase), with a compact alphabet ribbon and a subtle “drawing now” cue. Alphabet tiles show **published SVG if any, else shared draft / live cue**. Prefer this on the public screen; keep `?view=projection` as the older split wall if needed.
 
-Both views use the **same browser localStorage session** as the default workshop. Open studio and wall in two windows on the **same browser profile** so the wall stays live. Different computers are not synchronised yet — multiplayer / shared relay is a later install-day step.
+## Live session (cross-machine)
+
+When `VITE_LIVE_SESSION_URL` points at the Cloudflare Worker (`workers/live-session/`), both desks and the wall share one **room**:
+
+- **Contributions** (published letters) merge by id.
+- **Drafts** + **draft SVGs** so the wall can show in-progress letters.
+- **Live cue** (active char + SVG) so “drawing now” follows the desk that last pushed.
+- Refresh hydrates from `GET /rooms/:room` into `localStorage` + UI.
+
+| Query | Meaning |
+| --- | --- |
+| `?room=lettermans` | Room id (default `lettermans`) |
+| `?token=…` | Write token for PUT/DELETE (also stored from Facilitator Options) |
+| `?station=a` | Desk label on the live cue |
+
+Deploy Worker: see [`workers/live-session/README.md`](../workers/live-session/README.md). Set GitHub Pages build env `VITE_LIVE_SESSION_URL` (repo variable or secret), then redeploy Pages. Without that URL, the app stays localStorage-only.
+
+Both views also use **localStorage** as a cache / offline fallback. Same-browser two-window still works without the Worker.
 
 The wall shows the Swedish alphabet, the current draft, and a specimen phrase. Blank letters stay visible. Grey specimen letters indicate characters that have not been contributed yet. Uppercase and lowercase have separate collections; the wall follows the active case.
 
 Visitors choose a letter, draw, and press **Add to the typeface**. **Next visitor** selects an uncontributed letter where possible. Drawing over a letter edits a draft; previously published versions stay intact until a new version is submitted. Export offers previous contributions to build on. Every version is kept in the editable backup.
 
-The browser saves drafts and submissions locally after changes. The toolbar reports saving errors. Download **Editable backup** regularly and at the end of the day. Backups include stamps, grid settings, join settings, versions, and the shape library. **Restore backup** validates the file and downloads the current session before replacement. This is local browser storage, not cloud storage: clearing browser data removes the local copy. Keep only one editor window; the projector is read-only. Different computers and visitor phones are not synchronised.
+The browser saves drafts and submissions locally after changes, and (when live sync is enabled) debounced-pushes the active letter + contributions to the shared room. The toolbar / Facilitator Options report save and sync status. Download **Editable backup** regularly and at the end of the day. Backups include stamps, grid settings, join settings, versions, and the shape library. **Restore backup** validates the file and downloads the current session before replacement. Clearing browser data removes the local cache; the shared room still holds the last synced state until you **Clear shared room**. Keep one editor per desk; the wall is read-only (GET poll).
 
 The grid cannot change while work exists. Each glyph retains its Softness and roundedness. Tracing the Arial letter is optional in Options. Guides and the OTF use the default guide scale of 100%; leave guide size at that value for consistent metrics across contributors.
 

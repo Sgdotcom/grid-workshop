@@ -1,7 +1,6 @@
 /**
  * Installation studio desk — canvas + mini alphabet rail.
- * Shares the same localStorage festival session as the default workshop.
- * Cross-machine multiplayer is deferred; ?station= is a display label only.
+ * Shares the festival session via localStorage + optional Cloudflare live room.
  */
 import {
   useCallback,
@@ -48,6 +47,8 @@ import {
   type FestivalSession,
 } from '@/lib/festival'
 import { DEFAULT_BRUSH, DEFAULT_GRID } from '@/lib/gridGeometry'
+import { getLiveConfig, letterPreviewSvg } from '@/lib/liveSession'
+import { useLiveSession } from '@/lib/useLiveSession'
 import { buildStarterBlueprint, nudgeFilled } from '@/lib/skeletons'
 import { moduleShapeFillRule, moduleShapePath, shapeSupportsRounding } from '@/lib/shapes'
 import type { BrokenJoins } from '@/lib/softness'
@@ -182,10 +183,18 @@ export function StudioDesk() {
   brokenRef.current = brokenJoins
   const glyphsRef = useRef(glyphs)
   glyphsRef.current = glyphs
+  const contributionsRef = useRef(contributions)
+  contributionsRef.current = contributions
+  const sessionRef = useRef<FestivalSession | null>(restored)
   const past = useRef<Snapshot[]>([])
   const future = useRef<Snapshot[]>([])
   const strokeStarted = useRef(false)
   const importRef = useRef<HTMLInputElement>(null)
+  const [liveRoomInput, setLiveRoomInput] = useState(() => getLiveConfig().room)
+  const [liveTokenInput, setLiveTokenInput] = useState(() => getLiveConfig().token)
+  const [liveStationInput, setLiveStationInput] = useState(
+    () => getLiveConfig().station || stationLabel() || '',
+  )
 
   useEffect(() => {
     document.title = station
@@ -326,7 +335,7 @@ export function StudioDesk() {
       updatedAt: new Date().toISOString(),
       active,
       drafts: [...drafts.values()].filter((d) => d.filled.length),
-      contributions,
+      contributions: contributionsRef.current,
       library,
       liveSvg: compactSvgMarkup(
         buildSvgMarkup(
@@ -343,6 +352,7 @@ export function StudioDesk() {
         ),
       ),
     }
+    sessionRef.current = session
     try {
       localStorage.setItem(FESTIVAL_KEY, JSON.stringify(session))
       setSaveStatus('Saved on this computer')
@@ -350,13 +360,42 @@ export function StudioDesk() {
       setSaveStatus('Saving failed — download an editable backup now.')
     }
     return session
-  }, [contributions, library])
+  }, [library])
+
+  const live = useLiveSession({
+    getSession: () => sessionRef.current,
+    painting: () => strokeStarted.current,
+    onRemoteSession: (session) => {
+      setContributions(session.contributions)
+      contributionsRef.current = session.contributions
+      const activeChar = letterRef.current
+      const nextGlyphs = new Map(glyphsRef.current)
+      for (const draft of session.drafts) {
+        if (!draft.filled.length) continue
+        // Current letter stays owned by this desk while editing.
+        if (draft.char === activeChar) continue
+        nextGlyphs.set(draft.char, draft)
+      }
+      glyphsRef.current = nextGlyphs
+      setGlyphs(nextGlyphs)
+      sessionRef.current = {
+        ...session,
+        active: activeRef.current,
+        contributions: session.contributions,
+        drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
+        liveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
+      }
+    },
+  })
+  const pushLive = live.pushSession
 
   useEffect(() => {
     if (recovery.error) return
-    const timer = window.setTimeout(writeSession, 250)
+    const timer = window.setTimeout(() => {
+      pushLive(writeSession())
+    }, 250)
     const flush = () => {
-      writeSession()
+      pushLive(writeSession())
     }
     window.addEventListener('pagehide', flush)
     return () => {
@@ -372,7 +411,9 @@ export function StudioDesk() {
     holeMode,
     displayGuideLetter,
     glyphs,
+    contributions,
     writeSession,
+    pushLive,
     recovery.error,
   ])
 
@@ -928,6 +969,14 @@ export function StudioDesk() {
               const contribution = published.get(shown)
               const draft = glyphs.get(shown)
               const hasDraft = !!(draft && draft.filled.length)
+              const preview = letterPreviewSvg(shown, contributions, live.draftSvgs)
+              const previewSvg =
+                contribution?.svg ||
+                (isActive && filled.size
+                  ? null
+                  : preview.kind !== 'empty' && preview.kind !== 'published'
+                    ? preview.svg
+                    : null)
               return (
                 <button
                   key={shown}
@@ -937,12 +986,14 @@ export function StudioDesk() {
                     'studio-letter',
                     isActive && 'is-active',
                     contribution && 'is-published',
-                    !contribution && hasDraft && 'is-draft',
+                    !contribution && (hasDraft || preview.kind === 'draft' || preview.kind === 'live') && 'is-draft',
                   )}
                   onClick={() => switchToLetter(base, guideUpper)}
                 >
                   {contribution ? (
                     <img src={svgImage(contribution.svg)} alt="" />
+                  ) : previewSvg ? (
+                    <img src={svgImage(previewSvg)} alt="" />
                   ) : hasDraft ? (
                     <span className="studio-letter-dot" aria-hidden />
                   ) : null}
@@ -969,6 +1020,56 @@ export function StudioDesk() {
               </button>
             </div>
             <p className={cn('studio-save', saveFailed && 'is-error')}>{saveStatus}</p>
+            <p className="studio-save" data-testid="live-sync-status">
+              {live.status.message}
+              {live.status.lastPullAt
+                ? ` · pulled ${new Date(live.status.lastPullAt).toLocaleTimeString()}`
+                : ''}
+              {live.status.lastPushAt
+                ? ` · pushed ${new Date(live.status.lastPushAt).toLocaleTimeString()}`
+                : ''}
+            </p>
+            <label className="studio-options-field">
+              Room
+              <input
+                value={liveRoomInput}
+                onChange={(e) => setLiveRoomInput(e.target.value)}
+                onBlur={() => live.savePrefs({ room: liveRoomInput.trim() || 'lettermans' })}
+                spellCheck={false}
+              />
+            </label>
+            <label className="studio-options-field">
+              Write token
+              <input
+                type="password"
+                value={liveTokenInput}
+                onChange={(e) => setLiveTokenInput(e.target.value)}
+                onBlur={() => live.savePrefs({ token: liveTokenInput })}
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </label>
+            <label className="studio-options-field">
+              Station label
+              <input
+                value={liveStationInput}
+                onChange={(e) => setLiveStationInput(e.target.value)}
+                onBlur={() => live.savePrefs({ station: liveStationInput.trim().slice(0, 8) })}
+                placeholder="a / b"
+                spellCheck={false}
+              />
+            </label>
+            <Button type="button" variant="outline" className="w-full" onClick={() => void live.copyWallLink('wall')}>
+              Copy wall link
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => void live.copyWallLink('projection')}
+            >
+              Copy projection link
+            </Button>
             <a className="studio-link" href="?view=wall" target="_blank" rel="noreferrer">
               Open cinematic wall ↗
             </a>
@@ -989,6 +1090,18 @@ export function StudioDesk() {
             >
               Restore backup
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={!live.enabled}
+              onClick={() => {
+                if (!window.confirm('Clear the shared room for everyone? Local backups are unchanged.')) return
+                void live.clearRoom()
+              }}
+            >
+              Clear shared room
+            </Button>
             <input
               ref={importRef}
               type="file"
@@ -1001,7 +1114,9 @@ export function StudioDesk() {
               }}
             />
             <p className="studio-options-note">
-              Same-browser wall only for now. Multiplayer across two computers comes later.
+              {live.enabled
+                ? 'Desks share one room: drafts + published letters + live cue. Wall polls the same room.'
+                : 'Set VITE_LIVE_SESSION_URL (Worker URL) to enable cross-machine sync.'}
             </p>
           </div>
           <button

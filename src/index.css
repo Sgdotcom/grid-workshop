@@ -467,7 +467,9 @@ body.install-view {
   padding: 4%;
 }
 .cinematic-ribbon-letter.is-done { color: #000; }
+.cinematic-ribbon-letter.is-draft { color: #0000ee; }
 .cinematic-ribbon-letter.is-active { border-color: #0000ee; }
+.festival-letter.is-draft { outline: 1px dashed #0000ee; }
 .cinematic-live-dot {
   position: absolute;
   top: 6%;
@@ -887,6 +889,24 @@ body.install-view {
 .studio-save.is-error { color: #c00000; font-weight: 700; }
 .studio-link { color: #0000ee; font-size: 13px; }
 .studio-options-note { margin: 0; font-size: 12px; color: #666; line-height: 1.4; }
+.studio-options-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+}
+.studio-options-field input {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  font: inherit;
+  font-weight: 500;
+  background: #fff;
+}
 
 /* Narrow: stack canvas, then tools, then alphabet strip. */
 @media (max-width: 900px) {

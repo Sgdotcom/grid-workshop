@@ -62,6 +62,8 @@ import { cn } from '@/lib/utils'
 import { downloadBlob } from '@/lib/utils'
 import { prefBoolean, prefNumber, readUiPrefs, writeUiPrefs } from '@/lib/uiPrefs'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, parseSession, readSession, type Contribution, type FestivalSession } from '@/lib/festival'
+import { getLiveConfig } from '@/lib/liveSession'
+import { useLiveSession } from '@/lib/useLiveSession'
 
 type Screen = 'shape' | 'paint' | 'export'
 type ExportStatus =
@@ -240,9 +242,14 @@ export default function App() {
   const filledRef = useRef(filled)
   const brokenRef = useRef(brokenJoins)
   const glyphsRef = useRef(glyphs)
+  const contributionsRef = useRef(contributions)
+  contributionsRef.current = contributions
   const letterRef = useRef('a')
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
+  const [liveRoomInput, setLiveRoomInput] = useState(() => getLiveConfig().room)
+  const [liveTokenInput, setLiveTokenInput] = useState(() => getLiveConfig().token)
+  const [liveStationInput, setLiveStationInput] = useState(() => getLiveConfig().station)
 
   const displayGuideLetter = guideUpper ? guideLetter.toUpperCase() : guideLetter
   filledRef.current = filled
@@ -362,7 +369,7 @@ export default function App() {
       version: 1, updatedAt: new Date().toISOString(), active,
       // Letters that were only visited are not work: they must not come back as painted.
       drafts: [...drafts.values()].filter((draft) => draft.filled.length),
-      contributions, library,
+      contributions: contributionsRef.current, library,
       liveSvg: compactSvgMarkup(buildSvgMarkup({ ...active, grid: active.grid!, softness: active.softness!,
         library, filledRegions: active.filled, glyphChar: active.char,
         brokenJoins: new Set(active.brokenJoins) }, { fitContent: false })),
@@ -375,18 +382,47 @@ export default function App() {
       setSaveStatus('Saving failed — download an editable backup now.')
     }
     return session
-  }, [contributions, library])
+  }, [library])
+
+  const live = useLiveSession({
+    getSession: () => sessionRef.current,
+    painting: () => strokeStarted.current,
+    onRemoteSession: (session) => {
+      setContributions(session.contributions)
+      contributionsRef.current = session.contributions
+      const activeChar = letterRef.current
+      const nextGlyphs = new Map(glyphsRef.current)
+      for (const draft of session.drafts) {
+        if (!draft.filled.length || draft.char === activeChar) continue
+        nextGlyphs.set(draft.char, draft)
+      }
+      glyphsRef.current = nextGlyphs
+      setGlyphs(nextGlyphs)
+      sessionRef.current = {
+        ...session,
+        active: activeRef.current,
+        contributions: session.contributions,
+        drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
+        liveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
+      }
+    },
+  })
+  const pushLive = live.pushSession
 
   useEffect(() => {
     if (recovery.error) return
-    const timer = window.setTimeout(writeSession, 250)
-    const flush = () => { writeSession() }
+    const timer = window.setTimeout(() => {
+      pushLive(writeSession())
+    }, 250)
+    const flush = () => {
+      pushLive(writeSession())
+    }
     window.addEventListener('pagehide', flush)
     return () => {
       window.clearTimeout(timer)
       window.removeEventListener('pagehide', flush)
     }
-  }, [filled, brokenJoins, grid, softness, cornerRadius, holeMode, displayGuideLetter, glyphs, writeSession, recovery.error])
+  }, [filled, brokenJoins, grid, softness, cornerRadius, holeMode, displayGuideLetter, glyphs, contributions, writeSession, pushLive, recovery.error])
 
   useEffect(() => {
     writeUiPrefs({
@@ -1602,11 +1638,66 @@ export default function App() {
                   <p className={cn('mb-2 text-[11px] leading-relaxed', saveFailed ? 'font-bold text-[#c00000]' : 'text-ink-muted')}>
                     {saveStatus}
                   </p>
+                  <p className="mb-2 text-[11px] leading-relaxed text-ink-muted" data-testid="live-sync-status">
+                    {live.status.message}
+                    {live.status.lastPullAt
+                      ? ` · pulled ${new Date(live.status.lastPullAt).toLocaleTimeString()}`
+                      : ''}
+                    {live.status.lastPushAt
+                      ? ` · pushed ${new Date(live.status.lastPushAt).toLocaleTimeString()}`
+                      : ''}
+                  </p>
+                  <label className="mb-2 block text-[11px] font-semibold">
+                    Room
+                    <input
+                      className="mt-1 w-full rounded-[3px] border border-line px-2 py-2 text-sm"
+                      value={liveRoomInput}
+                      onChange={(e) => setLiveRoomInput(e.target.value)}
+                      onBlur={() => live.savePrefs({ room: liveRoomInput.trim() || 'lettermans' })}
+                      spellCheck={false}
+                    />
+                  </label>
+                  <label className="mb-2 block text-[11px] font-semibold">
+                    Write token
+                    <input
+                      type="password"
+                      className="mt-1 w-full rounded-[3px] border border-line px-2 py-2 text-sm"
+                      value={liveTokenInput}
+                      onChange={(e) => setLiveTokenInput(e.target.value)}
+                      onBlur={() => live.savePrefs({ token: liveTokenInput })}
+                      spellCheck={false}
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="mb-3 block text-[11px] font-semibold">
+                    Station
+                    <input
+                      className="mt-1 w-full rounded-[3px] border border-line px-2 py-2 text-sm"
+                      value={liveStationInput}
+                      onChange={(e) => setLiveStationInput(e.target.value)}
+                      onBlur={() => live.savePrefs({ station: liveStationInput.trim().slice(0, 8) })}
+                      placeholder="a / b"
+                      spellCheck={false}
+                    />
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
+                    <a className="options-link" href="?view=wall" target="_blank" rel="noreferrer">Cinematic wall ↗</a>
                     <a className="options-link" href="?view=projection" target="_blank" rel="noreferrer">Wall projection ↗</a>
                     <a className="options-link" href="?view=join-lab" target="_blank" rel="noreferrer">Shape joins ↗</a>
+                    <button type="button" className="options-link" onClick={() => void live.copyWallLink('wall')}>Copy wall link</button>
                     <button type="button" className="options-link" onClick={backupSession}>Editable backup</button>
                     <button type="button" className="options-link" onClick={() => importRef.current?.click()}>Restore backup</button>
+                    <button
+                      type="button"
+                      className="options-link col-span-2"
+                      disabled={!live.enabled}
+                      onClick={() => {
+                        if (!window.confirm('Clear the shared room for everyone? Local backups are unchanged.')) return
+                        void live.clearRoom()
+                      }}
+                    >
+                      Clear shared room
+                    </button>
                     {recovery.error && (
                       <button type="button" data-testid="start-fresh" className="options-link col-span-2" onClick={startFresh}>
                         Save the unreadable session and start fresh

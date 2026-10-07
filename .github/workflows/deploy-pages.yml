@@ -29,6 +29,8 @@ jobs:
         env:
           # /<repo>/ for project Pages (set by GITHUB_REPOSITORY in Actions)
           GITHUB_REPOSITORY: ${{ github.repository }}
+          # Cloudflare Worker URL for shared live room (repo variable or secret)
+          VITE_LIVE_SESSION_URL: ${{ vars.VITE_LIVE_SESSION_URL || secrets.VITE_LIVE_SESSION_URL }}
         run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
