@@ -1142,7 +1142,57 @@ body.install-view {
 .festival-save::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: #0000ee; }
 .festival-save.is-error { color: #c00000; font-weight: 700; white-space: normal; }
 .festival-save.is-error::before { background: #c00000; }
-.festival-links { display: contents; }
+.festival-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.festival-room-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 2px 0;
+}
+.festival-room-group strong {
+  color: #000;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.live-session-join-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.live-session-room-pill {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.live-session-room-pill.is-on {
+  background: #0000ee;
+  border-color: #0000ee;
+  color: #fff;
+}
+.cinematic-live-join .live-session-join-presets,
+.festival-live-join .live-session-join-presets {
+  gap: 4px;
+}
+.cinematic-live-join .live-session-room-pill,
+.festival-live-join .live-session-room-pill {
+  min-height: 22px;
+  height: 22px;
+  padding: 0 7px;
+  font-size: 10px;
+}
 
 .options-link {
   display: flex;

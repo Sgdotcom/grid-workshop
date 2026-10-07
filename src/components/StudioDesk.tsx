@@ -1075,11 +1075,17 @@ export function StudioDesk() {
             >
               Copy projection link
             </Button>
-            <a className="studio-link" href="?view=wall" target="_blank" rel="noreferrer">
-              Open cinematic wall ↗
+            <a className="studio-link" href="?view=wall&room=boom" target="_blank" rel="noreferrer">
+              Wall · boom ↗
             </a>
-            <a className="studio-link" href="?view=projection" target="_blank" rel="noreferrer">
-              Classic projection ↗
+            <a className="studio-link" href="?view=wall&room=bobby" target="_blank" rel="noreferrer">
+              Wall · bobby ↗
+            </a>
+            <a className="studio-link" href="?view=projection&room=boom" target="_blank" rel="noreferrer">
+              Projection · boom ↗
+            </a>
+            <a className="studio-link" href="?view=projection&room=bobby" target="_blank" rel="noreferrer">
+              Projection · bobby ↗
             </a>
             <a className="studio-link" href="./">
               Default workshop ↗

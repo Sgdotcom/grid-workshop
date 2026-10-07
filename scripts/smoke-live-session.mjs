@@ -153,6 +153,37 @@ async function main() {
   assert((after.json.contributions || []).length === 0, 'room not empty after DELETE')
   console.log('[ok] DELETE clears room')
 
+  // boom vs bobby must stay isolated Durable Object rooms
+  const boom = `boom-iso-${Date.now().toString(36)}`
+  const bobby = `bobby-iso-${Date.now().toString(36)}`
+  await req('PUT', `/rooms/${boom}`, {
+    liveCue: {
+      char: 'x',
+      station: 'a',
+      liveSvg: '<svg id="boom"/>',
+      updatedAt: '2026-10-07T13:00:00.000Z',
+    },
+    draftSvgs: { x: '<svg id="boom-draft"/>' },
+    draftUpdatedAt: { x: '2026-10-07T13:00:00.000Z' },
+  })
+  await req('PUT', `/rooms/${bobby}`, {
+    liveCue: {
+      char: 'y',
+      station: 'a',
+      liveSvg: '<svg id="bobby"/>',
+      updatedAt: '2026-10-07T13:00:00.000Z',
+    },
+    draftSvgs: { y: '<svg id="bobby-draft"/>' },
+    draftUpdatedAt: { y: '2026-10-07T13:00:00.000Z' },
+  })
+  const boomGet = await req('GET', `/rooms/${boom}`)
+  const bobbyGet = await req('GET', `/rooms/${bobby}`)
+  assert(boomGet.json.liveCues?.a?.liveSvg === '<svg id="boom"/>', 'boom room own cue')
+  assert(bobbyGet.json.liveCues?.a?.liveSvg === '<svg id="bobby"/>', 'bobby room own cue')
+  assert(!boomGet.json.draftSvgs?.y, 'boom must not see bobby draft')
+  assert(!bobbyGet.json.draftSvgs?.x, 'bobby must not see boom draft')
+  console.log('[ok] boom and bobby rooms are isolated')
+
   console.log('[pass] live-session smoke')
 }
 

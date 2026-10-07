@@ -803,27 +803,30 @@ export default function App() {
           <span role="status" className={cn('festival-save', saveFailed && 'is-error')}>{saveStatus}</span>
           <span role="status" className="festival-notice">{notice}</span>
           <span className="festival-links">
-            <a
-              href={`?view=wall&room=${encodeURIComponent(live.room || 'lettermans')}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open wall projection ↗
-            </a>
-            <a
-              href={`?view=studio&station=a&room=${encodeURIComponent(live.room || 'lettermans')}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Computer A ↗
-            </a>
-            <a
-              href={`?view=studio&station=b&room=${encodeURIComponent(live.room || 'lettermans')}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Computer B ↗
-            </a>
+            <span className="festival-room-group" aria-label="Room boom">
+              <strong>boom</strong>
+              <a href="?view=wall&room=boom" target="_blank" rel="noreferrer">
+                Wall ↗
+              </a>
+              <a href="?view=studio&station=a&room=boom" target="_blank" rel="noreferrer">
+                Desk A ↗
+              </a>
+              <a href="?view=studio&station=b&room=boom" target="_blank" rel="noreferrer">
+                Desk B ↗
+              </a>
+            </span>
+            <span className="festival-room-group" aria-label="Room bobby">
+              <strong>bobby</strong>
+              <a href="?view=wall&room=bobby" target="_blank" rel="noreferrer">
+                Wall ↗
+              </a>
+              <a href="?view=studio&station=a&room=bobby" target="_blank" rel="noreferrer">
+                Desk A ↗
+              </a>
+              <a href="?view=studio&station=b&room=bobby" target="_blank" rel="noreferrer">
+                Desk B ↗
+              </a>
+            </span>
           </span>
           <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={event => {
             const file = event.target.files?.[0]
