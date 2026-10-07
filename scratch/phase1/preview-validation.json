@@ -1,0 +1,1892 @@
+[
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Fill Gaps",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 112.779356
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square + ring · Solid",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000009372678574885973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 7.502717592536248e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 5.070930453946987e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 6.287231064432665e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000005414691738636419,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000004063184465823043,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000028021278382370026,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 1.9825421900234858e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.0000012430137786987785,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 7.235954268409292e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000006437935955146425,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 2.2422149178053937e-8,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000005282900562454798,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000012232208406120472,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 4.6016988977160243e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 1.722846254383165e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 3,
+    "missing": 19.448286696810275,
+    "beforeMissing": 19.45,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 20.658143419135158,
+    "beforeMissing": 20.66,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge · unequal vertical",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 21.84513438803608,
+    "beforeMissing": 21.85,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Square · diagonal reference",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00017725646756728075,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00013530256847312948,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000020967714004822688,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00014417834165879667,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000055500314608274474,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00002977221553663134,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00029019530061919684,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00010720651797029536,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0002230529973748144,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000011911588625561787,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Triangle · reported asymmetry",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0002891864793574652,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000002161067210809543,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000030835637321514247,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000027777593878374747,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000004215941936727456,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 5.814554970018935e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000002804916363541287,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000014860443518928054,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 9.638192877335555e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000018393374017484364,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000003621133509975128,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000019823403522661665,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000001254903760386656,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000024666555464074973,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 4.2682093055463584e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 2.4657550575064116e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 6.768285164531528e-7,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000001945704660256202,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc · approved reference",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.00003852586751114235,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.00047517522783841945,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.00020340531810506625,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.0005013336497890155,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.00023317333324042387,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000127857960773545,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00033191330249805864,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00043142247195762884,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00039361103857787547,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0003292457092170056,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00026850838451084085,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0004045788136936551,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00044170905821060087,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00035748263837097495,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00029152222303661045,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000415397248981806,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0003999261031306618,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0004731478307264975,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0003596711706231841,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Sharp stars · original report",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0004575233290620659,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00007651256884770393,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000011042673645196752,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000011022399510481762,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00000507346857121407,
+    "beforeMissing": 0,
+    "changeArea": 0.011061
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 8.423116163957372e-7,
+    "beforeMissing": 0,
+    "changeArea": 0.054468
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000012762911937240633,
+    "beforeMissing": 0,
+    "changeArea": 0.0740655
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000003986142970793867,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000005897808604915503,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000008815280104331161,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.00000389852845158781,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 6.092017178133406e-7,
+    "beforeMissing": 0,
+    "changeArea": 0.384243
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 2.3838898508880143e-8,
+    "beforeMissing": 0,
+    "changeArea": 0.351809
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 3,
+    "missing": 0.000006012371267353706,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000025570915683817158,
+    "beforeMissing": 0,
+    "changeArea": 0.21375
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000020193251516441027,
+    "beforeMissing": 0,
+    "changeArea": 0.173387
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000005169220216239938,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000012327023267395545,
+    "beforeMissing": 0,
+    "changeArea": 0.07905
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000020727099785911742,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Arc + notch · detached addition",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0.081021
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00007416236768486361,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000010703480950027084,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000010683829566524087,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000004917629185407604,
+    "beforeMissing": 0,
+    "changeArea": 0.011061
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 8.164387203455796e-7,
+    "beforeMissing": 0,
+    "changeArea": 0.054468
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000012370879478680309,
+    "beforeMissing": 0,
+    "changeArea": 0.0740655
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000003863702462178156,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000005716648347846209,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000008544505225589341,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.0000037787791576054704,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 5.90489150621157e-7,
+    "beforeMissing": 0,
+    "changeArea": 0.384243
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 2.310665009740776e-8,
+    "beforeMissing": 0,
+    "changeArea": 0.351809
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 3,
+    "missing": 0.000005827692042008543,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000024785465702460243,
+    "beforeMissing": 0,
+    "changeArea": 0.21375
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000019572984756218523,
+    "beforeMissing": 0,
+    "changeArea": 0.173387
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000005010439671472628,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0000011948379799352294,
+    "beforeMissing": 0,
+    "changeArea": 0.07905
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0.000020090435055491848,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Wedge + notch · detached addition",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0.081021
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0,
+    "rejected": 0,
+    "parts": 2,
+    "missing": 0,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.05,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0007424789106982531,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00007543345117118473,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.15,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000025516182863509736,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.2,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0008623886891426264,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.25,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0005888940621853727,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.3,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0005045177341570942,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.35,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0006645407425064018,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.4,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000636755508803495,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.45,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0005047868032508723,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.5,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.000649892254114137,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.55,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0006274398131469848,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.6,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0007826196927344365,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.65,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0004639374846238165,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.7,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00047819438251741464,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.75,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0004945175681385587,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.8,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0005294748861630787,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.85,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0005639810548709854,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.9,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0006105883041477354,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 0.95,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.00048236199100433886,
+    "beforeMissing": 0,
+    "changeArea": 0
+  },
+  {
+    "title": "Circle + 4-star · order reference",
+    "softness": 1,
+    "rejected": 0,
+    "parts": 1,
+    "missing": 0.0005415107926511318,
+    "beforeMissing": 0,
+    "changeArea": 0
+  }
+]

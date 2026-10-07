@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <title>Crosses, Xs, and Chevrons: Dedicated Solutions</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 p-6">
+  <div class="max-w-4xl mx-auto space-y-6">
+    <div class="border-b border-slate-800 pb-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-white">Crosses, Xs, and Chevrons · Dedicated Solutions</h1>
+          <p class="text-xs text-slate-400 mt-1 max-w-xl">
+            Why the generic methods failed on these three concave shapes, and the dedicated geometry fixes that make them look natural.
+          </p>
+        </div>
+        <a href="http://127.0.0.1:43127/docs/cross-x-chevron-solutions.html" target="_blank" class="text-xs text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-500/30 px-3 py-1.5 rounded-lg hover:underline">
+          Open in browser ↗
+        </a>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      
+      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-3">
+        <div class="border-b border-slate-700/80 pb-2">
+          <h3 class="text-sm font-bold text-white">Cross · Diagonal ↘</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Current Method B leaves a trapped diamond void between dual struts. Fix: Solid corner rolling-ball fillet rounding smoothly from vertical into horizontal arm.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-1">
+          <!-- Before / Current -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">Current Problematic Result</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1 13.92 L 13.92 13.92 L 13.92 1 L 26.08 1 L 26.08 13.92 L 39 13.92 L 39 24.947459296482414 L 39.016 24.966 L 41.096 27.293 L 43.253 29.626 L 45.473 31.952 L 47.743 34.257 L 50.048 36.527 L 52.374 38.747 L 54.707 40.904 L 57.034 42.984 L 57.052540703517586 43 L 68.08 43 L 68.08 55.92 L 81 55.92 L 81 68.08 L 68.08 68.08 L 68.08 81 L 55.92 81 L 55.92 68.08 L 43 68.08 L 43 57.052540703517586 L 42.984 57.034 L 40.904 54.707 L 38.747 52.374 L 36.527 50.048 L 34.257 47.743 L 31.952 45.473 L 29.626 43.253 L 27.293 41.096 L 24.966 39.016 L 24.947459296482414 39 L 13.92 39 L 13.92 26.08 L 1 26.08 Z M 26.08 26.08 L 26.208 27.2 L 26.759 28.626 L 27.687 30.313 L 28.948 32.216 L 30.495 34.288 L 32.284 36.485 L 34.267 38.76 L 36.4 41.068 L 38.637 43.363 L 40.932 45.6 L 43.24 47.733 L 45.515 49.716 L 47.712 51.505 L 49.784 53.052 L 51.687 54.313 L 53.374 55.241 L 54.8 55.792 L 55.92 55.92 L 55.792 54.8 L 55.241 53.374 L 54.313 51.687 L 53.052 49.784 L 51.505 47.712 L 49.716 45.515 L 47.733 43.24 L 45.6 40.932 L 43.363 38.637 L 41.068 36.4 L 38.76 34.267 L 36.485 32.284 L 34.288 30.495 L 32.216 28.948 L 30.313 27.687 L 28.626 26.759 L 27.2 26.208 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 13.92 1 L 26.08 1 L 26.08 13.92 L 39 13.92 L 39 26.08 L 26.08 26.08 L 26.08 39 L 13.92 39 L 13.92 26.08 L 1 26.08 L 1 13.92 L 13.92 13.92 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 55.92 43 L 68.08 43 L 68.08 55.92 L 81 55.92 L 81 68.08 L 68.08 68.08 L 68.08 81 L 55.92 81 L 55.92 68.08 L 43 68.08 L 43 55.92 L 55.92 55.92 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-1 bg-rose-950/60 px-2 py-0.5 rounded">Weird Void / Sliver</span>
+          </div>
+
+          <!-- After / Proposed -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">Dedicated Soft Solution</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 13.90 1.00 L 26.10 1.00 L 26.10 13.90 L 39.00 13.90 L 39.00 13.90 L 39.05 15.96 L 39.19 18.08 L 39.43 20.26 L 39.76 22.45 L 40.20 24.65 L 40.74 26.82 L 41.39 28.95 L 42.15 31.01 L 43.01 32.99 L 43.99 34.85 L 45.08 36.58 L 46.29 38.14 L 47.62 39.53 L 49.06 40.72 L 50.63 41.68 L 52.33 42.40 L 54.15 42.85 L 56.10 43.00 L 68.10 43.00 L 68.10 55.90 L 81.00 55.90 L 81.00 68.10 L 68.10 68.10 L 68.10 81.00 L 55.90 81.00 L 55.90 68.10 L 43.00 68.10 L 43.00 68.10 L 40.77 67.95 L 38.73 67.50 L 36.89 66.78 L 35.22 65.81 L 33.73 64.62 L 32.40 63.22 L 31.22 61.65 L 30.19 59.92 L 29.30 58.05 L 28.54 56.07 L 27.90 54.01 L 27.37 51.88 L 26.95 49.70 L 26.62 47.51 L 26.38 45.32 L 26.22 43.16 L 26.13 41.04 L 26.10 39.00 L 13.90 39.00 L 13.90 26.10 L 1.00 26.10 L 1.00 13.90 L 13.90 13.90 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 13.92 1 L 26.08 1 L 26.08 13.92 L 39 13.92 L 39 26.08 L 26.08 26.08 L 26.08 39 L 13.92 39 L 13.92 26.08 L 1 26.08 L 1 13.92 L 13.92 13.92 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 55.92 43 L 68.08 43 L 68.08 55.92 L 81 55.92 L 81 68.08 L 68.08 68.08 L 68.08 81 L 55.92 81 L 55.92 68.08 L 43 68.08 L 43 55.92 L 55.92 55.92 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-1 bg-emerald-950/60 px-2 py-0.5 rounded font-bold">Natural Fluid Geometry</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-3">
+        <div class="border-b border-slate-700/80 pb-2">
+          <h3 class="text-sm font-bold text-white">Cross · Horizontal ➔</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Facing arm tips meet with 4px gap. Seamless axial arm connection with soft corner fillets into the arm flanks.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-1">
+          <!-- Before / Current -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">Current Problematic Result</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1 13.92 L 13.92 13.92 L 13.92 1 L 26.08 1 L 26.08 13.92 L 39 13.92 L 39 16.603520719311962 L 39.751 16.664 L 41 16.698 L 42.249 16.664 L 43 16.603520719311962 L 43 13.92 L 55.92 13.92 L 55.92 1 L 68.08 1 L 68.08 13.92 L 81 13.92 L 81 26.08 L 68.08 26.08 L 68.08 39 L 55.92 39 L 55.92 26.08 L 43 26.08 L 43 23.396479280688038 L 42.249 23.336 L 41 23.302 L 39.751 23.336 L 39 23.396479280688038 L 39 26.08 L 26.08 26.08 L 26.08 39 L 13.92 39 L 13.92 26.08 L 1 26.08 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 13.92 1 L 26.08 1 L 26.08 13.92 L 39 13.92 L 39 26.08 L 26.08 26.08 L 26.08 39 L 13.92 39 L 13.92 26.08 L 1 26.08 L 1 13.92 L 13.92 13.92 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 55.92 1 L 68.08 1 L 68.08 13.92 L 81 13.92 L 81 26.08 L 68.08 26.08 L 68.08 39 L 55.92 39 L 55.92 26.08 L 43 26.08 L 43 13.92 L 55.92 13.92 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-1 bg-rose-950/60 px-2 py-0.5 rounded">Weird Void / Sliver</span>
+          </div>
+
+          <!-- After / Proposed -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">Dedicated Soft Solution</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1 13.92 L 13.92 13.92 L 13.92 1 L 26.08 1 L 26.08 13.92 L 39 13.92 L 39 16.603520719311962 L 39.751 16.664 L 41 16.698 L 42.249 16.664 L 43 16.603520719311962 L 43 13.92 L 55.92 13.92 L 55.92 1 L 68.08 1 L 68.08 13.92 L 81 13.92 L 81 26.08 L 68.08 26.08 L 68.08 39 L 55.92 39 L 55.92 26.08 L 43 26.08 L 43 23.396479280688038 L 42.249 23.336 L 41 23.302 L 39.751 23.336 L 39 23.396479280688038 L 39 26.08 L 26.08 26.08 L 26.08 39 L 13.92 39 L 13.92 26.08 L 1 26.08 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 13.92 1 L 26.08 1 L 26.08 13.92 L 39 13.92 L 39 26.08 L 26.08 26.08 L 26.08 39 L 13.92 39 L 13.92 26.08 L 1 26.08 L 1 13.92 L 13.92 13.92 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 55.92 1 L 68.08 1 L 68.08 13.92 L 81 13.92 L 81 26.08 L 68.08 26.08 L 68.08 39 L 55.92 39 L 55.92 26.08 L 43 26.08 L 43 13.92 L 55.92 13.92 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-1 bg-emerald-950/60 px-2 py-0.5 rounded font-bold">Natural Fluid Geometry</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-3">
+        <div class="border-b border-slate-700/80 pb-2">
+          <h3 class="text-sm font-bold text-white">X · Horizontal ➔</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Current Method B traps a rectangular slit between twin struts across the gap. Fix: Deep molten hourglass waist that curves gracefully into top and bottom V-notches.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-1">
+          <!-- Before / Current -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">Current Problematic Result</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.0380000000000038 10.231696969696971 L 10.23169696969697 1.0380000000000038 L 20 10.80630303030303 L 24.183082580207117 6.623220450095913 L 24.183 6.623 L 24.183227243801127 6.623075786501904 L 29.768303030303027 1.0380000000000038 L 38.38404092067054 9.65373789036752 L 39.187 9.705 L 41 9.743 L 42.813 9.705 L 43.615959079329464 9.65373789036752 L 52.23169696969697 1.0380000000000038 L 57.81677275619887 6.623075786501905 L 57.817 6.623 L 57.81691741979288 6.623220450095916 L 62 10.806303030303033 L 71.76830303030303 1.0380000000000038 L 80.96199999999999 10.231696969696968 L 71.19369696969696 19.999999999999996 L 80.96199999999999 29.768303030303024 L 71.76830303030303 38.96199999999999 L 62 29.193696969696965 L 57.81691741979288 33.37677954990408 L 57.817 33.377 L 57.81677275619886 33.3769242134981 L 52.23169696969697 38.96199999999999 L 43.615959079329464 30.346262109632484 L 42.813 30.295 L 41 30.257 L 39.187 30.295 L 38.38404092067053 30.346262109632484 L 29.768303030303034 38.96199999999999 L 24.183227243801134 33.3769242134981 L 24.183 33.377 L 24.183082580207117 33.37677954990408 L 20 29.193696969696965 L 10.23169696969697 38.96199999999999 L 1.0380000000000038 29.768303030303024 L 10.806303030303033 19.999999999999996 Z M 29.193696969696965 19.999999999999996 L 29.193917419792882 20.00022045009591 L 29.194 19.999999999999996 L 29.193917419792882 19.99977954990408 Z M 29.194 19.999999999999996 L 29.195812865497075 20.002115895800102 L 30.38287565308256 21.189178683385588 L 30.781 21.498 L 31.88 22.106 L 33.145 22.621 L 34.55 23.042 L 36.065 23.37 L 37.664 23.604 L 39.318 23.744 L 41 23.791 L 42.682 23.744 L 44.336 23.604 L 45.935 23.37 L 47.45 23.042 L 48.855 22.621 L 50.12 22.106 L 51.219 21.498 L 51.61712434691745 21.18917868338558 L 52.80418713450288 20.002115895800152 L 52.806 19.999999999999996 L 52.80418713450288 19.99788410419984 L 51.61712434691748 18.810821316614447 L 51.219 18.502 L 50.12 17.894 L 48.855 17.379 L 47.45 16.958 L 45.935 16.63 L 44.336 16.396 L 42.682 16.256 L 41 16.209 L 39.318 16.256 L 37.664 16.396 L 36.065 16.63 L 34.55 16.958 L 33.145 17.379 L 31.88 17.894 L 30.781 18.502 L 30.382875653082515 18.810821316614447 L 29.195812865497096 19.997884104199866 Z M 52.806 19.999999999999996 L 52.80608258020712 20.00022045009591 L 52.806303030303035 19.999999999999996 L 52.80608258020712 19.99977954990408 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 29.768303030303027 1.0380000000000038 L 38.96199999999999 10.231696969696968 L 29.193696969696965 19.999999999999996 L 38.961999999999996 29.768303030303024 L 29.768303030303034 38.96199999999999 L 20 29.193696969696965 L 10.23169696969697 38.961999999999996 L 1.0380000000000038 29.768303030303027 L 10.806303030303033 20 L 1.0380000000000038 10.231696969696971 L 10.23169696969697 1.0380000000000038 L 20 10.80630303030303 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 71.76830303030303 1.0380000000000038 L 80.96199999999999 10.231696969696968 L 71.19369696969696 19.999999999999996 L 80.96199999999999 29.768303030303024 L 71.76830303030303 38.96199999999999 L 62 29.193696969696965 L 52.23169696969697 38.961999999999996 L 43.03800000000001 29.768303030303034 L 52.806303030303035 20 L 43.038000000000004 10.231696969696971 L 52.23169696969697 1.0380000000000038 L 62 10.806303030303033 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-1 bg-rose-950/60 px-2 py-0.5 rounded">Weird Void / Sliver</span>
+          </div>
+
+          <!-- After / Proposed -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">Dedicated Soft Solution</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 6.50 6.50 L 14.00 20.00 L 6.50 33.50 L 14.00 33.50 L 20.00 26.00 L 26.00 33.50 L 33.00 33.50 L 33.00 33.50 L 33.79 31.83 L 34.67 30.38 L 35.62 29.16 L 36.63 28.16 L 37.68 27.38 L 38.77 26.82 L 39.88 26.49 L 41.00 26.38 L 42.12 26.49 L 43.23 26.82 L 44.32 27.38 L 45.38 28.16 L 46.38 29.16 L 47.33 30.38 L 48.21 31.83 L 49.00 33.50 L 56.00 33.50 L 62.00 26.00 L 68.00 33.50 L 75.50 33.50 L 68.00 20.00 L 75.50 6.50 L 68.00 6.50 L 62.00 14.00 L 56.00 6.50 L 49.00 6.50 L 49.00 6.50 L 48.21 8.17 L 47.33 9.62 L 46.38 10.84 L 45.38 11.84 L 44.32 12.62 L 43.23 13.18 L 42.12 13.51 L 41.00 13.63 L 39.88 13.51 L 38.77 13.18 L 37.68 12.62 L 36.63 11.84 L 35.62 10.84 L 34.67 9.62 L 33.79 8.17 L 33.00 6.50 L 26.00 6.50 L 20.00 14.00 L 14.00 6.50 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 29.768303030303027 1.0380000000000038 L 38.96199999999999 10.231696969696968 L 29.193696969696965 19.999999999999996 L 38.961999999999996 29.768303030303024 L 29.768303030303034 38.96199999999999 L 20 29.193696969696965 L 10.23169696969697 38.961999999999996 L 1.0380000000000038 29.768303030303027 L 10.806303030303033 20 L 1.0380000000000038 10.231696969696971 L 10.23169696969697 1.0380000000000038 L 20 10.80630303030303 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 71.76830303030303 1.0380000000000038 L 80.96199999999999 10.231696969696968 L 71.19369696969696 19.999999999999996 L 80.96199999999999 29.768303030303024 L 71.76830303030303 38.96199999999999 L 62 29.193696969696965 L 52.23169696969697 38.961999999999996 L 43.03800000000001 29.768303030303034 L 52.806303030303035 20 L 43.038000000000004 10.231696969696971 L 52.23169696969697 1.0380000000000038 L 62 10.806303030303033 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-1 bg-emerald-950/60 px-2 py-0.5 rounded font-bold">Natural Fluid Geometry</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-3">
+        <div class="border-b border-slate-700/80 pb-2">
+          <h3 class="text-sm font-bold text-white">Chevron · Vertical ⬇</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Apex inserts into inner V-notch. Current fails to connect or traps slivers. Fix: Continuous shingle blend along outer wing flanks forming a sleek arrow column.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-1">
+          <!-- Before / Current -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">Current Problematic Result</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.0380000000000003 27.878259523809525 L 20 6.658878571428572 L 38.962 27.878259523809525 L 32.00926666666667 33.34112142857143 L 28.28656362656558 28.61076944528508 L 28.157 29.192 L 27.625 31.944 L 27.16 34.833 L 26.789 37.819 L 26.538 40.862 L 26.432 43.923 L 26.497 46.961 L 26.76 49.937 L 27.245 52.81 L 27.98 55.541 L 28.989 58.09 L 29.947525430353434 59.790633219681226 L 38.962 69.87825952380952 L 32.00926666666667 75.34112142857143 L 23.275242110453654 64.243 L 16.724757889546346 64.243 L 7.990733333333333 75.34112142857143 L 1.0380000000000003 69.87825952380952 L 10.052474569646574 59.79063321968121 L 11.011 58.09 L 12.02 55.541 L 12.755 52.81 L 13.24 49.937 L 13.503 46.961 L 13.568 43.923 L 13.462 40.862 L 13.211 37.819 L 12.84 34.833 L 12.375 31.944 L 11.843 29.192 L 11.713436373434423 28.61076944528508 L 7.990733333333333 33.34112142857143 Z M 17.917 26.099 L 18.077 28.88 L 18.468 31.864 L 19.072 35 L 19.867 38.233 L 20 38.68431884057971 L 20.133 38.233 L 20.928 35 L 21.532 31.864 L 21.923 28.88 L 22.083 26.099 L 21.99 23.576 L 21.626 21.363 L 20.969 19.514 L 20.001086579320116 18.082606881491976 L 20 18.08122619047619 L 19.998913420679884 18.082606881491976 L 19.031 19.514 L 18.374 21.363 L 18.01 23.576 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 20 6.658878571428572 L 38.962 27.878259523809525 L 32.00926666666667 33.34112142857143 L 20 18.08122619047619 L 7.990733333333333 33.34112142857143 L 1.0380000000000003 27.878259523809525 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 20 48.658878571428566 L 38.962 69.87825952380952 L 32.00926666666667 75.34112142857143 L 20 60.08122619047618 L 7.990733333333333 75.34112142857143 L 1.0380000000000003 69.87825952380952 Z" fill="none" stroke="#f43f5e" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-1 bg-rose-950/60 px-2 py-0.5 rounded">Weird Void / Sliver</span>
+          </div>
+
+          <!-- After / Proposed -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">Dedicated Soft Solution</span>
+            <div class="w-full aspect-square max-w-[140px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 20.00 3.00 L 37.00 21.00 L 37.00 63.00 L 37.00 59.50 L 37.00 56.00 L 37.00 52.50 L 37.00 49.00 L 37.00 45.50 L 37.00 42.00 L 37.00 38.50 L 37.00 35.00 L 37.00 31.50 L 37.00 28.00 L 37.00 24.50 L 37.00 21.00 L 37.00 63.00 L 29.00 68.00 L 20.00 48.00 L 11.00 68.00 L 3.00 63.00 L 3.00 63.00 L 3.00 59.50 L 3.00 56.00 L 3.00 52.50 L 3.00 49.00 L 3.00 45.50 L 3.00 42.00 L 3.00 38.50 L 3.00 35.00 L 3.00 31.50 L 3.00 28.00 L 3.00 24.50 L 3.00 21.00 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 20 6.658878571428572 L 38.962 27.878259523809525 L 32.00926666666667 33.34112142857143 L 20 18.08122619047619 L 7.990733333333333 33.34112142857143 L 1.0380000000000003 27.878259523809525 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/><path d="M 20 48.658878571428566 L 38.962 69.87825952380952 L 32.00926666666667 75.34112142857143 L 20 60.08122619047618 L 7.990733333333333 75.34112142857143 L 1.0380000000000003 69.87825952380952 Z" fill="none" stroke="#34d399" stroke-width="0.6" stroke-dasharray="1.5 1.5" opacity="0.5"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-1 bg-emerald-950/60 px-2 py-0.5 rounded font-bold">Natural Fluid Geometry</span>
+          </div>
+        </div>
+      </div>
+    
+    </div>
+  </div>
+</body>
+</html>

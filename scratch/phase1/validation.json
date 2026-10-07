@@ -1,0 +1,761 @@
+{
+  "generatedAt": "2026-09-28T09:43:11.470Z",
+  "sourceHashes": {
+    "src/lib/softness.ts": "bb8b3eaff20139d144987b726a4946e9d7ed13de8d1d2149f5a4cb2d723f3a34",
+    "src/lib/shapes.ts": "0609eb5dc03f5caf41e7733e25ee03ba49d4c820bca2549b38ada7a30cd1154d",
+    "src/lib/polyBool.ts": "c4e74495be54edeafd94caa2f98b59a31a3482cf7d6104485c5e64f38c40477f"
+  },
+  "sourcesUnchanged": true,
+  "counts": {
+    "pairs": 4560,
+    "custom": 72,
+    "layouts": 72,
+    "rendered": 9408,
+    "orderChecks": 9408,
+    "rotationChecks": 4632,
+    "counterChecks": 48
+  },
+  "byIssue": {
+    "weld:body-loss": 28,
+    "weld:rotation-dependent": 28,
+    "production:body-loss": 1
+  },
+  "timingNote": "Single local run; timings cover initial render including geometry parsing, excluding reversed/rotated runs and visual rendering.",
+  "timings": {
+    "weld": {
+      "medianMs": 2.89,
+      "p95Ms": 7.35,
+      "maxMs": 236.5
+    },
+    "production": {
+      "medianMs": 0.97,
+      "p95Ms": 5.17,
+      "maxMs": 263.23
+    }
+  },
+  "failures": [
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-arc",
+        "preset-arc"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 26.518
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 27.55
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-arc",
+        "preset-wedge"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 27.669
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 29.16
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-arc",
+        "preset-notch"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 17.766
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 19.152
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-wedge"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 21.421
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 25.363
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "production",
+      "shapes": [
+        "preset-wedge",
+        "preset-wedge"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 21.845
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-notch"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 11.435
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 13.754
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-capsule"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 48.075
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 60.188
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-capsule"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 18.533
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 23.298
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-capsule-v"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 48.064
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 55.34
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-capsule-v"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 18.605
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 22.224
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-octagon"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 22.707
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 24.945
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-diamond"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 44.035
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 55.719
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-diamond"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 16.849
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 22.147
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-triangle"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 40.985
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 56.79
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-triangle"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 15.81
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 23.313
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-hexagon"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 49.707
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 58.093
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-hexagon"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 19.245
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 23.23
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-pentagon"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 50.032
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 60.728
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-pentagon"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 19.388
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 24.031
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-star5"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 36.167
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 46.302
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-star5"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 14.177
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 18.29
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-star4"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 30.829
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 41.714
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-star4"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 12.527
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 16.679
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-cross"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 17.575
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 20.591
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-x"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 19.221
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 27.763
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-chevron"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 31.807
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 55.096
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-chevron"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 12.723
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 21.592
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-ring"
+      ],
+      "layout": "V",
+      "sizes": [
+        37,
+        37
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 47.94
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 55.026
+        }
+      ]
+    },
+    {
+      "category": "pairs",
+      "method": "weld",
+      "shapes": [
+        "preset-wedge",
+        "preset-ring"
+      ],
+      "layout": "V",
+      "sizes": [
+        56,
+        24
+      ],
+      "softness": 1,
+      "corners": 2,
+      "issues": [
+        {
+          "type": "body-loss",
+          "percent": 18.721
+        },
+        {
+          "type": "rotation-dependent",
+          "percent": 21.626
+        }
+      ]
+    }
+  ],
+  "engineUnderTest": "scratch/phase1/softness.ts",
+  "candidateSourceSha256": "09757fdd49c88f3bc38fa1c4959998b6c57c52bd2b6c56f5e15afc6ee0a83a2a"
+}

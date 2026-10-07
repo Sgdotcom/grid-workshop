@@ -1,0 +1,2657 @@
+{
+  "productionUnchanged": true,
+  "sourceHashes": {
+    "src/lib/softness.ts": "bb8b3eaff20139d144987b726a4946e9d7ed13de8d1d2149f5a4cb2d723f3a34",
+    "src/lib/shapes.ts": "0609eb5dc03f5caf41e7733e25ee03ba49d4c820bca2549b38ada7a30cd1154d",
+    "src/lib/polyBool.ts": "c4e74495be54edeafd94caa2f98b59a31a3482cf7d6104485c5e64f38c40477f",
+    "src/lib/shapeJoinRegistry.ts": "5e0dded96438045fe0659628b6b29d937e073e8a9113641d1e389e3009d72138"
+  },
+  "cases": [
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 21.73,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 22.51,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 23.31,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 24.13,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 24.97,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 25.83,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 26.7,
+      "holeFill": 0
+    },
+    {
+      "title": "Arc · unequal vertical",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 26.91,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 19.45,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 20.66,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge · unequal vertical",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 21.85,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 47.3,
+      "holeFill": 0
+    },
+    {
+      "title": "Wedge + capsule",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 48.07,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square · diagonal reference",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.05,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.1,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.15,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.2,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.25,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.3,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.35,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.4,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.45,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.5,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.55,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Rectangle · vertical",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Capsule · diagonal",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.8,
+      "rejected": 1,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · horizontal",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Star · diagonal",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · diagonal",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "X · horizontal",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · horizontal",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 2,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Square + ring · Fill Gaps",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 4,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.5,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Cross · block",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0,
+      "rejected": 0,
+      "parts": 3,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.05,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.15,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.2,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.25,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.3,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.35,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.4,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.45,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.5,
+      "rejected": 1,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.55,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.6,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.65,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.7,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.75,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.8,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.85,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.9,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 0.95,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    },
+    {
+      "title": "Chevron · L cluster",
+      "softness": 1,
+      "rejected": 0,
+      "parts": 1,
+      "missing": 0,
+      "beforeMissing": 0,
+      "holeFill": 0
+    }
+  ]
+}

@@ -1,0 +1,888 @@
+{
+  "date": "2026-09-23",
+  "baselineSettings": {
+    "size": 37,
+    "softness": 1,
+    "roundedness": 2,
+    "radius": 1,
+    "neck": 1
+  },
+  "baselineWeld": [
+    {
+      "shape": "preset-circle",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-circle",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-circle",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-circle",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-circle",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-circle",
+      "layout": "block",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-square",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-square",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-square",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-square",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-square",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-square",
+      "layout": "block",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-rect",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-rect",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-rect",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-rect",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-rect",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-rect",
+      "layout": "block",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": 0.0003
+    },
+    {
+      "shape": "preset-capsule",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0002,
+      "asymmetryPercent": 0.0002
+    },
+    {
+      "shape": "preset-capsule",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule",
+      "layout": "block",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule-v",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0002,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-capsule-v",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0.0004
+    },
+    {
+      "shape": "preset-capsule-v",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule-v",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule-v",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-capsule-v",
+      "layout": "block",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-octagon",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-octagon",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-octagon",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-octagon",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-octagon",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-octagon",
+      "layout": "block",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-diamond",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-diamond",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-diamond",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-diamond",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-diamond",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-diamond",
+      "layout": "block",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-triangle",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0005,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-triangle",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-triangle",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-triangle",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-triangle",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0004,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-triangle",
+      "layout": "block",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0004,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-hexagon",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0008,
+      "asymmetryPercent": 0.0015
+    },
+    {
+      "shape": "preset-hexagon",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0004,
+      "asymmetryPercent": 0.0001
+    },
+    {
+      "shape": "preset-hexagon",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0004,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-hexagon",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0004,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-hexagon",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0005,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-hexagon",
+      "layout": "block",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0004,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-pentagon",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-pentagon",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-pentagon",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-pentagon",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-pentagon",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0004,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-pentagon",
+      "layout": "block",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star5",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star5",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-star5",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star5",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star5",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star5",
+      "layout": "block",
+      "components": 1,
+      "holes": 6,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star4",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0005,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-star4",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0005,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-star4",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0009,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star4",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0009,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star4",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0013,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-star4",
+      "layout": "block",
+      "components": 1,
+      "holes": 4,
+      "removedPercent": 0.0008,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-cross",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-cross",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-cross",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-cross",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-cross",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-cross",
+      "layout": "block",
+      "components": 1,
+      "holes": 4,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-x",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-x",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-x",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-x",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-x",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 3,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-x",
+      "layout": "block",
+      "components": 1,
+      "holes": 8,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-chevron",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-chevron",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 1,
+      "removedPercent": 0.0002,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-chevron",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-chevron",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 0,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-chevron",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0.0003,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-chevron",
+      "layout": "block",
+      "components": 1,
+      "holes": 6,
+      "removedPercent": 0.0002,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-ring",
+      "layout": "horizontal",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-ring",
+      "layout": "vertical",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0,
+      "asymmetryPercent": 0
+    },
+    {
+      "shape": "preset-ring",
+      "layout": "diagonal-right",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0.0002,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-ring",
+      "layout": "diagonal-left",
+      "components": 1,
+      "holes": 2,
+      "removedPercent": 0.0002,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-ring",
+      "layout": "elbow",
+      "components": 1,
+      "holes": 4,
+      "removedPercent": 0.0001,
+      "asymmetryPercent": null
+    },
+    {
+      "shape": "preset-ring",
+      "layout": "block",
+      "components": 1,
+      "holes": 4,
+      "removedPercent": 0,
+      "asymmetryPercent": null
+    }
+  ],
+  "sweep": {
+    "sizes": [
+      24,
+      37,
+      56
+    ],
+    "softness": [
+      0.2,
+      0.55,
+      1
+    ],
+    "roundedness": [
+      0,
+      2,
+      12
+    ],
+    "total": 5184
+  },
+  "methods": {
+    "weld": {
+      "cases": 2592,
+      "errors": 0,
+      "empty": 0,
+      "bodyLossAboveOnePercent": 0,
+      "asymmetryBefore": 357,
+      "asymmetryAfter": 1,
+      "splitRegressions": [],
+      "remainingAsymmetry": [
+        {
+          "shape": "preset-triangle",
+          "layout": "vertical",
+          "method": "weld",
+          "size": 56,
+          "softness": 1,
+          "roundedness": 2,
+          "radius": 1,
+          "neck": 1,
+          "components": 1,
+          "originalComponents": 1,
+          "holes": 0,
+          "addedArea": 236.092,
+          "removedPercent": 0.0002,
+          "asymmetryPercent": 0.8808
+        }
+      ],
+      "extraIslands": [
+        {
+          "shape": "preset-star5",
+          "layout": "vertical",
+          "method": "weld",
+          "size": 56,
+          "softness": 0.2,
+          "roundedness": 0,
+          "radius": 1,
+          "neck": 1,
+          "components": 4,
+          "originalComponents": 2,
+          "holes": 0,
+          "addedArea": 17.161,
+          "removedPercent": 0.0006,
+          "asymmetryPercent": 0
+        },
+        {
+          "shape": "preset-star5",
+          "layout": "elbow",
+          "method": "weld",
+          "size": 56,
+          "softness": 0.2,
+          "roundedness": 0,
+          "radius": 1,
+          "neck": 1,
+          "components": 3,
+          "originalComponents": 2,
+          "holes": 0,
+          "addedArea": 177.278,
+          "removedPercent": 0.0004,
+          "asymmetryPercent": null
+        },
+        {
+          "shape": "preset-star5",
+          "layout": "block",
+          "method": "weld",
+          "size": 56,
+          "softness": 0.2,
+          "roundedness": 0,
+          "radius": 1,
+          "neck": 1,
+          "components": 3,
+          "originalComponents": 2,
+          "holes": 3,
+          "addedArea": 266.488,
+          "removedPercent": 0.0006,
+          "asymmetryPercent": null
+        }
+      ]
+    },
+    "metaball": {
+      "cases": 2592,
+      "errors": 0,
+      "empty": 0,
+      "bodyLossAboveOnePercent": 0,
+      "asymmetryBefore": 0,
+      "asymmetryAfter": 0,
+      "splitRegressions": [],
+      "remainingAsymmetry": [],
+      "extraIslands": []
+    }
+  }
+}

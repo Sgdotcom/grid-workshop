@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-09-23T11:26:30.728Z",
+  "sourceHashes": {
+    "src/lib/softness.ts": "0e8d4b5c251f49cd78f3d4653e808d2a93ca3f894c603e0baa6ebcc648e7bd8f",
+    "src/lib/shapes.ts": "2689836fb87014ada26ea9652d6df2529237a09208e0e3e8e1f0149b129e0005",
+    "src/lib/polyBool.ts": "88483ea81f0a3597bfe16e8d320b159676051cf5e48ec796f7afeb6f57023ded"
+  },
+  "sourcesUnchanged": true,
+  "counts": {
+    "pairs": 3264,
+    "custom": 72,
+    "layouts": 72,
+    "rendered": 6816,
+    "orderChecks": 6816,
+    "rotationChecks": 3336,
+    "counterChecks": 48
+  },
+  "byIssue": {},
+  "timingNote": "Single local run; timings cover initial render including geometry parsing, excluding reversed/rotated runs and visual rendering.",
+  "timings": {
+    "weld": {
+      "medianMs": 1.75,
+      "p95Ms": 3.88,
+      "maxMs": 168.44
+    },
+    "production": {
+      "medianMs": 0.68,
+      "p95Ms": 3.61,
+      "maxMs": 286.12
+    }
+  },
+  "failures": []
+}

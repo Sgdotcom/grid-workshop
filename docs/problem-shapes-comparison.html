@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <title>Curvature & Softness Evolution: Chamfer vs Natural Fillet</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 p-6">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <div class="border-b border-slate-700 pb-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-bold text-white">Problem Shapes Curvature & Softness Evolution</h1>
+          <p class="text-xs text-slate-400 mt-1 max-w-2xl">
+            Comparing <strong>Current Method B</strong> (struts with trapped void), <strong>Straight Chamfer</strong> (ruler-edge flat bridge), <strong>Natural Soft Curve</strong> (true 90° circular rolling-ball fillet & deep liquid waist), and <strong>Close Proximity</strong> (natural fusion when shapes are closer).
+          </p>
+        </div>
+        <span class="text-xs text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-500/30 px-3 py-1.5 rounded-lg">
+          Live Interactive Review
+        </span>
+      </div>
+    </div>
+
+    <div>
+      
+      <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-lg space-y-4 mb-6">
+        <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
+          <div>
+            <h3 class="text-sm font-bold text-white">Cross · Diagonal ↘</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Perpendicular arms meeting across diagonal.</p>
+          </div>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-700 text-slate-300">cross</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- 1. Current Method B -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">1. Current (Method B)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Dual struts trap diamond void</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.5 14.08 L 14.08 14.08 L 14.08 1.5 L 25.92 1.5 L 25.92 14.08 L 38.5 14.08 L 38.5 24.76260939060939 L 38.796 25.104 L 40.889 27.435 L 43.059 29.776 L 45.292 32.111 L 47.573 34.427 L 49.889 36.708 L 52.224 38.941 L 54.565 41.111 L 56.896 43.204 L 57.23739060939061 43.5 L 67.92 43.5 L 67.92 56.08 L 80.5 56.08 L 80.5 67.92 L 67.92 67.92 L 67.92 80.5 L 56.08 80.5 L 56.08 67.92 L 43.5 67.92 L 43.5 57.23739060939061 L 43.204 56.896 L 41.111 54.565 L 38.941 52.224 L 36.708 49.889 L 34.427 47.573 L 32.111 45.292 L 29.776 43.059 L 27.435 40.889 L 25.104 38.796 L 24.76260939060939 38.5 L 14.08 38.5 L 14.08 25.92 L 1.5 25.92 Z M 25.92 25.92 L 26.056 27.023 L 26.622 28.442 L 27.571 30.13 L 28.857 32.04 L 30.432 34.127 L 32.25 36.343 L 34.265 38.642 L 36.429 40.977 L 38.698 43.302 L 41.023 45.571 L 43.358 47.735 L 45.657 49.75 L 47.873 51.568 L 49.96 53.143 L 51.87 54.429 L 53.558 55.378 L 54.977 55.944 L 56.08 56.08 L 55.944 54.977 L 55.378 53.558 L 54.429 51.87 L 53.143 49.96 L 51.568 47.873 L 49.75 45.657 L 47.735 43.358 L 45.571 41.023 L 43.302 38.698 L 40.977 36.429 L 38.642 34.265 L 36.343 32.25 L 34.127 30.432 L 32.04 28.857 L 30.13 27.571 L 28.442 26.622 L 27.023 26.056 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 14.08 1.5 L 25.92 1.5 L 25.92 14.08 L 38.5 14.08 L 38.5 25.92 L 25.92 25.92 L 25.92 38.5 L 14.08 38.5 L 14.08 25.92 L 1.5 25.92 L 1.5 14.08 L 14.08 14.08 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 56.08 43.5 L 67.92 43.5 L 67.92 56.08 L 80.5 56.08 L 80.5 67.92 L 67.92 67.92 L 67.92 80.5 L 56.08 80.5 L 56.08 67.92 L 43.5 67.92 L 43.5 56.08 L 56.08 56.08 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-2 bg-rose-950/50 px-1.5 py-0.5 rounded">Weird Void</span>
+          </div>
+
+          <!-- 2. Flat Chamfer (Too Straight) -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-amber-500/30">
+            <span class="text-[11px] font-bold text-amber-400 mb-1">2. Straight Chamfer</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Flat 45° line (criticized as rigid)</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.5 14.08 L 14.08 14.08 L 14.08 1.5 L 25.92 1.5 L 25.92 14.08 L 38.5 14.08 L 38.5 24.76260939060939 L 38.796 25.104 L 40.889 27.435 L 43.059 29.776 L 45.292 32.111 L 47.573 34.427 L 49.889 36.708 L 52.224 38.941 L 54.565 41.111 L 56.896 43.204 L 57.23739060939061 43.5 L 67.92 43.5 L 67.92 56.08 L 80.5 56.08 L 80.5 67.92 L 67.92 67.92 L 67.92 80.5 L 56.08 80.5 L 56.08 67.92 L 43.5 67.92 L 43.5 57.23739060939061 L 43.204 56.896 L 41.111 54.565 L 38.941 52.224 L 36.708 49.889 L 34.427 47.573 L 32.111 45.292 L 29.776 43.059 L 27.435 40.889 L 25.104 38.796 L 24.76260939060939 38.5 L 14.08 38.5 L 14.08 25.92 L 1.5 25.92 Z" fill="#fbbf24" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 14.08 1.5 L 25.92 1.5 L 25.92 14.08 L 38.5 14.08 L 38.5 25.92 L 25.92 25.92 L 25.92 38.5 L 14.08 38.5 L 14.08 25.92 L 1.5 25.92 L 1.5 14.08 L 14.08 14.08 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 56.08 43.5 L 67.92 43.5 L 67.92 56.08 L 80.5 56.08 L 80.5 67.92 L 67.92 67.92 L 67.92 80.5 L 56.08 80.5 L 56.08 67.92 L 43.5 67.92 L 43.5 56.08 L 56.08 56.08 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-amber-300 mt-2 bg-amber-950/50 px-1.5 py-0.5 rounded">No Softness</span>
+          </div>
+
+          <!-- 3. Soft Rolling Fillet / Deep Waist -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-emerald-950/30 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">3. Natural Soft Curve</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">90° rolling-ball fillet & deep waist</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 14.05 1.50 L 25.95 1.50 L 25.95 14.05 L 38.50 14.05 L 38.50 14.05 L 38.55 16.11 L 38.70 18.25 L 38.96 20.43 L 39.32 22.65 L 39.79 24.86 L 40.36 27.06 L 41.04 29.22 L 41.83 31.31 L 42.74 33.31 L 43.75 35.20 L 44.88 36.96 L 46.12 38.55 L 47.48 39.97 L 48.96 41.18 L 50.55 42.16 L 52.26 42.89 L 54.09 43.34 L 56.05 43.50 L 67.95 43.50 L 67.95 56.05 L 80.50 56.05 L 80.50 67.95 L 67.95 67.95 L 67.95 80.50 L 56.05 80.50 L 56.05 67.95 L 43.50 67.95 L 43.50 67.95 L 41.34 67.81 L 39.34 67.38 L 37.51 66.71 L 35.84 65.79 L 34.32 64.65 L 32.95 63.31 L 31.72 61.80 L 30.63 60.11 L 29.66 58.29 L 28.82 56.34 L 28.11 54.28 L 27.50 52.14 L 27.00 49.92 L 26.61 47.66 L 26.31 45.37 L 26.11 43.07 L 25.99 40.77 L 25.95 38.50 L 14.05 38.50 L 14.05 25.95 L 1.50 25.95 L 1.50 14.05 L 14.05 14.05 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 14.08 1.5 L 25.92 1.5 L 25.92 14.08 L 38.5 14.08 L 38.5 25.92 L 25.92 25.92 L 25.92 38.5 L 14.08 38.5 L 14.08 25.92 L 1.5 25.92 L 1.5 14.08 L 14.08 14.08 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 56.08 43.5 L 67.92 43.5 L 67.92 56.08 L 80.5 56.08 L 80.5 67.92 L 67.92 67.92 L 67.92 80.5 L 56.08 80.5 L 56.08 67.92 L 43.5 67.92 L 43.5 56.08 L 56.08 56.08 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-2 bg-emerald-950/50 px-1.5 py-0.5 rounded font-bold">Liquid Curvature</span>
+          </div>
+
+          <!-- 4. Closer Proximity -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-sky-500/30">
+            <span class="text-[11px] font-bold text-sky-400 mb-1">4. Close Spacing (Size 48-50)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Proximity brings natural fusion</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M -4 12.32 L 12.32 12.32 L 12.32 -4 L 27.68 -4 L 27.68 12.32 L 44 12.32 L 44 26.794931305201175 L 45.174 28.102 L 47.28 30.347 L 49.443 32.557 L 51.653 34.72 L 53.898 36.826 L 55.205068694798825 38 L 69.68 38 L 69.68 54.32 L 86 54.32 L 86 69.68 L 69.68 69.68 L 69.68 86 L 54.32 86 L 54.32 69.68 L 38 69.68 L 38 55.205068694798825 L 36.826 53.898 L 34.72 51.653 L 32.557 49.443 L 30.347 47.28 L 28.102 45.174 L 26.794931305201175 44 L 12.32 44 L 12.32 27.68 L -4 27.68 Z M 27.68 27.68 L 27.71 28.963 L 28.104 30.463 L 28.826 32.144 L 29.84 33.969 L 31.109 35.902 L 32.598 37.906 L 34.269 39.946 L 36.086 41.985 L 38.014 43.986 L 40.015 45.914 L 42.054 47.731 L 44.094 49.402 L 46.098 50.891 L 48.031 52.16 L 49.856 53.174 L 51.537 53.896 L 53.037 54.29 L 54.32 54.32 L 54.29 53.037 L 53.896 51.537 L 53.174 49.856 L 52.16 48.031 L 50.891 46.098 L 49.402 44.094 L 47.731 42.054 L 45.914 40.015 L 43.986 38.014 L 41.985 36.086 L 39.946 34.269 L 37.906 32.598 L 35.902 31.109 L 33.969 29.84 L 32.144 28.826 L 30.463 28.104 L 28.963 27.71 Z" fill="#38bdf8" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 12.32 -4 L 27.68 -4 L 27.68 12.32 L 44 12.32 L 44 27.68 L 27.68 27.68 L 27.68 44 L 12.32 44 L 12.32 27.68 L -4 27.68 L -4 12.32 L 12.32 12.32 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 54.32 38 L 69.68 38 L 69.68 54.32 L 86 54.32 L 86 69.68 L 69.68 69.68 L 69.68 86 L 54.32 86 L 54.32 69.68 L 38 69.68 L 38 54.32 L 54.32 54.32 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-sky-300 mt-2 bg-sky-950/50 px-1.5 py-0.5 rounded">Natural Proximity</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-lg space-y-4 mb-6">
+        <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
+          <div>
+            <h3 class="text-sm font-bold text-white">4-Star · Diagonal ↘</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Pointed arms meeting across diagonal gap.</p>
+          </div>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-700 text-slate-300">star4</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- 1. Current Method B -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">1. Current (Method B)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Dual struts trap diamond void</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.536999999999999 20 L 15.300087499622997 15.300087499623 L 20 1.536999999999999 L 24.699912500377 15.300087499623 L 24.7 15.300117379587938 L 24.7 15.3 L 24.700148762479643 15.300168180008823 L 38.463 20 L 31.104581472018022 22.512802684980063 L 32.557 24.135 L 34.821 26.638 L 36.957 28.969 L 38.995 31.159 L 40.964 33.238 L 42.896 35.235 L 44.82 37.18 L 46.765 39.104 L 48.762 41.036 L 50.841 43.005 L 53.031 45.043 L 55.362 47.179 L 57.865 49.443 L 59.487197315019934 50.895418527981974 L 62 43.537 L 66.69983181999119 57.29985123752036 L 66.7 57.3 L 66.69988262041207 57.3 L 66.69991250037701 57.300087499623 L 80.463 62 L 66.69991250037701 66.69991250037701 L 62 80.463 L 57.300087499623 66.69991250037701 L 57.3 66.69988262041207 L 57.3 66.7 L 57.299851237520365 66.69983181999119 L 43.537 62 L 50.895418527981974 59.487197315019934 L 49.443 57.865 L 47.179 55.362 L 45.043 53.031 L 43.005 50.841 L 41.036 48.762 L 39.104 46.765 L 37.18 44.82 L 35.235 42.896 L 33.238 40.964 L 31.159 38.995 L 28.969 36.957 L 26.638 34.821 L 24.135 32.557 L 22.512802684980063 31.10458147201802 L 20 38.463 L 15.300168180008823 24.700148762479643 L 15.3 24.7 L 15.300117379587938 24.7 L 15.300087499623 24.699912500377 Z M 24.699882620412062 24.7 L 24.7 24.7 L 24.7 24.699882620412062 L 24.699912500377 24.699912500377 Z M 24.7 24.7 L 24.811 25.413 L 25.452 26.584 L 26.56 28.152 L 28.074 30.055 L 29.931 32.231 L 32.071 34.618 L 34.432 37.155 L 36.951 39.781 L 39.567 42.433 L 42.219 45.049 L 44.845 47.568 L 47.382 49.929 L 49.769 52.069 L 51.945 53.926 L 53.848 55.44 L 55.416 56.548 L 56.587 57.189 L 57.3 57.3 L 57.189 56.587 L 56.548 55.416 L 55.44 53.848 L 53.926 51.945 L 52.069 49.769 L 49.929 47.382 L 47.568 44.845 L 45.049 42.219 L 42.433 39.567 L 39.781 36.951 L 37.155 34.432 L 34.618 32.071 L 32.231 29.931 L 30.055 28.074 L 28.152 26.56 L 26.584 25.452 L 25.413 24.811 Z M 57.3 57.3 L 57.3 57.30011737958793 L 57.300087499623 57.300087499623 L 57.30011737958793 57.3 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 20 1.536999999999999 L 24.699912500377 15.300087499623 L 38.463 20 L 24.699912500377 24.699912500377 L 20 38.463 L 15.300087499623 24.699912500377 L 1.536999999999999 20.000000000000004 L 15.300087499622997 15.300087499623 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 43.537 L 66.69991250037701 57.300087499623 L 80.463 62 L 66.69991250037701 66.69991250037701 L 62 80.463 L 57.300087499623 66.69991250037701 L 43.537 62 L 57.300087499623 57.300087499623 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-2 bg-rose-950/50 px-1.5 py-0.5 rounded">Weird Void</span>
+          </div>
+
+          <!-- 2. Flat Chamfer (Too Straight) -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-amber-500/30">
+            <span class="text-[11px] font-bold text-amber-400 mb-1">2. Straight Chamfer</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Flat 45° line (criticized as rigid)</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.536999999999999 20 L 15.300087499622997 15.300087499623 L 20 1.536999999999999 L 24.699912500377 15.300087499623 L 24.7 15.300117379587938 L 24.7 15.3 L 24.700148762479643 15.300168180008823 L 38.463 20 L 31.104581472018022 22.512802684980063 L 32.557 24.135 L 34.821 26.638 L 36.957 28.969 L 38.995 31.159 L 40.964 33.238 L 42.896 35.235 L 44.82 37.18 L 46.765 39.104 L 48.762 41.036 L 50.841 43.005 L 53.031 45.043 L 55.362 47.179 L 57.865 49.443 L 59.487197315019934 50.895418527981974 L 62 43.537 L 66.69983181999119 57.29985123752036 L 66.7 57.3 L 66.69988262041207 57.3 L 66.69991250037701 57.300087499623 L 80.463 62 L 66.69991250037701 66.69991250037701 L 62 80.463 L 57.300087499623 66.69991250037701 L 57.3 66.69988262041207 L 57.3 66.7 L 57.299851237520365 66.69983181999119 L 43.537 62 L 50.895418527981974 59.487197315019934 L 49.443 57.865 L 47.179 55.362 L 45.043 53.031 L 43.005 50.841 L 41.036 48.762 L 39.104 46.765 L 37.18 44.82 L 35.235 42.896 L 33.238 40.964 L 31.159 38.995 L 28.969 36.957 L 26.638 34.821 L 24.135 32.557 L 22.512802684980063 31.10458147201802 L 20 38.463 L 15.300168180008823 24.700148762479643 L 15.3 24.7 L 15.300117379587938 24.7 L 15.300087499623 24.699912500377 Z" fill="#fbbf24" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 20 1.536999999999999 L 24.699912500377 15.300087499623 L 38.463 20 L 24.699912500377 24.699912500377 L 20 38.463 L 15.300087499623 24.699912500377 L 1.536999999999999 20.000000000000004 L 15.300087499622997 15.300087499623 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 43.537 L 66.69991250037701 57.300087499623 L 80.463 62 L 66.69991250037701 66.69991250037701 L 62 80.463 L 57.300087499623 66.69991250037701 L 43.537 62 L 57.300087499623 57.300087499623 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-amber-300 mt-2 bg-amber-950/50 px-1.5 py-0.5 rounded">No Softness</span>
+          </div>
+
+          <!-- 3. Soft Rolling Fillet / Deep Waist -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-emerald-950/30 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">3. Natural Soft Curve</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">90° rolling-ball fillet & deep waist</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 20.00 1.50 L 25.50 14.50 L 38.50 20.00 L 38.50 20.00 L 39.14 21.35 L 39.90 22.73 L 40.76 24.14 L 41.72 25.56 L 42.78 26.99 L 43.93 28.43 L 45.15 29.86 L 46.45 31.28 L 47.81 32.69 L 49.24 34.07 L 50.72 35.42 L 52.24 36.74 L 53.81 38.01 L 55.40 39.24 L 57.03 40.41 L 58.68 41.51 L 60.33 42.54 L 62.00 43.50 L 74.50 49.00 L 80.50 62.00 L 74.50 74.50 L 62.00 80.50 L 49.00 74.50 L 43.50 62.00 L 43.50 62.00 L 42.54 60.33 L 41.51 58.68 L 40.41 57.03 L 39.24 55.40 L 38.01 53.81 L 36.74 52.24 L 35.42 50.72 L 34.07 49.24 L 32.69 47.81 L 31.28 46.45 L 29.86 45.15 L 28.43 43.93 L 26.99 42.78 L 25.56 41.72 L 24.14 40.76 L 22.73 39.90 L 21.35 39.14 L 20.00 38.50 L 14.50 25.50 L 1.50 20.00 L 14.50 14.50 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 20 1.536999999999999 L 24.699912500377 15.300087499623 L 38.463 20 L 24.699912500377 24.699912500377 L 20 38.463 L 15.300087499623 24.699912500377 L 1.536999999999999 20.000000000000004 L 15.300087499622997 15.300087499623 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 43.537 L 66.69991250037701 57.300087499623 L 80.463 62 L 66.69991250037701 66.69991250037701 L 62 80.463 L 57.300087499623 66.69991250037701 L 43.537 62 L 57.300087499623 57.300087499623 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-2 bg-emerald-950/50 px-1.5 py-0.5 rounded font-bold">Liquid Curvature</span>
+          </div>
+
+          <!-- 4. Closer Proximity -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-sky-500/30">
+            <span class="text-[11px] font-bold text-sky-400 mb-1">4. Close Spacing (Size 48-50)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Proximity brings natural fusion</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M -4.949999999999999 20 L 13.64876689138243 13.64876689138243 L 20 -4.949999999999999 L 26.35123310861757 13.64876689138243 L 44.95 20 L 34.756825886814006 23.480834255714385 L 36.258 25.201 L 38.36 27.566 L 40.371 29.783 L 42.322 31.881 L 44.242 33.889 L 46.162 35.838 L 48.111 37.758 L 50.119 39.678 L 52.217 41.629 L 54.434 43.64 L 56.799 45.742 L 58.51916574428562 47.243174113185994 L 62 37.05 L 68.35123310861756 55.64876689138243 L 86.95 62 L 68.35123310861756 68.35123310861756 L 62 86.95 L 55.64876689138243 68.35123310861756 L 37.05 62 L 47.243174113185994 58.519165744285615 L 45.742 56.799 L 43.64 54.434 L 41.629 52.217 L 39.678 50.119 L 37.758 48.111 L 35.838 46.162 L 33.889 44.242 L 31.881 42.322 L 29.783 40.371 L 27.566 38.36 L 25.201 36.258 L 23.48083425571438 34.756825886814006 L 20 44.95 L 13.64876689138243 26.35123310861757 Z M 26.351013777354805 26.351875391928296 L 26.364 27.177 L 26.851 28.382 L 27.759 29.912 L 29.035 31.714 L 30.625 33.735 L 32.476 35.92 L 34.535 38.218 L 36.748 40.575 L 39.063 42.937 L 41.425 45.252 L 43.782 47.465 L 46.08 49.524 L 48.265 51.375 L 50.286 52.965 L 52.088 54.241 L 53.618 55.149 L 54.823 55.636 L 55.6481246080717 55.6489862226452 L 55.64876689138243 55.64876689138243 L 55.6489862226452 55.648124608071704 L 55.636 54.823 L 55.149 53.618 L 54.241 52.088 L 52.965 50.286 L 51.375 48.265 L 49.524 46.08 L 47.465 43.782 L 45.252 41.425 L 42.937 39.063 L 40.575 36.748 L 38.218 34.535 L 35.92 32.476 L 33.735 30.625 L 31.714 29.035 L 29.912 27.759 L 28.382 26.851 L 27.177 26.364 L 26.3518753919283 26.351013777354805 L 26.35123310861757 26.35123310861757 Z" fill="#38bdf8" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 20 -4.949999999999999 L 26.35123310861757 13.64876689138243 L 44.95 20 L 26.35123310861757 26.35123310861757 L 20 44.95 L 13.64876689138243 26.35123310861757 L -4.949999999999999 20.000000000000004 L 13.64876689138243 13.64876689138243 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 37.05 L 68.35123310861756 55.64876689138243 L 86.95 62 L 68.35123310861756 68.35123310861756 L 62 86.95 L 55.64876689138243 68.35123310861756 L 37.05 62 L 55.64876689138243 55.64876689138243 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-sky-300 mt-2 bg-sky-950/50 px-1.5 py-0.5 rounded">Natural Proximity</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-lg space-y-4 mb-6">
+        <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
+          <div>
+            <h3 class="text-sm font-bold text-white">Pentagon · Horizontal ➔</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Slanted flank meeting vertical base flank.</p>
+          </div>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-700 text-slate-300">pentagon</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- 1. Current Method B -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">1. Current (Method B)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Dual struts trap diamond void</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.536999999999999 15.854798234205564 L 20 2.4406435396425827 L 22.000309882857152 3.893953738727726 L 22 3.893 L 22.00153592039263 3.8948445071381803 L 29.518965610416277 9.356576878230516 L 31.033 9.924 L 33.402 10.574 L 35.876 11.038 L 38.42 11.316 L 41 11.409 L 43.58 11.316 L 46.124 11.038 L 48.598 10.574 L 50.967 9.924 L 52.48103438958373 9.356576878230513 L 59.998464079607366 3.894844507138183 L 60 3.893 L 59.99969011714285 3.8939537387277268 L 62 2.4406435396425827 L 80.463 15.85479823420556 L 73.41076153428932 37.55935646035742 L 50.58923846571069 37.55935646035742 L 49.825280676731694 35.20813615011995 L 49.825 35.209 L 49.823733898549165 35.20337565637192 L 48.826457889875776 32.13407570245798 L 48.125 31.034 L 47.19 30.013 L 46.118 29.178 L 44.935 28.529 L 43.669 28.065 L 42.348 27.787 L 41 27.694 L 39.652 27.787 L 38.331 28.065 L 37.065 28.529 L 35.882 29.178 L 34.81 30.013 L 33.875 31.034 L 33.173542110124224 32.13407570245798 L 32.176266101450835 35.20337565637192 L 32.175 35.209 L 32.174719323268306 35.20813615011995 L 31.410761534289307 37.55935646035742 L 8.589238465710693 37.55935646035742 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 20 2.4406435396425827 L 38.463 15.85479823420556 L 31.410761534289307 37.55935646035742 L 8.589238465710693 37.55935646035742 L 1.536999999999999 15.854798234205564 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 2.4406435396425827 L 80.463 15.85479823420556 L 73.41076153428932 37.55935646035742 L 50.58923846571069 37.55935646035742 L 43.537 15.854798234205564 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-2 bg-rose-950/50 px-1.5 py-0.5 rounded">Weird Void</span>
+          </div>
+
+          <!-- 2. Flat Chamfer (Too Straight) -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-amber-500/30">
+            <span class="text-[11px] font-bold text-amber-400 mb-1">2. Straight Chamfer</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Flat 45° line (criticized as rigid)</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.50 16.00 L 20.00 2.50 L 30.00 9.50 L 31.32 9.76 L 32.67 9.99 L 34.03 10.19 L 35.41 10.34 L 36.79 10.47 L 38.19 10.55 L 39.59 10.61 L 41.00 10.63 L 42.41 10.61 L 43.81 10.55 L 45.21 10.47 L 46.59 10.34 L 47.97 10.19 L 49.33 9.99 L 50.68 9.76 L 52.00 9.50 L 62.00 2.50 L 80.50 16.00 L 73.50 37.50 L 52.00 35.00 L 50.68 34.65 L 49.33 34.34 L 47.97 34.09 L 46.59 33.88 L 45.21 33.71 L 43.81 33.59 L 42.41 33.52 L 41.00 33.50 L 39.59 33.52 L 38.19 33.59 L 36.79 33.71 L 35.41 33.88 L 34.03 34.09 L 32.67 34.34 L 31.32 34.65 L 30.00 35.00 L 8.50 37.50 Z" fill="#fbbf24" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 20 2.4406435396425827 L 38.463 15.85479823420556 L 31.410761534289307 37.55935646035742 L 8.589238465710693 37.55935646035742 L 1.536999999999999 15.854798234205564 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 2.4406435396425827 L 80.463 15.85479823420556 L 73.41076153428932 37.55935646035742 L 50.58923846571069 37.55935646035742 L 43.537 15.854798234205564 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-amber-300 mt-2 bg-amber-950/50 px-1.5 py-0.5 rounded">No Softness</span>
+          </div>
+
+          <!-- 3. Soft Rolling Fillet / Deep Waist -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-emerald-950/30 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">3. Natural Soft Curve</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">90° rolling-ball fillet & deep waist</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.50 16.00 L 20.00 2.50 L 30.00 9.50 L 31.17 10.38 L 32.42 11.14 L 33.74 11.79 L 35.13 12.31 L 36.55 12.72 L 38.02 13.02 L 39.50 13.19 L 41.00 13.25 L 42.50 13.19 L 43.98 13.02 L 45.45 12.72 L 46.88 12.31 L 48.26 11.79 L 49.58 11.14 L 50.83 10.38 L 52.00 9.50 L 62.00 2.50 L 80.50 16.00 L 73.50 37.50 L 52.00 35.00 L 50.83 33.51 L 49.58 32.21 L 48.26 31.12 L 46.88 30.22 L 45.45 29.52 L 43.98 29.02 L 42.50 28.72 L 41.00 28.63 L 39.50 28.72 L 38.02 29.02 L 36.55 29.52 L 35.13 30.22 L 33.74 31.12 L 32.42 32.21 L 31.17 33.51 L 30.00 35.00 L 8.50 37.50 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 20 2.4406435396425827 L 38.463 15.85479823420556 L 31.410761534289307 37.55935646035742 L 8.589238465710693 37.55935646035742 L 1.536999999999999 15.854798234205564 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 2.4406435396425827 L 80.463 15.85479823420556 L 73.41076153428932 37.55935646035742 L 50.58923846571069 37.55935646035742 L 43.537 15.854798234205564 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-2 bg-emerald-950/50 px-1.5 py-0.5 rounded font-bold">Liquid Curvature</span>
+          </div>
+
+          <!-- 4. Closer Proximity -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-sky-500/30">
+            <span class="text-[11px] font-bold text-sky-400 mb-1">4. Close Spacing (Size 48-50)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Proximity brings natural fusion</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M -2.9540000000000006 14.8465059127961 L 20 -1.8305512750389532 L 40.638282392012115 13.164038587742057 L 41 13.189 L 41.361717607987885 13.164038587742057 L 62 -1.8305512750389532 L 84.95400000000001 14.8465059127961 L 76.18635217776509 41.83055127503896 L 51.83402312327853 41.83055127503896 L 51.834 41.831 L 51.83362432878657 41.83055127503896 L 47.81364782223491 41.83055127503896 L 45.60538534214046 35.03421819429047 L 45.079 34.573 L 44 33.792 L 42.972 33.234 L 41.977 32.899 L 41 32.787 L 40.023 32.899 L 39.028 33.234 L 38 33.792 L 36.921 34.573 L 36.39461465785954 35.03421819429047 L 34.18635217776509 41.83055127503896 L 30.166375671213437 41.83055127503896 L 30.166 41.831 L 30.16597687672148 41.83055127503896 L 5.813647822234914 41.83055127503896 Z" fill="#38bdf8" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 20 -1.8305512750389532 L 42.954 14.8465059127961 L 34.18635217776509 41.83055127503896 L 5.813647822234914 41.83055127503896 L -2.9540000000000006 14.8465059127961 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 62 -1.8305512750389532 L 84.95400000000001 14.8465059127961 L 76.18635217776509 41.83055127503896 L 47.81364782223491 41.83055127503896 L 39.046 14.8465059127961 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-sky-300 mt-2 bg-sky-950/50 px-1.5 py-0.5 rounded">Natural Proximity</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-lg space-y-4 mb-6">
+        <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
+          <div>
+            <h3 class="text-sm font-bold text-white">X · Horizontal ➔</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Dual flared arms facing across horizontal gap.</p>
+          </div>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-700 text-slate-300">x</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- 1. Current Method B -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-rose-500/30">
+            <span class="text-[11px] font-bold text-rose-400 mb-1">1. Current (Method B)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Dual struts trap diamond void</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.536999999999999 10.488757575757576 L 10.488757575757575 1.5370000000000026 L 20 11.048242424242424 L 24.073066062772497 6.975176361469929 L 24.073 6.975 L 24.073183255662983 6.975059168579444 L 29.511242424242422 1.5370000000000026 L 37.869544111670635 9.89530168742822 L 39.175 9.976 L 41 10.013 L 42.825 9.976 L 44.13045588832937 9.89530168742822 L 52.48875757575758 1.5370000000000061 L 57.92681674433702 6.975059168579444 L 57.927 6.975 L 57.9269339372275 6.975176361469927 L 62 11.048242424242424 L 71.51124242424243 1.5370000000000061 L 80.463 10.488757575757576 L 70.95175757575757 20 L 80.463 29.511242424242422 L 71.51124242424243 38.462999999999994 L 62 28.951757575757576 L 57.9269339372275 33.02482363853007 L 57.927 33.025 L 57.92681674433702 33.02494083142056 L 52.48875757575758 38.462999999999994 L 44.13045588832937 30.104698312571784 L 42.825 30.024 L 41 29.987 L 39.175 30.024 L 37.869544111670635 30.104698312571784 L 29.511242424242422 38.462999999999994 L 24.073183255662983 33.02494083142056 L 24.073 33.025 L 24.073066062772497 33.02482363853007 L 20 28.951757575757576 L 10.488757575757578 38.462999999999994 L 1.5370000000000026 29.511242424242422 L 11.048242424242424 20 Z M 28.951757575757576 20 L 28.951933937227505 20.00017636146993 L 28.952 20 L 28.951933937227505 19.99982363853007 Z M 28.952 20 L 28.95375628626694 20.001998710509366 L 30.005584453227925 21.05382687747035 L 30.547 21.459 L 31.663 22.051 L 32.954 22.553 L 34.389 22.963 L 35.94 23.282 L 37.579 23.51 L 39.275 23.647 L 41 23.692 L 42.725 23.647 L 44.421 23.51 L 46.06 23.282 L 47.611 22.963 L 49.046 22.553 L 50.337 22.051 L 51.453 21.459 L 51.994415546772075 21.05382687747035 L 53.04624371373309 20.001998710509337 L 53.048 20 L 53.04624371373309 19.998001289490663 L 51.994415546772075 18.94617312252965 L 51.453 18.541 L 50.337 17.949 L 49.046 17.447 L 47.611 17.037 L 46.06 16.718 L 44.421 16.49 L 42.725 16.353 L 41 16.308 L 39.275 16.353 L 37.579 16.49 L 35.94 16.718 L 34.389 17.037 L 32.954 17.447 L 31.663 17.949 L 30.547 18.541 L 30.005584453227925 18.94617312252965 L 28.95375628626694 19.998001289490634 Z M 53.048 20 L 53.0480660627725 20.00017636146993 L 53.048242424242424 20 L 53.0480660627725 19.99982363853007 Z" fill="#f43f5e" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 29.511242424242422 1.5370000000000026 L 38.462999999999994 10.488757575757576 L 28.951757575757576 20 L 38.462999999999994 29.511242424242422 L 29.511242424242422 38.462999999999994 L 20 28.951757575757576 L 10.488757575757578 38.462999999999994 L 1.5370000000000026 29.511242424242422 L 11.048242424242424 20 L 1.536999999999999 10.488757575757578 L 10.488757575757575 1.5370000000000026 L 20 11.048242424242424 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 71.51124242424243 1.5370000000000061 L 80.463 10.488757575757578 L 70.95175757575757 20 L 80.463 29.51124242424242 L 71.51124242424243 38.462999999999994 L 62 28.951757575757576 L 52.48875757575758 38.462999999999994 L 43.537000000000006 29.51124242424242 L 53.048242424242424 20 L 43.537000000000006 10.48875757575758 L 52.48875757575758 1.5370000000000061 L 62 11.048242424242426 Z" fill="none" stroke="#f43f5e" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-rose-300 mt-2 bg-rose-950/50 px-1.5 py-0.5 rounded">Weird Void</span>
+          </div>
+
+          <!-- 2. Flat Chamfer (Too Straight) -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-amber-500/30">
+            <span class="text-[11px] font-bold text-amber-400 mb-1">2. Straight Chamfer</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Flat 45° line (criticized as rigid)</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 1.536999999999999 10.488757575757576 L 10.488757575757575 1.5370000000000026 L 20 11.048242424242424 L 24.073066062772497 6.975176361469929 L 24.073 6.975 L 24.073183255662983 6.975059168579444 L 29.511242424242422 1.5370000000000026 L 37.869544111670635 9.89530168742822 L 39.175 9.976 L 41 10.013 L 42.825 9.976 L 44.13045588832937 9.89530168742822 L 52.48875757575758 1.5370000000000061 L 57.92681674433702 6.975059168579444 L 57.927 6.975 L 57.9269339372275 6.975176361469927 L 62 11.048242424242424 L 71.51124242424243 1.5370000000000061 L 80.463 10.488757575757576 L 70.95175757575757 20 L 80.463 29.511242424242422 L 71.51124242424243 38.462999999999994 L 62 28.951757575757576 L 57.9269339372275 33.02482363853007 L 57.927 33.025 L 57.92681674433702 33.02494083142056 L 52.48875757575758 38.462999999999994 L 44.13045588832937 30.104698312571784 L 42.825 30.024 L 41 29.987 L 39.175 30.024 L 37.869544111670635 30.104698312571784 L 29.511242424242422 38.462999999999994 L 24.073183255662983 33.02494083142056 L 24.073 33.025 L 24.073066062772497 33.02482363853007 L 20 28.951757575757576 L 10.488757575757578 38.462999999999994 L 1.5370000000000026 29.511242424242422 L 11.048242424242424 20 Z" fill="#fbbf24" fill-rule="evenodd" opacity="0.85"/>
+                <path d="M 29.511242424242422 1.5370000000000026 L 38.462999999999994 10.488757575757576 L 28.951757575757576 20 L 38.462999999999994 29.511242424242422 L 29.511242424242422 38.462999999999994 L 20 28.951757575757576 L 10.488757575757578 38.462999999999994 L 1.5370000000000026 29.511242424242422 L 11.048242424242424 20 L 1.536999999999999 10.488757575757578 L 10.488757575757575 1.5370000000000026 L 20 11.048242424242424 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 71.51124242424243 1.5370000000000061 L 80.463 10.488757575757578 L 70.95175757575757 20 L 80.463 29.51124242424242 L 71.51124242424243 38.462999999999994 L 62 28.951757575757576 L 52.48875757575758 38.462999999999994 L 43.537000000000006 29.51124242424242 L 53.048242424242424 20 L 43.537000000000006 10.48875757575758 L 52.48875757575758 1.5370000000000061 L 62 11.048242424242426 Z" fill="none" stroke="#fbbf24" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-amber-300 mt-2 bg-amber-950/50 px-1.5 py-0.5 rounded">No Softness</span>
+          </div>
+
+          <!-- 3. Soft Rolling Fillet / Deep Waist -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-emerald-500/40 shadow-emerald-950/30 shadow-md">
+            <span class="text-[11px] font-bold text-emerald-400 mb-1">3. Natural Soft Curve</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">90° rolling-ball fillet & deep waist</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M 7.00 7.00 L 14.00 20.00 L 7.00 33.00 L 14.00 33.00 L 20.00 26.00 L 26.00 33.00 L 33.00 33.00 L 33.00 33.00 L 33.79 31.42 L 34.67 30.05 L 35.62 28.89 L 36.63 27.94 L 37.68 27.20 L 38.77 26.67 L 39.88 26.36 L 41.00 26.25 L 42.12 26.36 L 43.23 26.67 L 44.32 27.20 L 45.38 27.94 L 46.38 28.89 L 47.33 30.05 L 48.21 31.42 L 49.00 33.00 L 56.00 33.00 L 62.00 26.00 L 68.00 33.00 L 75.00 33.00 L 68.00 20.00 L 75.00 7.00 L 68.00 7.00 L 62.00 14.00 L 56.00 7.00 L 49.00 7.00 L 49.00 7.00 L 48.21 8.58 L 47.33 9.95 L 46.38 11.11 L 45.38 12.06 L 44.32 12.80 L 43.23 13.33 L 42.12 13.64 L 41.00 13.75 L 39.88 13.64 L 38.77 13.33 L 37.68 12.80 L 36.63 12.06 L 35.62 11.11 L 34.67 9.95 L 33.79 8.58 L 33.00 7.00 L 26.00 7.00 L 20.00 14.00 L 14.00 7.00 Z" fill="#10b981" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 29.511242424242422 1.5370000000000026 L 38.462999999999994 10.488757575757576 L 28.951757575757576 20 L 38.462999999999994 29.511242424242422 L 29.511242424242422 38.462999999999994 L 20 28.951757575757576 L 10.488757575757578 38.462999999999994 L 1.5370000000000026 29.511242424242422 L 11.048242424242424 20 L 1.536999999999999 10.488757575757578 L 10.488757575757575 1.5370000000000026 L 20 11.048242424242424 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 71.51124242424243 1.5370000000000061 L 80.463 10.488757575757578 L 70.95175757575757 20 L 80.463 29.51124242424242 L 71.51124242424243 38.462999999999994 L 62 28.951757575757576 L 52.48875757575758 38.462999999999994 L 43.537000000000006 29.51124242424242 L 53.048242424242424 20 L 43.537000000000006 10.48875757575758 L 52.48875757575758 1.5370000000000061 L 62 11.048242424242426 Z" fill="none" stroke="#34d399" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-emerald-300 mt-2 bg-emerald-950/50 px-1.5 py-0.5 rounded font-bold">Liquid Curvature</span>
+          </div>
+
+          <!-- 4. Closer Proximity -->
+          <div class="bg-slate-950/60 rounded-xl p-3 flex flex-col items-center border border-sky-500/30">
+            <span class="text-[11px] font-bold text-sky-400 mb-1">4. Close Spacing (Size 48-50)</span>
+            <span class="text-[10px] text-slate-400 text-center mb-2">Proximity brings natural fusion</span>
+            <div class="w-full aspect-square max-w-[130px]">
+              <svg viewBox="-5 -5 94 94" class="w-full h-full">
+                <path d="M -3.9519999999999946 7.661090909090914 L 7.661090909090909 -3.951999999999991 L 20.000000000000004 8.386909090909095 L 32.338909090909084 -3.9519999999999946 L 41 4.709090909090915 L 49.661090909090916 -3.951999999999991 L 62.00000000000001 8.386909090909095 L 74.33890909090908 -3.9519999999999946 L 85.952 7.661090909090916 L 73.61309090909091 20.000000000000007 L 85.952 32.338909090909084 L 74.33890909090908 43.95199999999999 L 62.00000000000001 31.61309090909091 L 49.66109090909093 43.95199999999999 L 41 35.29090909090908 L 32.338909090909084 43.95199999999999 L 20.000000000000004 31.613090909090904 L 7.661090909090916 43.95199999999999 L -3.951999999999991 32.338909090909084 L 8.386909090909093 20 Z M 31.613090909090907 20 L 35.87393087903831 24.26083996994741 L 36.152 24.416 L 37.31 24.892 L 38.514 25.232 L 39.749 25.436 L 41 25.503 L 42.251 25.436 L 43.486 25.232 L 44.69 24.892 L 45.848 24.416 L 46.126069120961674 24.26083996994741 L 50.386909090909086 20 L 46.126069120961674 15.73916003005259 L 45.848 15.584 L 44.69 15.108 L 43.486 14.768 L 42.251 14.564 L 41 14.497 L 39.749 14.564 L 38.514 14.768 L 37.31 15.108 L 36.152 15.584 L 35.87393087903831 15.739160030052595 Z" fill="#38bdf8" fill-rule="evenodd" opacity="0.9"/>
+                <path d="M 32.338909090909084 -3.9519999999999946 L 43.952 7.661090909090909 L 31.613090909090907 20 L 43.952 32.338909090909084 L 32.33890909090909 43.95199999999999 L 20.000000000000004 31.613090909090904 L 7.661090909090916 43.952 L -3.951999999999991 32.33890909090909 L 8.386909090909093 20 L -3.9519999999999946 7.661090909090914 L 7.661090909090909 -3.951999999999991 L 20 8.386909090909095 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/><path d="M 74.33890909090908 -3.9519999999999946 L 85.952 7.661090909090916 L 73.61309090909091 20.000000000000007 L 85.95199999999998 32.338909090909084 L 74.33890909090908 43.95199999999999 L 62.00000000000001 31.61309090909091 L 49.66109090909093 43.952 L 38.048 32.33890909090909 L 50.386909090909086 20 L 38.048 7.661090909090914 L 49.661090909090916 -3.951999999999991 L 62 8.386909090909095 Z" fill="none" stroke="#38bdf8" stroke-width="0.75" stroke-dasharray="1.5 1.5" opacity="0.6"/>
+              </svg>
+            </div>
+            <span class="text-[9px] font-mono text-sky-300 mt-2 bg-sky-950/50 px-1.5 py-0.5 rounded">Natural Proximity</span>
+          </div>
+        </div>
+      </div>
+    
+    </div>
+  </div>
+</body>
+</html>
