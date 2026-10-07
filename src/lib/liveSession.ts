@@ -182,6 +182,7 @@ export async function clearLiveRoom(config = getLiveConfig()): Promise<LiveRoomS
 /**
  * Push only this desk's active letter + full contribution list.
  * Avoids last-writer stomping the other desk's drafts for letters they own.
+ * Empty active letter sends a clear (empty draftSvg + empty liveCue) so wall/peers drop it.
  */
 export function buildLivePayload(
   session: FestivalSession,
@@ -195,28 +196,37 @@ export function buildLivePayload(
   const hasInk = !!(activeDraft && activeDraft.filled.length)
   const station = opts?.station ?? getLiveConfig().station
   const draftSvgs: Record<string, string> = {}
-  const draftUpdatedAt: Record<string, string> = {}
+  const draftUpdatedAt: Record<string, string> = { [ch]: now }
   if (hasInk && session.liveSvg) {
     draftSvgs[ch] = session.liveSvg
-    draftUpdatedAt[ch] = now
-  } else if (hasInk) {
-    draftUpdatedAt[ch] = now
+  } else if (!hasInk) {
+    // Tombstone: Worker deletes this char's draft preview.
+    draftSvgs[ch] = ''
   }
   return {
     updatedAt: now,
     contributions: session.contributions,
-    drafts: hasInk && activeDraft ? [activeDraft] : [],
+    drafts: hasInk && activeDraft
+      ? [activeDraft]
+      : [
+          {
+            char: ch,
+            filled: [],
+            brokenJoins: [],
+            grid: session.active.grid,
+            softness: session.active.softness,
+            cornerRadius: session.active.cornerRadius,
+            holeMode: session.active.holeMode,
+          },
+        ],
     draftSvgs,
     draftUpdatedAt,
-    liveCue:
-      hasInk && session.liveSvg
-        ? {
-            char: ch,
-            liveSvg: session.liveSvg,
-            updatedAt: now,
-            ...(station ? { station } : {}),
-          }
-        : undefined,
+    liveCue: {
+      char: ch,
+      liveSvg: hasInk && session.liveSvg ? session.liveSvg : '',
+      updatedAt: now,
+      ...(station ? { station } : {}),
+    },
   }
 }
 

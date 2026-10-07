@@ -118,7 +118,14 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
       const incomingAt = typeof incomingTimes[ch] === 'string' ? incomingTimes[ch] : incoming.updatedAt
       const storedAt = next.draftUpdatedAt[ch] ?? ''
       if (!storedAt || !incomingAt || incomingAt >= storedAt) {
-        byChar.set(ch, draft)
+        const filled = asRecord(draft)?.filled
+        const empty = Array.isArray(filled) && filled.length === 0
+        if (empty) {
+          byChar.delete(ch)
+          delete next.draftSvgs[ch]
+        } else {
+          byChar.set(ch, draft)
+        }
         if (incomingAt) next.draftUpdatedAt[ch] = incomingAt
       }
     }
@@ -131,7 +138,11 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
       const incomingAt = incoming.draftUpdatedAt?.[ch] ?? incoming.updatedAt ?? next.updatedAt
       const storedAt = next.draftUpdatedAt[ch] ?? ''
       if (!storedAt || incomingAt >= storedAt) {
-        next.draftSvgs[ch] = svg
+        if (svg === '') {
+          delete next.draftSvgs[ch]
+        } else {
+          next.draftSvgs[ch] = svg
+        }
         next.draftUpdatedAt[ch] = incomingAt
       }
     }
@@ -145,11 +156,15 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
       typeof cue.updatedAt === 'string'
     ) {
       if (!next.liveCue || cue.updatedAt >= next.liveCue.updatedAt) {
-        next.liveCue = {
-          char: cue.char,
-          liveSvg: cue.liveSvg,
-          updatedAt: cue.updatedAt,
-          ...(typeof cue.station === 'string' ? { station: cue.station } : {}),
+        if (!cue.liveSvg) {
+          next.liveCue = undefined
+        } else {
+          next.liveCue = {
+            char: cue.char,
+            liveSvg: cue.liveSvg,
+            updatedAt: cue.updatedAt,
+            ...(typeof cue.station === 'string' ? { station: cue.station } : {}),
+          }
         }
       }
     }

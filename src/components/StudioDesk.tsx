@@ -707,6 +707,7 @@ export function StudioDesk() {
               />
               <ToolBtn
                 label="Clear letter"
+                testId="studio-clear"
                 disabled={!filled.size}
                 onClick={clearCanvas}
                 icon={<Trash2 className="h-4 w-4" />}
@@ -760,6 +761,7 @@ export function StudioDesk() {
             <div className="studio-tool-grid">
               <ToolBtn
                 label={stampMode === 'cutout' ? 'Cut holes' : 'Solid ink'}
+                testId="studio-stamp-mode"
                 active={stampMode === 'cutout'}
                 onClick={() => setStampMode((m) => (m === 'ink' ? 'cutout' : 'ink'))}
                 icon={<Scissors className="h-4 w-4" />}
@@ -1102,6 +1104,7 @@ function ToolBtn({
   disabled,
   active,
   caption,
+  testId,
 }: {
   label: string
   icon: ReactNode
@@ -1109,6 +1112,7 @@ function ToolBtn({
   disabled?: boolean
   active?: boolean
   caption?: string
+  testId?: string
 }) {
   return (
     <button
@@ -1118,6 +1122,7 @@ function ToolBtn({
       aria-pressed={active}
       disabled={disabled}
       onClick={onClick}
+      data-testid={testId}
       className={cn(
         'studio-tool',
         caption && 'has-caption',
