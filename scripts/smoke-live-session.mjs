@@ -141,7 +141,8 @@ async function main() {
   const wall = await req('GET', `/rooms/${room}`)
   assert(wall.status === 200, 'wall GET failed')
   assert(wall.json.contributions.length === 2, 'wall should see both publishes')
-  assert(wall.json.draftSvgs.a && wall.json.draftSvgs.b, 'wall should see both draft SVGs')
+  assert(!wall.json.draftSvgs?.a, 'wall should not see cleared draft a')
+  assert(wall.json.draftSvgs?.b, 'wall should still see draft b')
   assert(wall.json.liveCues?.b?.liveSvg, 'wall should still see desk B live')
   console.log('[ok] wall GET sees full room')
 
