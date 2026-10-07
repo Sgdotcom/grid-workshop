@@ -105,7 +105,7 @@ Same-preset circle/ring: always dedicated metaball / ring join.
 | `/?view=wall` | Specimen + alphabet ribbon |
 | `/?view=projection` | Classic projection |
 
-`localStorage` is the cache. With `VITE_LIVE_SESSION_URL`, desks **PUT** (debounced) and wall **GET**-polls a Cloudflare Durable Object room (`workers/live-session/`). Alphabet tiles: published SVG → else draft/live SVG. Facilitator Options: room, write token, station, copy wall link, clear room, sync status.
+`localStorage` is the cache. With `VITE_LIVE_SESSION_URL`, desks and wall **Join session** (same room name) and sync via Cloudflare Durable Object WebSockets (`workers/live-session/`), with a slow GET fallback. Alphabet tiles: published SVG → else draft/live SVG. No write token for the festival install. Toolbar: wall + Computer A/B.
 
 Studio details worth knowing: resizable tools rail (`gridz-studio-tools-width`), grouped tools (Draw / Show / Mode / Look / Shape), melt-off chip under Softness.
 

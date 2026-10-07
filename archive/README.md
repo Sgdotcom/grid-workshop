@@ -16,3 +16,5 @@ Code kept for reference, **not imported** by the running shape-grid app.
 | `docs/ios-implementation.md` | Early multi-mode iOS plan (dot / vertical / circle / dual). Product is shape-grid only now. |
 
 Do not re-add these to `src/` unless the product explicitly brings them back.
+
+Related docs (not hot-path code): [`docs/archive/live-session/`](../docs/archive/live-session/) — superseded write-token facilitator notes.

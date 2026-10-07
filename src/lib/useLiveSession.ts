@@ -16,7 +16,7 @@ export function useLiveSession(options: {
   getSession: () => FestivalSession | null
   painting?: () => boolean
   onRemoteSession: (session: FestivalSession, room: LiveRoomState) => void
-  /** Wall/projection: poll only (still respects join + room). */
+  /** Wall/projection: apply full remote active/live cue (desks keep local canvas). */
   wallMode?: boolean
 }) {
   const getSessionRef = useRef(options.getSession)
@@ -34,7 +34,6 @@ export function useLiveSession(options: {
       : { state: 'off', message: 'Shared session not configured' },
   )
   const [room, setRoom] = useState(initial.room)
-  const [station, setStation] = useState(initial.station)
   const [joined, setJoined] = useState(() => isLiveJoined())
   const [draftSvgs, setDraftSvgs] = useState<Record<string, string>>({})
   const controllerRef = useRef<ReturnType<typeof createLiveSyncController> | null>(null)
@@ -57,7 +56,6 @@ export function useLiveSession(options: {
       getSession: () => getSessionRef.current(),
       painting: () => paintingRef.current?.() ?? false,
       keepLocalActive: !wallMode,
-      selfStation: () => getLiveConfig().station,
       onRoom: (liveRoom, session) => {
         setDraftSvgs(liveRoom.draftSvgs ?? {})
         onRemoteRef.current(session, liveRoom)
@@ -85,7 +83,6 @@ export function useLiveSession(options: {
     persistLivePrefs({ room: clean, joined: true })
     setRoom(clean)
     setJoined(true)
-    // Keep URL shareable without a reload dance when possible.
     try {
       const url = new URL(window.location.href)
       url.searchParams.set('room', clean)
@@ -94,22 +91,6 @@ export function useLiveSession(options: {
       /* ignore */
     }
     setStatus({ state: 'syncing', message: `Joining ${clean}…` })
-  }, [])
-
-  const savePrefs = useCallback((next: { room?: string; station?: string; joined?: boolean }) => {
-    if (next.room !== undefined) {
-      const clean = next.room.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || DEFAULT_LIVE_ROOM
-      setRoom(clean)
-      persistLivePrefs({ room: clean })
-    }
-    if (next.station !== undefined) {
-      setStation(next.station)
-      persistLivePrefs({ station: next.station })
-    }
-    if (next.joined !== undefined) {
-      setJoined(next.joined)
-      persistLivePrefs({ joined: next.joined })
-    }
   }, [])
 
   const clearRoom = useCallback(async () => {
@@ -141,14 +122,11 @@ export function useLiveSession(options: {
     enabled: getLiveConfig().enabled,
     status,
     room,
-    station,
     joined,
     draftSvgs,
     pushSession,
     joinSession,
-    savePrefs,
     clearRoom,
     copyWallLink,
-    refresh: () => void controllerRef.current?.pull(),
   }
 }

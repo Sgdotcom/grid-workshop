@@ -42,11 +42,13 @@ Point the Vite app at that URL with `VITE_LIVE_SESSION_URL`.
 
 ## Smoke
 
-From repo root (Worker running on 8787):
+From repo root (Worker URL set; festival Worker is open/no token):
 
 ```bash
-LIVE_WRITE_TOKEN=test-secret npm run smoke:live
+npm run smoke:live -- https://grid-workshop-live.sgdotcom.workers.dev
+npm run smoke:live-ws -- https://grid-workshop-live.sgdotcom.workers.dev
 npm run smoke:live-client
-# also start Vite with VITE_LIVE_SESSION_URL=http://127.0.0.1:8787
-LIVE_WRITE_TOKEN=test-secret npm run smoke:live-e2e
+# Vite or Pages + VITE_LIVE_SESSION_URL=…
+npm run smoke:live-e2e -- http://127.0.0.1:43127/
+npm run smoke:live-ops -- http://127.0.0.1:43127/
 ```

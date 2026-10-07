@@ -1,10 +1,8 @@
 /**
  * Cross-desk live room smoke (Playwright).
- * Requires:
- *   - Worker on http://127.0.0.1:8787 with LIVE_WRITE_TOKEN=test-secret (.dev.vars)
- *   - Vite with VITE_LIVE_SESSION_URL=http://127.0.0.1:8787
+ * Requires VITE_LIVE_SESSION_URL (Worker) and a running site (Vite or Pages).
  *
- * Usage: node scripts/smoke-live-e2e.mjs [viteBase]
+ * Usage: node scripts/smoke-live-e2e.mjs [siteBase]
  */
 import assert from 'node:assert/strict'
 import { chromium } from 'playwright-core'

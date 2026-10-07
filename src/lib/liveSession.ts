@@ -362,8 +362,6 @@ function parseRoomMessage(raw: string): LiveRoomState | null {
 export function createLiveSyncController(options: {
   onStatus?: (status: LiveSyncStatus) => void
   onRoom?: (room: LiveRoomState, session: FestivalSession) => void
-  /** When true, skip applying remote liveCue that matches our station (avoid echo). */
-  selfStation?: () => string
   getSession?: () => FestivalSession | null
   painting?: () => boolean
   /** Desk mode: merge room into storage but keep this machine's active canvas letter. */
