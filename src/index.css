@@ -908,6 +908,97 @@ body.install-view {
   background: #fff;
 }
 
+.live-session-join {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid #d0d0d0;
+  background: #fafafa;
+}
+.live-session-join.is-compact {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  border-color: #0000ee33;
+  background: #fff;
+}
+.live-session-join-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.live-session-join-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+.live-session-join-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 140px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.live-session-join-row input {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #c8c8c8;
+  border-radius: 3px;
+  font: inherit;
+  font-weight: 500;
+  background: #fff;
+}
+.live-session-join.is-compact .live-session-join-row {
+  flex: 1 1 auto;
+  margin: 0;
+}
+.live-session-join.is-compact .live-session-join-row input {
+  min-height: 34px;
+}
+.live-session-join-row button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.live-session-join.is-joined .live-session-join-row button {
+  background: #0000ee;
+  border-color: #0000ee;
+}
+.live-session-join-status {
+  margin: 0;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.35;
+}
+.live-session-join.is-compact .live-session-join-status {
+  flex: 1 1 100%;
+  margin: 0;
+}
+.live-session-join.is-off p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+.cinematic-live-join,
+.festival-live-join {
+  width: 100%;
+}
+
 /* Narrow: stack canvas, then tools, then alphabet strip. */
 @media (max-width: 900px) {
   .studio-body {

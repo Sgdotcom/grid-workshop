@@ -62,7 +62,7 @@ import { cn } from '@/lib/utils'
 import { downloadBlob } from '@/lib/utils'
 import { prefBoolean, prefNumber, readUiPrefs, writeUiPrefs } from '@/lib/uiPrefs'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, parseSession, readSession, type Contribution, type FestivalSession } from '@/lib/festival'
-import { getLiveConfig } from '@/lib/liveSession'
+import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import { useLiveSession } from '@/lib/useLiveSession'
 
 type Screen = 'shape' | 'paint' | 'export'
@@ -247,10 +247,6 @@ export default function App() {
   const letterRef = useRef('a')
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
-  const [liveRoomInput, setLiveRoomInput] = useState(() => getLiveConfig().room)
-  const [liveTokenInput, setLiveTokenInput] = useState(() => getLiveConfig().token)
-  const [liveStationInput, setLiveStationInput] = useState(() => getLiveConfig().station)
-
   const displayGuideLetter = guideUpper ? guideLetter.toUpperCase() : guideLetter
   filledRef.current = filled
   brokenRef.current = brokenJoins
@@ -1638,48 +1634,14 @@ export default function App() {
                   <p className={cn('mb-2 text-[11px] leading-relaxed', saveFailed ? 'font-bold text-[#c00000]' : 'text-ink-muted')}>
                     {saveStatus}
                   </p>
-                  <p className="mb-2 text-[11px] leading-relaxed text-ink-muted" data-testid="live-sync-status">
-                    {live.status.message}
-                    {live.status.lastPullAt
-                      ? ` · pulled ${new Date(live.status.lastPullAt).toLocaleTimeString()}`
-                      : ''}
-                    {live.status.lastPushAt
-                      ? ` · pushed ${new Date(live.status.lastPushAt).toLocaleTimeString()}`
-                      : ''}
-                  </p>
-                  <label className="mb-2 block text-[11px] font-semibold">
-                    Room
-                    <input
-                      className="mt-1 w-full rounded-[3px] border border-line px-2 py-2 text-sm"
-                      value={liveRoomInput}
-                      onChange={(e) => setLiveRoomInput(e.target.value)}
-                      onBlur={() => live.savePrefs({ room: liveRoomInput.trim() || 'lettermans' })}
-                      spellCheck={false}
-                    />
-                  </label>
-                  <label className="mb-2 block text-[11px] font-semibold">
-                    Write token
-                    <input
-                      type="password"
-                      className="mt-1 w-full rounded-[3px] border border-line px-2 py-2 text-sm"
-                      value={liveTokenInput}
-                      onChange={(e) => setLiveTokenInput(e.target.value)}
-                      onBlur={() => live.savePrefs({ token: liveTokenInput })}
-                      spellCheck={false}
-                      autoComplete="off"
-                    />
-                  </label>
-                  <label className="mb-3 block text-[11px] font-semibold">
-                    Station
-                    <input
-                      className="mt-1 w-full rounded-[3px] border border-line px-2 py-2 text-sm"
-                      value={liveStationInput}
-                      onChange={(e) => setLiveStationInput(e.target.value)}
-                      onBlur={() => live.savePrefs({ station: liveStationInput.trim().slice(0, 8) })}
-                      placeholder="a / b"
-                      spellCheck={false}
-                    />
-                  </label>
+                  <LiveSessionJoin
+                    className="mb-3"
+                    room={live.room}
+                    enabled={live.enabled}
+                    joined={live.joined}
+                    statusMessage={live.status.message}
+                    onJoin={live.joinSession}
+                  />
                   <div className="grid grid-cols-2 gap-2">
                     <a className="options-link" href="?view=wall" target="_blank" rel="noreferrer">Cinematic wall ↗</a>
                     <a className="options-link" href="?view=projection" target="_blank" rel="noreferrer">Wall projection ↗</a>

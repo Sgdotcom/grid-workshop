@@ -22,18 +22,18 @@ Additive layouts for the public GitHub site and the installation desk/wall setup
 
 When `VITE_LIVE_SESSION_URL` points at the Cloudflare Worker (`workers/live-session/`), both desks and the wall share one **room**:
 
-- **Contributions** (published letters) merge by id.
-- **Drafts** + **draft SVGs** so the wall can show in-progress letters.
-- **Live cue** (active char + SVG) so “drawing now” follows the desk that last pushed.
-- Refresh hydrates from `GET /rooms/:room` into `localStorage` + UI.
+- Open the site on each computer → **Join session** (same room name, default `lettermans`).
+- No write token for the festival install — anyone in the room can sync.
+- Wall page has the same room / Join control.
+- Published letters, drafts, and “drawing now” update across desks + wall.
+- Refresh reloads from the shared room.
 
 | Query | Meaning |
 | --- | --- |
 | `?room=lettermans` | Room id (default `lettermans`) |
-| `?token=…` | Write token for PUT/DELETE (also stored from Facilitator Options) |
-| `?station=a` | Desk label on the live cue |
+| `?station=a` | Optional desk label |
 
-Deploy Worker: see [`workers/live-session/README.md`](../workers/live-session/README.md). Set GitHub Pages build env `VITE_LIVE_SESSION_URL` (repo variable or secret), then redeploy Pages. Without that URL, the app stays localStorage-only.
+Deploy Worker: see [`workers/live-session/README.md`](../workers/live-session/README.md). Set GitHub Pages build env `VITE_LIVE_SESSION_URL`, then redeploy Pages.
 
 Both views also use **localStorage** as a cache / offline fallback. Same-browser two-window still works without the Worker.
 

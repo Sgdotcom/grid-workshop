@@ -6,9 +6,11 @@ Cloudflare Worker + Durable Object that stores one shared festival room JSON per
 
 | Method | Path | Auth |
 |--------|------|------|
-| `GET` | `/rooms/:room` | Public (wall / hydrate) |
-| `PUT` | `/rooms/:room` | `Authorization: Bearer <token>` or `?token=` when `LIVE_WRITE_TOKEN` is set |
+| `GET` | `/rooms/:room` | Public |
+| `PUT` | `/rooms/:room` | Public unless `LIVE_WRITE_TOKEN` is set |
 | `DELETE` | `/rooms/:room` | Same as PUT — clears the room |
+
+Festival install runs **without** a write token so desks/wall only need the same room name + **Join session**.
 
 ## Deploy
 
@@ -16,16 +18,16 @@ Cloudflare Worker + Durable Object that stores one shared festival room JSON per
 cd workers/live-session
 npm install
 npx wrangler login
-npx wrangler secret put LIVE_WRITE_TOKEN   # shared write token for desks
 npm run deploy
+# optional lock: npx wrangler secret put LIVE_WRITE_TOKEN
 ```
 
-Copy the Worker URL (e.g. `https://grid-workshop-live.<account>.workers.dev`) into the app:
+Copy the Worker URL into the app:
 
 - Local: `.env.local` → `VITE_LIVE_SESSION_URL=https://…`
-- GitHub Pages: repository variable / Actions env `VITE_LIVE_SESSION_URL` (see root workflow)
+- GitHub Pages: repository variable `VITE_LIVE_SESSION_URL`
 
-Facilitator Options (studio or workshop gear): set **Room** (default `lettermans`), **Write token**, **Station** (`a` / `b`), copy wall link, clear room.
+In the app: **Join session** (room default `lettermans`) on desks and wall.
 
 ## Local Worker
 

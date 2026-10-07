@@ -11,7 +11,7 @@ import { chromium } from 'playwright-core'
 
 const viteBase = (process.argv[2] || 'http://127.0.0.1:43127/').replace(/\/?$/, '/')
 const worker = process.env.VITE_LIVE_SESSION_URL || 'http://127.0.0.1:8787'
-const token = process.env.LIVE_WRITE_TOKEN || 'test-secret'
+const token = process.env.LIVE_WRITE_TOKEN || ''
 const room = `e2e-${Date.now().toString(36)}`
 
 const browser = await chromium.launch({
@@ -35,7 +35,7 @@ async function openDesk(station) {
   const page = await context.newPage()
   const errors = []
   page.on('pageerror', (error) => errors.push(error.message))
-  const url = `${viteBase}?view=studio&station=${station}&room=${room}&token=${encodeURIComponent(token)}`
+  const url = `${viteBase}?view=studio&station=${station}&room=${room}${token ? `&token=${encodeURIComponent(token)}` : ''}`
   await page.goto(url)
   await page.getByTestId('studio-desk').waitFor({ timeout: 20000 })
   return { context, page, errors }

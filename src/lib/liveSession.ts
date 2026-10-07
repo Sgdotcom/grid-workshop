@@ -15,6 +15,7 @@ import { PRESET_SHAPES, type GlyphDraft } from '@/lib/types'
 export const LIVE_ROOM_KEY = 'gridz-live-room'
 export const LIVE_TOKEN_KEY = 'gridz-live-token'
 export const LIVE_STATION_KEY = 'gridz-live-station'
+export const LIVE_JOINED_KEY = 'gridz-live-joined'
 export const DEFAULT_LIVE_ROOM = 'lettermans'
 
 export interface LiveCue {
@@ -58,6 +59,11 @@ export function getLiveConfig(): LiveSessionConfig {
     typeof import.meta !== 'undefined' && import.meta.env?.VITE_LIVE_SESSION_URL
       ? String(import.meta.env.VITE_LIVE_SESSION_URL).trim()
       : ''
+  // Optional baked token for locked rooms; festival install leaves Worker open (no secret).
+  const envToken =
+    typeof import.meta !== 'undefined' && import.meta.env?.VITE_LIVE_WRITE_TOKEN
+      ? String(import.meta.env.VITE_LIVE_WRITE_TOKEN).trim()
+      : ''
   let storedRoom = DEFAULT_LIVE_ROOM
   let storedToken = ''
   let storedStation = ''
@@ -69,7 +75,7 @@ export function getLiveConfig(): LiveSessionConfig {
     /* ignore */
   }
   const room = (params?.get('room') || storedRoom || DEFAULT_LIVE_ROOM).slice(0, 64)
-  const token = params?.get('token') || storedToken
+  const token = params?.get('token') || storedToken || envToken
   const station = (params?.get('station') || storedStation || '').slice(0, 8)
   return {
     enabled: !!envUrl,
@@ -80,10 +86,30 @@ export function getLiveConfig(): LiveSessionConfig {
   }
 }
 
-export function persistLivePrefs(partial: { room?: string; token?: string; station?: string }) {
+/** Festival default: auto-join when live URL is configured (or ?room= is present). */
+export function isLiveJoined(): boolean {
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  if (params?.has('room')) return true
+  try {
+    const raw = localStorage.getItem(LIVE_JOINED_KEY)
+    if (raw === '0' || raw === 'false') return false
+    if (raw === '1' || raw === 'true') return true
+  } catch {
+    /* ignore */
+  }
+  return getLiveConfig().enabled
+}
+
+export function persistLivePrefs(partial: {
+  room?: string
+  token?: string
+  station?: string
+  joined?: boolean
+}) {
   try {
     if (partial.room !== undefined) {
-      localStorage.setItem(LIVE_ROOM_KEY, partial.room.slice(0, 64) || DEFAULT_LIVE_ROOM)
+      const clean = partial.room.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || DEFAULT_LIVE_ROOM
+      localStorage.setItem(LIVE_ROOM_KEY, clean)
     }
     if (partial.token !== undefined) {
       if (partial.token) localStorage.setItem(LIVE_TOKEN_KEY, partial.token)
@@ -93,18 +119,20 @@ export function persistLivePrefs(partial: { room?: string; token?: string; stati
       if (partial.station) localStorage.setItem(LIVE_STATION_KEY, partial.station.slice(0, 8))
       else localStorage.removeItem(LIVE_STATION_KEY)
     }
+    if (partial.joined !== undefined) {
+      localStorage.setItem(LIVE_JOINED_KEY, partial.joined ? '1' : '0')
+    }
   } catch {
     /* ignore */
   }
 }
 
 export function wallLink(view: 'wall' | 'projection' | 'studio' = 'wall'): string {
-  const { room, token } = getLiveConfig()
+  const { room } = getLiveConfig()
   const url = new URL(window.location.href)
   url.search = ''
   url.searchParams.set('view', view)
   url.searchParams.set('room', room)
-  if (token) url.searchParams.set('token', token)
   return url.pathname + url.search
 }
 
@@ -317,17 +345,17 @@ export function createLiveSyncController(options: {
   const pull = async () => {
     const config = getLiveConfig()
     if (!config.enabled || stopped) {
-      setStatus({ state: 'off', message: 'Live sync off (no VITE_LIVE_SESSION_URL)' })
+      setStatus({ state: 'off', message: 'Shared session not configured' })
       return null
     }
     try {
-      setStatus({ state: 'syncing', message: 'Pulling shared room…' })
+      setStatus({ state: 'syncing', message: `Connecting · ${config.room}…` })
       const room = await pullLiveRoom(config)
       if (!room || stopped) return null
       if (room.updatedAt === lastSeenUpdatedAt) {
         setStatus({
           state: 'ok',
-          message: `Live · room ${config.room}`,
+          message: `Connected · ${config.room}`,
           lastPullAt: new Date().toISOString(),
         })
         return room
@@ -342,7 +370,7 @@ export function createLiveSyncController(options: {
       options.onRoom?.(room, session)
       setStatus({
         state: 'ok',
-        message: `Live · room ${config.room}`,
+        message: `Connected · ${config.room}`,
         lastPullAt: new Date().toISOString(),
       })
       return room
@@ -361,13 +389,13 @@ export function createLiveSyncController(options: {
     if (pushTimer) window.clearTimeout(pushTimer)
     pushTimer = window.setTimeout(async () => {
       try {
-        setStatus({ state: 'syncing', message: 'Pushing to shared room…' })
+        setStatus({ state: 'syncing', message: `Saving · ${config.room}…` })
         const room = await pushLiveRoom(buildLivePayload(session, { station: config.station }), config)
         if (room) {
           lastSeenUpdatedAt = room.updatedAt
           setStatus({
             state: 'ok',
-            message: `Live · room ${config.room}`,
+            message: `Connected · ${config.room}`,
             lastPushAt: new Date().toISOString(),
           })
         }

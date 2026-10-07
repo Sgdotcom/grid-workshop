@@ -1,20 +1,26 @@
 /**
  * Classic wall projection — alphabet + live cue + specimen.
- * Polls the Cloudflare live room when configured; falls back to localStorage.
+ * Joins the shared live room (same room as the desks).
  */
 import { useEffect, useState } from 'react'
+import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
-import {
-  createLiveSyncController,
-  letterPreviewSvg,
-  readLocalSessionSafe,
-  type LiveRoomState,
-} from '@/lib/liveSession'
+import { letterPreviewSvg, readLocalSessionSafe, type LiveRoomState } from '@/lib/liveSession'
+import { useLiveSession } from '@/lib/useLiveSession'
 
 export function Projection() {
   const [session, setSession] = useState<FestivalSession | null>(() => readLocalSessionSafe())
-  const [room, setRoom] = useState<LiveRoomState | null>(null)
+  const [roomBlob, setRoomBlob] = useState<LiveRoomState | null>(null)
   const [canFullscreen] = useState(() => typeof document.documentElement.requestFullscreen === 'function')
+
+  const live = useLiveSession({
+    wallMode: true,
+    getSession: () => readLocalSessionSafe(),
+    onRemoteSession: (nextSession, liveRoom) => {
+      setRoomBlob(liveRoom)
+      setSession(nextSession)
+    },
+  })
 
   useEffect(() => {
     document.title = 'Wall projection · grid workshop'
@@ -25,15 +31,6 @@ export function Projection() {
       )
     }
 
-    const controller = createLiveSyncController({
-      getSession: () => readLocalSessionSafe(),
-      onRoom: (liveRoom, nextSession) => {
-        setRoom(liveRoom)
-        setSession(nextSession)
-      },
-    })
-    controller.start(1500)
-
     const onStorage = (event: StorageEvent) => {
       if (event.key === null || event.key === FESTIVAL_KEY) applyLocal()
     }
@@ -42,7 +39,6 @@ export function Projection() {
     document.addEventListener('visibilitychange', applyLocal)
 
     return () => {
-      controller.stop()
       window.removeEventListener('storage', onStorage)
       window.removeEventListener('focus', applyLocal)
       document.removeEventListener('visibilitychange', applyLocal)
@@ -51,8 +47,8 @@ export function Projection() {
 
   const contributions = session?.contributions ?? []
   const published = latestContributions(contributions)
-  const draftSvgs = room?.draftSvgs ?? {}
-  const liveCue = room?.liveCue
+  const draftSvgs = roomBlob?.draftSvgs ?? {}
+  const liveCue = roomBlob?.liveCue
   const activeChar = liveCue?.char ?? session?.active.char ?? 'a'
   const upper = activeChar !== activeChar.toLowerCase()
   const letters = ALPHABET.map((char) => (upper ? char.toUpperCase() : char))
@@ -65,6 +61,15 @@ export function Projection() {
         <div><p>BECKMANS · A TYPEFACE MADE TOGETHER</p><h1>Our letters, today.</h1></div>
         <span>{complete} / {letters.length} letters · {contributions.length} contributions</span>
       </header>
+      <LiveSessionJoin
+        compact
+        className="festival-live-join"
+        room={live.room}
+        enabled={live.enabled}
+        joined={live.joined}
+        statusMessage={live.status.message}
+        onJoin={live.joinSession}
+      />
       <div className="festival-wall-split">
         <section className="festival-alphabet" aria-label="Collective typeface">
           {letters.map((char) => {

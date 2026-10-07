@@ -1,24 +1,30 @@
 /**
  * Installation cinematic wall — specimen-first layout.
- * Polls the Cloudflare live room when configured; falls back to localStorage.
+ * Joins the shared live room (same room as the desks).
  */
 import { useEffect, useState } from 'react'
+import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
-import {
-  createLiveSyncController,
-  letterPreviewSvg,
-  readLocalSessionSafe,
-  type LiveRoomState,
-} from '@/lib/liveSession'
+import { letterPreviewSvg, readLocalSessionSafe, type LiveRoomState } from '@/lib/liveSession'
+import { useLiveSession } from '@/lib/useLiveSession'
 
 const SPECIMEN = 'vi formar tillsammans'
 
 export function CinematicWall() {
   const [session, setSession] = useState<FestivalSession | null>(() => readLocalSessionSafe())
-  const [room, setRoom] = useState<LiveRoomState | null>(null)
+  const [roomBlob, setRoomBlob] = useState<LiveRoomState | null>(null)
   const [canFullscreen] = useState(
     () => typeof document.documentElement.requestFullscreen === 'function',
   )
+
+  const live = useLiveSession({
+    wallMode: true,
+    getSession: () => readLocalSessionSafe(),
+    onRemoteSession: (nextSession, liveRoom) => {
+      setRoomBlob(liveRoom)
+      setSession(nextSession)
+    },
+  })
 
   useEffect(() => {
     document.title = 'Wall · grid workshop'
@@ -32,15 +38,6 @@ export function CinematicWall() {
       )
     }
 
-    const controller = createLiveSyncController({
-      getSession: () => readLocalSessionSafe(),
-      onRoom: (liveRoom, nextSession) => {
-        setRoom(liveRoom)
-        setSession(nextSession)
-      },
-    })
-    controller.start(1500)
-
     const onStorage = (event: StorageEvent) => {
       if (event.key === null || event.key === FESTIVAL_KEY) applyLocal()
     }
@@ -49,7 +46,6 @@ export function CinematicWall() {
     document.addEventListener('visibilitychange', applyLocal)
 
     return () => {
-      controller.stop()
       document.documentElement.classList.remove('install-view')
       document.body.classList.remove('install-view')
       window.removeEventListener('storage', onStorage)
@@ -60,8 +56,8 @@ export function CinematicWall() {
 
   const contributions = session?.contributions ?? []
   const published = latestContributions(contributions)
-  const draftSvgs = room?.draftSvgs ?? {}
-  const liveCue = room?.liveCue
+  const draftSvgs = roomBlob?.draftSvgs ?? {}
+  const liveCue = roomBlob?.liveCue
   const activeChar = liveCue?.char ?? session?.active.char ?? 'a'
   const upper = activeChar !== activeChar.toLowerCase()
   const letters = ALPHABET.map((char) => (upper ? char.toUpperCase() : char))
@@ -85,6 +81,16 @@ export function CinematicWall() {
           ) : null}
         </span>
       </header>
+
+      <LiveSessionJoin
+        compact
+        className="cinematic-live-join"
+        room={live.room}
+        enabled={live.enabled}
+        joined={live.joined}
+        statusMessage={live.status.message}
+        onJoin={live.joinSession}
+      />
 
       <section className="cinematic-ribbon" aria-label="Alphabet">
         {letters.map((char) => {

@@ -47,7 +47,8 @@ import {
   type FestivalSession,
 } from '@/lib/festival'
 import { DEFAULT_BRUSH, DEFAULT_GRID } from '@/lib/gridGeometry'
-import { getLiveConfig, letterPreviewSvg } from '@/lib/liveSession'
+import { LiveSessionJoin } from '@/components/LiveSessionJoin'
+import { letterPreviewSvg } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 import { buildStarterBlueprint, nudgeFilled } from '@/lib/skeletons'
 import { moduleShapeFillRule, moduleShapePath, shapeSupportsRounding } from '@/lib/shapes'
@@ -190,11 +191,6 @@ export function StudioDesk() {
   const future = useRef<Snapshot[]>([])
   const strokeStarted = useRef(false)
   const importRef = useRef<HTMLInputElement>(null)
-  const [liveRoomInput, setLiveRoomInput] = useState(() => getLiveConfig().room)
-  const [liveTokenInput, setLiveTokenInput] = useState(() => getLiveConfig().token)
-  const [liveStationInput, setLiveStationInput] = useState(
-    () => getLiveConfig().station || stationLabel() || '',
-  )
 
   useEffect(() => {
     document.title = station
@@ -1020,45 +1016,13 @@ export function StudioDesk() {
               </button>
             </div>
             <p className={cn('studio-save', saveFailed && 'is-error')}>{saveStatus}</p>
-            <p className="studio-save" data-testid="live-sync-status">
-              {live.status.message}
-              {live.status.lastPullAt
-                ? ` · pulled ${new Date(live.status.lastPullAt).toLocaleTimeString()}`
-                : ''}
-              {live.status.lastPushAt
-                ? ` · pushed ${new Date(live.status.lastPushAt).toLocaleTimeString()}`
-                : ''}
-            </p>
-            <label className="studio-options-field">
-              Room
-              <input
-                value={liveRoomInput}
-                onChange={(e) => setLiveRoomInput(e.target.value)}
-                onBlur={() => live.savePrefs({ room: liveRoomInput.trim() || 'lettermans' })}
-                spellCheck={false}
-              />
-            </label>
-            <label className="studio-options-field">
-              Write token
-              <input
-                type="password"
-                value={liveTokenInput}
-                onChange={(e) => setLiveTokenInput(e.target.value)}
-                onBlur={() => live.savePrefs({ token: liveTokenInput })}
-                spellCheck={false}
-                autoComplete="off"
-              />
-            </label>
-            <label className="studio-options-field">
-              Station label
-              <input
-                value={liveStationInput}
-                onChange={(e) => setLiveStationInput(e.target.value)}
-                onBlur={() => live.savePrefs({ station: liveStationInput.trim().slice(0, 8) })}
-                placeholder="a / b"
-                spellCheck={false}
-              />
-            </label>
+            <LiveSessionJoin
+              room={live.room}
+              enabled={live.enabled}
+              joined={live.joined}
+              statusMessage={live.status.message}
+              onJoin={live.joinSession}
+            />
             <Button type="button" variant="outline" className="w-full" onClick={() => void live.copyWallLink('wall')}>
               Copy wall link
             </Button>
@@ -1115,8 +1079,8 @@ export function StudioDesk() {
             />
             <p className="studio-options-note">
               {live.enabled
-                ? 'Desks share one room: drafts + published letters + live cue. Wall polls the same room.'
-                : 'Set VITE_LIVE_SESSION_URL (Worker URL) to enable cross-machine sync.'}
+                ? 'Both desks and the wall join the same room name. No password — just Join session.'
+                : 'Shared session is not configured on this build.'}
             </p>
           </div>
           <button
