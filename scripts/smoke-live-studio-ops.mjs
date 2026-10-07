@@ -169,7 +169,69 @@ try {
     (r) => !r.liveCues?.a && (!r.draftSvgs || !r.draftSvgs.a) && !!r.liveCues?.b?.liveSvg,
     'clear removed desk A cue; desk B kept',
   )
-  console.log('[ok] clear synced (desk A gone, desk B live)')
+  // Desk B alphabet must drop draft preview for a
+  await deskB.page.waitForFunction(
+    () => {
+      const btn = document.querySelector('[data-testid="studio-glyph-a"]')
+      if (!btn) return false
+      return !btn.classList.contains('is-draft') && !btn.querySelector('img')
+    },
+    null,
+    { timeout: 20000 },
+  )
+  // Wall must drop live cue for a (desk B may still be live on b)
+  await wall.waitForFunction(
+    () => {
+      const a = document.querySelector('.cinematic-ribbon-letter')
+      // First ribbon letter is 'a' in lowercase alphabet
+      const letters = [...document.querySelectorAll('.cinematic-ribbon-letter')]
+      const letterA = letters.find((el) => el.textContent?.trim() === 'a' || el.querySelector('img[alt="a"]'))
+        || letters[0]
+      if (!letterA) return false
+      return !letterA.querySelector('.cinematic-live-dot')
+    },
+    null,
+    { timeout: 20000 },
+  )
+  console.log('[ok] clear synced (desk A gone for B + wall; desk B live)')
+
+  // --- Undo clear on desk A restores for everyone ---
+  await deskA.page.getByTestId('studio-undo').click()
+  await deskA.page.waitForFunction(
+    () => (JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active.filled || []).length > 0,
+    null,
+    { timeout: 10000 },
+  )
+  await waitRoom(
+    (r) => !!r.liveCues?.a?.liveSvg && !!r.draftSvgs?.a && !!r.liveCues?.b?.liveSvg,
+    'undo restored desk A live cue',
+  )
+  await deskB.page.waitForFunction(
+    () => {
+      const btn = document.querySelector('[data-testid="studio-glyph-a"]')
+      return !!(btn && (btn.classList.contains('is-draft') || btn.querySelector('img')))
+    },
+    null,
+    { timeout: 20000 },
+  )
+  await wall.waitForFunction(
+    () => document.querySelectorAll('.cinematic-live-dot').length >= 2,
+    null,
+    { timeout: 20000 },
+  )
+  console.log('[ok] undo clear restored desk A for B + wall')
+
+  // Clear again so publish path still has a clean a
+  await deskA.page.getByTestId('studio-clear').click()
+  await deskA.page.waitForFunction(
+    () => (JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active.filled || []).length === 0,
+    null,
+    { timeout: 10000 },
+  )
+  await waitRoom(
+    (r) => !r.liveCues?.a && (!r.draftSvgs || !r.draftSvgs.a) && !!r.liveCues?.b?.liveSvg,
+    're-clear desk A before publish',
+  )
 
   // --- Desk B: publish letter b (already stamped above) ---
   const publishBtn = deskB.page.getByTestId('studio-publish')

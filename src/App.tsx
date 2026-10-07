@@ -384,7 +384,7 @@ export default function App() {
   const live = useLiveSession({
     getSession: () => sessionRef.current,
     painting: () => strokeStarted.current,
-    onRemoteSession: (session) => {
+    onRemoteSession: (session, liveRoom) => {
       const merged = mergeContributions(contributionsRef.current, session.contributions)
       setContributions(merged)
       contributionsRef.current = merged
@@ -393,6 +393,12 @@ export default function App() {
       for (const draft of session.drafts) {
         if (!draft.filled.length || draft.char === activeChar) continue
         nextGlyphs.set(draft.char, draft)
+      }
+      for (const ch of [...nextGlyphs.keys()]) {
+        if (ch === activeChar) continue
+        if (liveRoom.draftUpdatedAt?.[ch] && !liveRoom.draftSvgs?.[ch]) {
+          nextGlyphs.delete(ch)
+        }
       }
       glyphsRef.current = nextGlyphs
       setGlyphs(nextGlyphs)
@@ -529,15 +535,36 @@ export default function App() {
     [pushHistory],
   )
 
-  const applySnapshot = useCallback((snapshot: Snapshot) => {
-    const nextFilled = restoreFilled(snapshot.filled)
-    const nextBroken = new Set(snapshot.brokenJoins)
-    filledRef.current = nextFilled
-    brokenRef.current = nextBroken
-    setFilled(nextFilled)
-    setBrokenJoins(nextBroken)
-    setExportStatus({ state: 'idle' })
+  const syncGlyphForActive = useCallback((nextFilled: Map<string, FilledRegion>, nextBroken: Set<string>) => {
+    const ch = letterRef.current
+    const store = new Map(glyphsRef.current)
+    if (nextFilled.size) {
+      store.set(ch, {
+        char: ch,
+        filled: snapshotFilled(nextFilled),
+        brokenJoins: [...nextBroken],
+        ...settingsRef.current,
+      })
+    } else {
+      store.delete(ch)
+    }
+    glyphsRef.current = store
+    setGlyphs(store)
   }, [])
+
+  const applySnapshot = useCallback(
+    (snapshot: Snapshot) => {
+      const nextFilled = restoreFilled(snapshot.filled)
+      const nextBroken = new Set(snapshot.brokenJoins)
+      filledRef.current = nextFilled
+      brokenRef.current = nextBroken
+      setFilled(nextFilled)
+      setBrokenJoins(nextBroken)
+      syncGlyphForActive(nextFilled, nextBroken)
+      setExportStatus({ state: 'idle' })
+    },
+    [syncGlyphForActive],
+  )
 
   const undo = useCallback(() => {
     const previous = past.current.pop()
@@ -570,8 +597,13 @@ export default function App() {
   const clearCanvas = () => {
     if (filled.size === 0) return
     pushHistory()
-    setFilled(new Map())
-    setBrokenJoins(new Set())
+    const empty = new Map<string, FilledRegion>()
+    const noJoins = new Set<string>()
+    filledRef.current = empty
+    brokenRef.current = noJoins
+    setFilled(empty)
+    setBrokenJoins(noJoins)
+    syncGlyphForActive(empty, noJoins)
     setExportStatus({ state: 'idle' })
   }
 

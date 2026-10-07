@@ -250,16 +250,39 @@ export function mergeDrafts(
   localTimes: Record<string, string> = {},
 ): GlyphDraft[] {
   const byChar = new Map<string, GlyphDraft>()
-  for (const draft of local) byChar.set(draft.char, draft)
+  for (const draft of local) {
+    if (draft.filled.length) byChar.set(draft.char, draft)
+  }
   for (const draft of remote) {
     const remoteAt = remoteTimes[draft.char] ?? ''
     const localAt = localTimes[draft.char] ?? ''
     const existing = byChar.get(draft.char)
-    if (!existing || !localAt || (remoteAt && remoteAt >= localAt) || (!localAt && remoteAt)) {
-      byChar.set(draft.char, draft)
+    const remoteWins = !existing || !localAt || (remoteAt && remoteAt >= localAt) || (!localAt && remoteAt)
+    if (!remoteWins) continue
+    // Empty remote draft is a tombstone (clear letter).
+    if (!draft.filled.length) {
+      byChar.delete(draft.char)
+      continue
     }
+    byChar.set(draft.char, draft)
   }
   return [...byChar.values()]
+}
+
+/** Drop local drafts the room has cleared (no draftSvg, but draftUpdatedAt set). */
+export function pruneClearedDrafts(
+  drafts: GlyphDraft[],
+  room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'>,
+  keepChar?: string,
+): GlyphDraft[] {
+  const times = room.draftUpdatedAt ?? {}
+  const svgs = room.draftSvgs ?? {}
+  return drafts.filter((draft) => {
+    if (keepChar && draft.char === keepChar) return true
+    if (!times[draft.char]) return true
+    if (svgs[draft.char]) return true
+    return false
+  })
 }
 
 /** Apply remote room into a FestivalSession for wall/projection display + localStorage. */
@@ -287,15 +310,19 @@ export function applyRoomToSession(
   }
 
   const contributions = mergeContributions(base.contributions, room.contributions ?? [])
-  const drafts = mergeDrafts(base.drafts, room.drafts ?? [], room.draftUpdatedAt ?? {})
-  const liveCue = room.liveCue
   const keepActive = !!opts?.keepLocalActive && !!local
+  const liveCue = room.liveCue
   const activeChar = keepActive ? local!.active.char : (liveCue?.char ?? base.active.char)
+  const merged = mergeDrafts(base.drafts, room.drafts ?? [], room.draftUpdatedAt ?? {})
+  // Worker deletes cleared drafts from the array; also honor draftSvg tombstones.
+  const drafts = pruneClearedDrafts(merged, room, keepActive ? activeChar : undefined)
   const activeDraft = keepActive
     ? local!.active
     : (drafts.find((d) => d.char === activeChar) ?? {
         ...base.active,
         char: activeChar,
+        filled: [],
+        brokenJoins: [],
       })
 
   return {

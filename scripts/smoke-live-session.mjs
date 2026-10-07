@@ -121,6 +121,9 @@ async function main() {
   console.log('[ok] stale liveCue ignored')
 
   const clearA = await req('PUT', `/rooms/${room}`, {
+    draftSvgs: { a: '' },
+    draftUpdatedAt: { a: '2026-10-07T12:00:02.000Z' },
+    drafts: [{ char: 'a', filled: [], brokenJoins: [] }],
     liveCue: {
       char: 'a',
       station: 'a',
@@ -129,7 +132,9 @@ async function main() {
     },
   })
   assert(!clearA.json.liveCues?.a, 'empty liveSvg should drop station a')
+  assert(!clearA.json.draftSvgs?.a, 'empty draftSvg should drop draft a')
   assert(clearA.json.liveCues?.b?.liveSvg === '<svg id="live-b"/>', 'clearing a must keep station b')
+  assert(clearA.json.draftSvgs?.b, 'clearing a must keep draft b')
   assert(clearA.json.liveCue?.char === 'b', 'compat liveCue should fall back to b')
   console.log('[ok] clear station a keeps station b')
 

@@ -361,7 +361,7 @@ export function StudioDesk() {
   const live = useLiveSession({
     getSession: () => sessionRef.current,
     painting: () => strokeStarted.current,
-    onRemoteSession: (session) => {
+    onRemoteSession: (session, liveRoom) => {
       // Union with local so a just-published letter is not wiped by a stale WS frame.
       const merged = mergeContributions(contributionsRef.current, session.contributions)
       setContributions(merged)
@@ -373,6 +373,13 @@ export function StudioDesk() {
         // Current letter stays owned by this desk while editing.
         if (draft.char === activeChar) continue
         nextGlyphs.set(draft.char, draft)
+      }
+      // Remote clear: drop peer draft previews for tombstoned letters.
+      for (const ch of [...nextGlyphs.keys()]) {
+        if (ch === activeChar) continue
+        if (liveRoom.draftUpdatedAt?.[ch] && !liveRoom.draftSvgs?.[ch]) {
+          nextGlyphs.delete(ch)
+        }
       }
       glyphsRef.current = nextGlyphs
       setGlyphs(nextGlyphs)
@@ -454,14 +461,35 @@ export function StudioDesk() {
     [pushHistory],
   )
 
-  const applySnapshot = useCallback((snapshot: Snapshot) => {
-    const nextFilled = restoreFilled(snapshot.filled)
-    const nextBroken = new Set(snapshot.brokenJoins)
-    filledRef.current = nextFilled
-    brokenRef.current = nextBroken
-    setFilled(nextFilled)
-    setBrokenJoins(nextBroken)
+  const syncGlyphForActive = useCallback((nextFilled: Map<string, FilledRegion>, nextBroken: Set<string>) => {
+    const ch = letterRef.current
+    const store = new Map(glyphsRef.current)
+    if (nextFilled.size) {
+      store.set(ch, {
+        char: ch,
+        filled: snapshotFilled(nextFilled),
+        brokenJoins: [...nextBroken],
+        ...settingsRef.current,
+      })
+    } else {
+      store.delete(ch)
+    }
+    glyphsRef.current = store
+    setGlyphs(store)
   }, [])
+
+  const applySnapshot = useCallback(
+    (snapshot: Snapshot) => {
+      const nextFilled = restoreFilled(snapshot.filled)
+      const nextBroken = new Set(snapshot.brokenJoins)
+      filledRef.current = nextFilled
+      brokenRef.current = nextBroken
+      setFilled(nextFilled)
+      setBrokenJoins(nextBroken)
+      syncGlyphForActive(nextFilled, nextBroken)
+    },
+    [syncGlyphForActive],
+  )
 
   const undo = useCallback(() => {
     const previous = past.current.pop()
@@ -491,8 +519,13 @@ export function StudioDesk() {
   const clearCanvas = () => {
     if (filled.size === 0) return
     pushHistory()
-    setFilled(new Map())
-    setBrokenJoins(new Set())
+    const empty = new Map<string, FilledRegion>()
+    const noJoins = new Set<string>()
+    filledRef.current = empty
+    brokenRef.current = noJoins
+    setFilled(empty)
+    setBrokenJoins(noJoins)
+    syncGlyphForActive(empty, noJoins)
   }
 
   const nudge = useCallback(
@@ -698,6 +731,7 @@ export function StudioDesk() {
             <div className="studio-tool-grid">
               <ToolBtn
                 label="Undo"
+                testId="studio-undo"
                 disabled={!canUndo}
                 onClick={undo}
                 icon={<Undo2 className="h-4 w-4" />}
