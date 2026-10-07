@@ -5,7 +5,12 @@
 import { useEffect, useState } from 'react'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
-import { letterPreviewSvg, readLocalSessionSafe, type LiveRoomState } from '@/lib/liveSession'
+import {
+  activeLiveCues,
+  letterPreviewSvg,
+  readLocalSessionSafe,
+  type LiveRoomState,
+} from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 
 const SPECIMEN = 'vi formar tillsammans'
@@ -57,12 +62,18 @@ export function CinematicWall() {
   const contributions = session?.contributions ?? []
   const published = latestContributions(contributions)
   const draftSvgs = roomBlob?.draftSvgs ?? {}
-  const liveCue = roomBlob?.liveCue
-  const activeChar = liveCue?.char ?? session?.active.char ?? 'a'
+  const liveCues = activeLiveCues(roomBlob)
+  const liveChars = new Set(liveCues.map((cue) => cue.char))
+  const activeChar =
+    liveCues[liveCues.length - 1]?.char ?? session?.active.char ?? 'a'
+  const drawingLabel = liveCues.length
+    ? [...new Set(liveCues.map((cue) => cue.char))].join(' · ')
+    : activeChar
   const upper = activeChar !== activeChar.toLowerCase()
   const letters = ALPHABET.map((char) => (upper ? char.toUpperCase() : char))
   const complete = letters.filter((char) => published.has(char)).length
-  const liveReady = !!(liveCue?.liveSvg || (session?.liveSvg && session.active.filled.length))
+  const liveReady =
+    liveCues.length > 0 || !!(session?.liveSvg && session.active.filled.length)
 
   return (
     <main className="cinematic-wall" data-testid="cinematic-wall">
@@ -76,7 +87,7 @@ export function CinematicWall() {
           {liveReady ? (
             <>
               {' '}
-              · drawing <strong>{activeChar}</strong>
+              · drawing <strong>{drawingLabel}</strong>
             </>
           ) : null}
         </span>
@@ -94,8 +105,13 @@ export function CinematicWall() {
 
       <section className="cinematic-ribbon" aria-label="Alphabet">
         {letters.map((char) => {
-          const preview = letterPreviewSvg(char, contributions, draftSvgs, liveCue)
-          const isActive = char === activeChar
+          const preview = letterPreviewSvg(
+            char,
+            contributions,
+            draftSvgs,
+            roomBlob?.liveCues ?? roomBlob?.liveCue,
+          )
+          const isActive = liveChars.has(char) || (liveCues.length === 0 && char === activeChar)
           return (
             <div
               key={char}
@@ -106,7 +122,9 @@ export function CinematicWall() {
               ) : (
                 <span>{char}</span>
               )}
-              {isActive && liveReady ? <i className="cinematic-live-dot" aria-hidden /> : null}
+              {liveChars.has(char) || (isActive && liveReady && liveCues.length === 0) ? (
+                <i className="cinematic-live-dot" aria-hidden />
+              ) : null}
             </div>
           )
         })}

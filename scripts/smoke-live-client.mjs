@@ -23,10 +23,22 @@ function mergeDrafts(local, remote, remoteTimes, localTimes = {}) {
   return [...byChar.values()]
 }
 
-function letterPreviewSvg(char, contributions, draftSvgs, liveCue) {
+function normalizeLiveInput(live) {
+  if (!live) return []
+  if (Array.isArray(live)) return live.filter((c) => c?.liveSvg)
+  if (typeof live === 'object' && 'char' in live && 'liveSvg' in live) {
+    return live.liveSvg ? [live] : []
+  }
+  return Object.values(live).filter((c) => c?.liveSvg)
+}
+
+function letterPreviewSvg(char, contributions, draftSvgs, live) {
   const published = [...contributions].reverse().find((c) => c.draft.char === char)
   if (published) return { svg: published.svg, kind: 'published' }
-  if (liveCue?.char === char && liveCue.liveSvg) return { svg: liveCue.liveSvg, kind: 'live' }
+  const liveHit = normalizeLiveInput(live)
+    .filter((c) => c.char === char && c.liveSvg)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
+  if (liveHit) return { svg: liveHit.liveSvg, kind: 'live' }
   const draft = draftSvgs?.[char]
   if (draft) return { svg: draft, kind: 'draft' }
   return { svg: '', kind: 'empty' }
@@ -69,5 +81,16 @@ const live = letterPreviewSvg(
   { char: 'd', liveSvg: '<live/>', updatedAt: 'x' },
 )
 assert(live.kind === 'live', 'live cue when no publish')
+
+const multiA = letterPreviewSvg('a', [], {}, {
+  a: { char: 'a', liveSvg: '<a/>', updatedAt: '1', station: 'a' },
+  b: { char: 'b', liveSvg: '<b/>', updatedAt: '2', station: 'b' },
+})
+const multiB = letterPreviewSvg('b', [], {}, {
+  a: { char: 'a', liveSvg: '<a/>', updatedAt: '1', station: 'a' },
+  b: { char: 'b', liveSvg: '<b/>', updatedAt: '2', station: 'b' },
+})
+assert(multiA.kind === 'live' && multiA.svg === '<a/>', 'multi map live a')
+assert(multiB.kind === 'live' && multiB.svg === '<b/>', 'multi map live b')
 
 console.log('[pass] live-client merge helpers')

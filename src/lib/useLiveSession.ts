@@ -40,6 +40,11 @@ export function useLiveSession(options: {
 
   useEffect(() => {
     const config = getLiveConfig()
+    if (config.station) persistLivePrefs({ station: config.station })
+  }, [])
+
+  useEffect(() => {
+    const config = getLiveConfig()
     if (!config.enabled || !joined) {
       controllerRef.current?.stop()
       controllerRef.current = null
@@ -80,12 +85,14 @@ export function useLiveSession(options: {
 
   const joinSession = useCallback((nextRoom: string) => {
     const clean = nextRoom.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || DEFAULT_LIVE_ROOM
-    persistLivePrefs({ room: clean, joined: true })
+    const station = getLiveConfig().station
+    persistLivePrefs({ room: clean, joined: true, ...(station ? { station } : {}) })
     setRoom(clean)
     setJoined(true)
     try {
       const url = new URL(window.location.href)
       url.searchParams.set('room', clean)
+      if (station) url.searchParams.set('station', station)
       window.history.replaceState({}, '', url.pathname + url.search)
     } catch {
       /* ignore */

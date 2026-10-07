@@ -31,6 +31,9 @@ export interface LiveRoomState {
   drafts: GlyphDraft[]
   draftSvgs: Record<string, string>
   draftUpdatedAt: Record<string, string>
+  /** Per-desk live previews keyed by station (a / b). */
+  liveCues?: Record<string, LiveCue>
+  /** Newest cue (compat); prefer liveCues on the wall. */
   liveCue?: LiveCue
 }
 
@@ -194,7 +197,8 @@ export function buildLivePayload(
     session.drafts.find((d) => d.char === ch) ??
     (session.active.filled.length ? session.active : null)
   const hasInk = !!(activeDraft && activeDraft.filled.length)
-  const station = opts?.station ?? getLiveConfig().station
+  const stationRaw = (opts?.station ?? getLiveConfig().station ?? 'desk').slice(0, 8)
+  const station = stationRaw.replace(/[^a-zA-Z0-9_-]/g, '') || 'desk'
   const draftSvgs: Record<string, string> = {}
   const draftUpdatedAt: Record<string, string> = { [ch]: now }
   if (hasInk && session.liveSvg) {
@@ -202,6 +206,12 @@ export function buildLivePayload(
   } else if (!hasInk) {
     // Tombstone: Worker deletes this char's draft preview.
     draftSvgs[ch] = ''
+  }
+  const liveCue: LiveCue = {
+    char: ch,
+    liveSvg: hasInk && session.liveSvg ? session.liveSvg : '',
+    updatedAt: now,
+    station,
   }
   return {
     updatedAt: now,
@@ -221,12 +231,8 @@ export function buildLivePayload(
         ],
     draftSvgs,
     draftUpdatedAt,
-    liveCue: {
-      char: ch,
-      liveSvg: hasInk && session.liveSvg ? session.liveSvg : '',
-      updatedAt: now,
-      ...(station ? { station } : {}),
-    },
+    liveCue,
+    liveCues: { [station]: liveCue },
   }
 }
 
@@ -320,16 +326,38 @@ export function readLocalSessionSafe(): FestivalSession | null {
   }
 }
 
-/** Glyph preview for wall tiles: published wins, else shared draft SVG. */
+/** Active live previews from a room (multi-desk). */
+export function activeLiveCues(room: Pick<LiveRoomState, 'liveCues' | 'liveCue'> | null | undefined): LiveCue[] {
+  if (!room) return []
+  const fromMap = room.liveCues ? Object.values(room.liveCues).filter((c) => c?.liveSvg) : []
+  if (fromMap.length) return fromMap.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
+  return room.liveCue?.liveSvg ? [room.liveCue] : []
+}
+
+function normalizeLiveInput(
+  live?: LiveCue | LiveCue[] | Record<string, LiveCue> | null,
+): LiveCue[] {
+  if (!live) return []
+  if (Array.isArray(live)) return live.filter((c) => c?.liveSvg)
+  if (typeof live === 'object' && 'char' in live && 'liveSvg' in live) {
+    return (live as LiveCue).liveSvg ? [live as LiveCue] : []
+  }
+  return Object.values(live as Record<string, LiveCue>).filter((c) => c?.liveSvg)
+}
+
+/** Glyph preview for wall tiles: published wins, else live cue, else draft SVG. */
 export function letterPreviewSvg(
   char: string,
   contributions: Contribution[],
   draftSvgs: Record<string, string> | undefined,
-  liveCue?: LiveCue,
+  live?: LiveCue | LiveCue[] | Record<string, LiveCue> | null,
 ): { svg: string; kind: 'published' | 'draft' | 'live' | 'empty' } {
   const published = [...contributions].reverse().find((c) => c.draft.char === char)
   if (published) return { svg: published.svg, kind: 'published' }
-  if (liveCue?.char === char && liveCue.liveSvg) return { svg: liveCue.liveSvg, kind: 'live' }
+  const liveHit = normalizeLiveInput(live)
+    .filter((c) => c.char === char && c.liveSvg)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
+  if (liveHit) return { svg: liveHit.liveSvg, kind: 'live' }
   const draft = draftSvgs?.[char]
   if (draft) return { svg: draft, kind: 'draft' }
   return { svg: '', kind: 'empty' }
@@ -353,6 +381,10 @@ function parseRoomMessage(raw: string): LiveRoomState | null {
       draftUpdatedAt:
         data.draftUpdatedAt && typeof data.draftUpdatedAt === 'object' ? data.draftUpdatedAt : {},
       liveCue: data.liveCue,
+      liveCues:
+        data.liveCues && typeof data.liveCues === 'object'
+          ? (data.liveCues as Record<string, LiveCue>)
+          : undefined,
     }
   } catch {
     return null

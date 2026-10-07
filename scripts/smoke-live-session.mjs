@@ -74,6 +74,7 @@ async function main() {
   assert(deskA.json.contributions.some((c) => c.id === 'pub-a'), 'desk A contribution missing')
   assert(deskA.json.draftSvgs.a === '<svg id="a-draft"/>', 'desk A draftSvg missing')
   assert(deskA.json.liveCue?.char === 'a', 'desk A liveCue missing')
+  assert(deskA.json.liveCues?.a?.liveSvg === '<svg id="live-a"/>', 'desk A liveCues.a missing')
   console.log('[ok] desk A PUT')
 
   const deskB = await req('PUT', `/rooms/${room}`, {
@@ -101,8 +102,10 @@ async function main() {
   assert(ids.has('pub-a') && ids.has('pub-b'), `contribution union failed: ${[...ids]}`)
   assert(deskB.json.draftSvgs.a === '<svg id="a-draft"/>', 'desk A draftSvg lost after B push')
   assert(deskB.json.draftSvgs.b === '<svg id="b-draft"/>', 'desk B draftSvg missing')
-  assert(deskB.json.liveCue?.char === 'b', 'newer liveCue should win')
-  console.log('[ok] desk B merge (union + LWW cue)')
+  assert(deskB.json.liveCues?.a?.liveSvg === '<svg id="live-a"/>', 'desk A live cue lost after B push')
+  assert(deskB.json.liveCues?.b?.liveSvg === '<svg id="live-b"/>', 'desk B live cue missing')
+  assert(deskB.json.liveCue?.char === 'b', 'compat liveCue should be newest desk')
+  console.log('[ok] desk B merge (union + multi live cues)')
 
   const staleCue = await req('PUT', `/rooms/${room}`, {
     liveCue: {
@@ -112,13 +115,29 @@ async function main() {
       updatedAt: '2026-10-07T11:00:00.000Z',
     },
   })
-  assert(staleCue.json.liveCue?.char === 'b', 'stale liveCue should not overwrite')
+  assert(staleCue.json.liveCues?.a?.liveSvg === '<svg id="live-a"/>', 'stale liveCue should not overwrite station a')
+  assert(staleCue.json.liveCues?.b?.liveSvg === '<svg id="live-b"/>', 'stale update must keep station b')
+  assert(staleCue.json.liveCue?.char === 'b', 'compat liveCue should stay newest')
   console.log('[ok] stale liveCue ignored')
+
+  const clearA = await req('PUT', `/rooms/${room}`, {
+    liveCue: {
+      char: 'a',
+      station: 'a',
+      liveSvg: '',
+      updatedAt: '2026-10-07T12:00:02.000Z',
+    },
+  })
+  assert(!clearA.json.liveCues?.a, 'empty liveSvg should drop station a')
+  assert(clearA.json.liveCues?.b?.liveSvg === '<svg id="live-b"/>', 'clearing a must keep station b')
+  assert(clearA.json.liveCue?.char === 'b', 'compat liveCue should fall back to b')
+  console.log('[ok] clear station a keeps station b')
 
   const wall = await req('GET', `/rooms/${room}`)
   assert(wall.status === 200, 'wall GET failed')
   assert(wall.json.contributions.length === 2, 'wall should see both publishes')
   assert(wall.json.draftSvgs.a && wall.json.draftSvgs.b, 'wall should see both draft SVGs')
+  assert(wall.json.liveCues?.b?.liveSvg, 'wall should still see desk B live')
   console.log('[ok] wall GET sees full room')
 
   const cleared = await req('DELETE', `/rooms/${room}`)

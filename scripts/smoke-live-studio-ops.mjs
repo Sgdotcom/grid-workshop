@@ -77,7 +77,7 @@ try {
   )
 
   await waitRoom(
-    (r) => !!(r.liveCue?.liveSvg || (r.draftSvgs && Object.keys(r.draftSvgs).length)),
+    (r) => !!(r.liveCues?.a?.liveSvg || r.liveCue?.liveSvg || (r.draftSvgs && Object.keys(r.draftSvgs).length)),
     'desk A draft/live cue',
   )
 
@@ -100,50 +100,13 @@ try {
   )
   console.log('[ok] desk B alphabet shows remote draft')
 
-  // --- Desk A: punch-out (cutout) on middle cell ---
-  await deskA.page.getByTestId('studio-stamp-mode').click()
-  await deskA.page.waitForFunction(
-    () => document.querySelector('[data-testid="studio-stamp-mode"]')?.getAttribute('aria-pressed') === 'true',
-    null,
-    { timeout: 5000 },
-  )
-  const svgBefore = await waitRoom((r) => !!r.liveCue?.liveSvg, 'live before cut').then((r) => r.liveCue.liveSvg)
-  await stamp(deskA.page, 2, 2)
-  await deskA.page.waitForFunction(
-    () => {
-      const filled = JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active.filled || []
-      return filled.some((f) => f.mode === 'cutout')
-    },
-    null,
-    { timeout: 10000 },
-  )
-  await waitRoom(
-    (r) => !!r.liveCue?.liveSvg && r.liveCue.liveSvg !== svgBefore,
-    'live cue changed after cutout',
-  )
-  console.log('[ok] cutout changed shared live cue')
-
-  // --- Desk A: clear letter ---
-  await deskA.page.getByTestId('studio-clear').click()
-  await deskA.page.waitForFunction(
-    () => (JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active.filled || []).length === 0,
-    null,
-    { timeout: 10000 },
-  )
-  await waitRoom(
-    (r) => !r.liveCue && (!r.draftSvgs || !r.draftSvgs.a),
-    'clear removed live cue + draft a',
-  )
-  console.log('[ok] clear synced (no live cue / draft a)')
-
-  // --- Desk B: draw + publish on letter b ---
+  // --- Both desks live at once (A on a, B on b) ---
   await deskB.page.getByTestId('studio-glyph-b').click()
   await deskB.page.waitForFunction(
     () => JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active?.char === 'b',
     null,
     { timeout: 10000 },
   )
-  // Ensure ink mode on B (A may have left cutout toggled only on A).
   const modeB = deskB.page.getByTestId('studio-stamp-mode')
   if ((await modeB.getAttribute('aria-pressed')) === 'true') {
     await modeB.click()
@@ -159,6 +122,56 @@ try {
     null,
     { timeout: 15000 },
   )
+  await waitRoom(
+    (r) => !!(r.liveCues?.a?.liveSvg && r.liveCues?.b?.liveSvg),
+    'both desks have live cues',
+  )
+  await wall.waitForFunction(
+    () => document.querySelectorAll('.cinematic-live-dot').length >= 2,
+    null,
+    { timeout: 20000 },
+  )
+  console.log('[ok] wall shows both desks live')
+
+  // --- Desk A: punch-out (cutout) on middle cell ---
+  await deskA.page.getByTestId('studio-stamp-mode').click()
+  await deskA.page.waitForFunction(
+    () => document.querySelector('[data-testid="studio-stamp-mode"]')?.getAttribute('aria-pressed') === 'true',
+    null,
+    { timeout: 5000 },
+  )
+  const svgBefore = await waitRoom((r) => !!r.liveCues?.a?.liveSvg, 'live a before cut').then(
+    (r) => r.liveCues.a.liveSvg,
+  )
+  await stamp(deskA.page, 2, 2)
+  await deskA.page.waitForFunction(
+    () => {
+      const filled = JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active.filled || []
+      return filled.some((f) => f.mode === 'cutout')
+    },
+    null,
+    { timeout: 10000 },
+  )
+  await waitRoom(
+    (r) => !!r.liveCues?.a?.liveSvg && r.liveCues.a.liveSvg !== svgBefore && !!r.liveCues?.b?.liveSvg,
+    'live a changed after cutout; b kept',
+  )
+  console.log('[ok] cutout changed desk A live cue')
+
+  // --- Desk A: clear letter ---
+  await deskA.page.getByTestId('studio-clear').click()
+  await deskA.page.waitForFunction(
+    () => (JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active.filled || []).length === 0,
+    null,
+    { timeout: 10000 },
+  )
+  await waitRoom(
+    (r) => !r.liveCues?.a && (!r.draftSvgs || !r.draftSvgs.a) && !!r.liveCues?.b?.liveSvg,
+    'clear removed desk A cue; desk B kept',
+  )
+  console.log('[ok] clear synced (desk A gone, desk B live)')
+
+  // --- Desk B: publish letter b (already stamped above) ---
   const publishBtn = deskB.page.getByTestId('studio-publish')
   await publishBtn.waitFor({ state: 'visible' })
   assert.equal(await publishBtn.isEnabled(), true, 'publish should be enabled with ink on b')

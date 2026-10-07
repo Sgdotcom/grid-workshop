@@ -330,6 +330,25 @@
 .festival-live > p { font-size: clamp(14px, 1.6vw, 34px); }
 .festival-live strong { color: #0000ee; }
 .festival-live img { width: 100%; min-height: 0; flex: 1; object-fit: contain; }
+.festival-live-stack {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2vh;
+}
+.festival-live-stack.is-multi { grid-template-columns: 1fr 1fr; }
+.festival-live-pane {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4vh;
+}
+.festival-live-pane > small {
+  font-size: clamp(11px, 1.1vw, 22px);
+  color: #0000ee;
+}
+.festival-live-pane img { width: 100%; min-height: 0; flex: 1; object-fit: contain; }
 .festival-waiting { flex: 1; display: grid; place-items: center; color: #0000ee; font-size: 2vw; }
 .festival-phrase { border-top: 1px solid #000; padding-top: 1vh; display: flex; align-items: center; justify-content: center; min-height: 0; }
 .festival-phrase img { width: 3.6vw; height: 100%; object-fit: contain; }

@@ -17,6 +17,9 @@ export interface LiveRoomState {
   drafts: unknown[]
   draftSvgs: Record<string, string>
   draftUpdatedAt: Record<string, string>
+  /** Per-desk live previews keyed by station (a / b). */
+  liveCues?: Record<string, LiveCue>
+  /** Newest cue (compat); prefer liveCues for multi-desk walls. */
   liveCue?: LiveCue
 }
 
@@ -46,7 +49,22 @@ function emptyRoom(): LiveRoomState {
     drafts: [],
     draftSvgs: {},
     draftUpdatedAt: {},
+    liveCues: {},
   }
+}
+
+function stationKey(cue: LiveCue): string {
+  const raw = typeof cue.station === 'string' && cue.station.trim() ? cue.station : 'desk'
+  return raw.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 8) || 'desk'
+}
+
+function newestLiveCue(cues: Record<string, LiveCue>): LiveCue | undefined {
+  let best: LiveCue | undefined
+  for (const cue of Object.values(cues)) {
+    if (!cue.liveSvg) continue
+    if (!best || cue.updatedAt >= best.updatedAt) best = cue
+  }
+  return best
 }
 
 /** /rooms/:room or /rooms/:room/ws */
@@ -83,12 +101,19 @@ function contributionId(item: unknown): string | null {
 }
 
 function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): LiveRoomState {
+  const liveCues: Record<string, LiveCue> = { ...(stored.liveCues ?? {}) }
+  // Migrate legacy single cue into the map once.
+  if (stored.liveCue?.liveSvg) {
+    const key = stationKey(stored.liveCue)
+    if (!liveCues[key]) liveCues[key] = stored.liveCue
+  }
   const next: LiveRoomState = {
     updatedAt: new Date().toISOString(),
     contributions: [...stored.contributions],
     drafts: [...stored.drafts],
     draftSvgs: { ...stored.draftSvgs },
     draftUpdatedAt: { ...stored.draftUpdatedAt },
+    liveCues,
     liveCue: stored.liveCue,
   }
 
@@ -148,6 +173,16 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
     }
   }
 
+  if (incoming.liveCues && typeof incoming.liveCues === 'object') {
+    for (const [key, cue] of Object.entries(incoming.liveCues)) {
+      if (!cue || typeof cue !== 'object') continue
+      const typed = cue as LiveCue
+      if (typeof typed.char !== 'string' || typeof typed.updatedAt !== 'string') continue
+      if (!typed.liveSvg) delete next.liveCues![key]
+      else next.liveCues![key] = { ...typed, station: typed.station || key }
+    }
+  }
+
   if (incoming.liveCue && typeof incoming.liveCue === 'object') {
     const cue = incoming.liveCue as LiveCue
     if (
@@ -155,21 +190,24 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
       typeof cue.liveSvg === 'string' &&
       typeof cue.updatedAt === 'string'
     ) {
-      if (!next.liveCue || cue.updatedAt >= next.liveCue.updatedAt) {
+      const key = stationKey(cue)
+      const existing = next.liveCues![key]
+      if (!existing || cue.updatedAt >= existing.updatedAt) {
         if (!cue.liveSvg) {
-          next.liveCue = undefined
+          delete next.liveCues![key]
         } else {
-          next.liveCue = {
+          next.liveCues![key] = {
             char: cue.char,
             liveSvg: cue.liveSvg,
             updatedAt: cue.updatedAt,
-            ...(typeof cue.station === 'string' ? { station: cue.station } : {}),
+            station: key,
           }
         }
       }
     }
   }
 
+  next.liveCue = newestLiveCue(next.liveCues ?? {})
   return next
 }
 

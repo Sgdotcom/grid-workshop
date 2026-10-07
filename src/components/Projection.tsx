@@ -5,7 +5,12 @@
 import { useEffect, useState } from 'react'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
-import { letterPreviewSvg, readLocalSessionSafe, type LiveRoomState } from '@/lib/liveSession'
+import {
+  activeLiveCues,
+  letterPreviewSvg,
+  readLocalSessionSafe,
+  type LiveRoomState,
+} from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 
 export function Projection() {
@@ -48,12 +53,24 @@ export function Projection() {
   const contributions = session?.contributions ?? []
   const published = latestContributions(contributions)
   const draftSvgs = roomBlob?.draftSvgs ?? {}
-  const liveCue = roomBlob?.liveCue
-  const activeChar = liveCue?.char ?? session?.active.char ?? 'a'
+  const liveCues = activeLiveCues(roomBlob)
+  const liveChars = new Set(liveCues.map((cue) => cue.char))
+  const activeChar =
+    liveCues[liveCues.length - 1]?.char ?? session?.active.char ?? 'a'
+  const drawingLabel = liveCues.length
+    ? [...new Set(liveCues.map((cue) => cue.char))].join(' · ')
+    : activeChar
   const upper = activeChar !== activeChar.toLowerCase()
   const letters = ALPHABET.map((char) => (upper ? char.toUpperCase() : char))
   const complete = letters.filter((char) => published.has(char)).length
-  const liveSvg = liveCue?.liveSvg || (session?.liveSvg && session.active.filled.length ? session.liveSvg : '')
+  const localLiveSvg =
+    session?.liveSvg && session.active.filled.length ? session.liveSvg : ''
+  const panes =
+    liveCues.length > 0
+      ? liveCues
+      : localLiveSvg
+        ? [{ char: activeChar, liveSvg: localLiveSvg, updatedAt: '', station: 'desk' }]
+        : []
 
   return (
     <main className="festival-wall">
@@ -73,11 +90,17 @@ export function Projection() {
       <div className="festival-wall-split">
         <section className="festival-alphabet" aria-label="Collective typeface">
           {letters.map((char) => {
-            const preview = letterPreviewSvg(char, contributions, draftSvgs, liveCue)
+            const preview = letterPreviewSvg(
+              char,
+              contributions,
+              draftSvgs,
+              roomBlob?.liveCues ?? roomBlob?.liveCue,
+            )
+            const isLive = liveChars.has(char)
             return (
               <div
                 key={char}
-                className={`festival-letter ${char === activeChar ? 'is-active' : ''} ${preview.kind === 'draft' || preview.kind === 'live' ? 'is-draft' : ''}`}
+                className={`festival-letter ${isLive || (panes.length === 0 && char === activeChar) ? 'is-active' : ''} ${preview.kind === 'draft' || preview.kind === 'live' ? 'is-draft' : ''}`}
               >
                 {preview.svg ? (
                   <img src={svgImage(preview.svg)} alt={char} />
@@ -86,7 +109,7 @@ export function Projection() {
                 )}
                 <small>
                   {char}
-                  {char === activeChar ? ' · drawing now' : ''}
+                  {isLive ? ' · drawing now' : ''}
                   {preview.kind === 'draft' ? ' · draft' : ''}
                 </small>
               </div>
@@ -94,9 +117,28 @@ export function Projection() {
           })}
         </section>
         <section className="festival-live" aria-label="Current glyph">
-          <p>DRAWING NOW <strong>{activeChar}</strong></p>
-          {liveSvg ? (
-            <img src={svgImage(liveSvg)} alt={`Live drawing of ${activeChar}`} />
+          <p>
+            DRAWING NOW <strong>{drawingLabel}</strong>
+          </p>
+          {panes.length ? (
+            <div
+              className={`festival-live-stack${panes.length > 1 ? ' is-multi' : ''}`}
+              data-testid="festival-live-stack"
+            >
+              {panes.map((cue) => (
+                <div
+                  key={`${cue.station || 'desk'}-${cue.char}-${cue.updatedAt}`}
+                  className="festival-live-pane"
+                >
+                  <small>
+                    {cue.station && cue.station !== 'desk'
+                      ? `Desk ${cue.station.toUpperCase()} · ${cue.char}`
+                      : cue.char}
+                  </small>
+                  <img src={svgImage(cue.liveSvg)} alt={`Live drawing of ${cue.char}`} />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="festival-waiting">Your letter starts here.</div>
           )}
