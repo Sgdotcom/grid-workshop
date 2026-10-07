@@ -29,11 +29,10 @@ function mergeDrafts(local, remote, remoteTimes, localTimes = {}) {
   return [...byChar.values()]
 }
 
-function pruneClearedDrafts(drafts, room, keepChar) {
+function pruneClearedDrafts(drafts, room) {
   const times = room.draftUpdatedAt ?? {}
   const svgs = room.draftSvgs ?? {}
   return drafts.filter((draft) => {
-    if (keepChar && draft.char === keepChar) return true
     if (!times[draft.char]) return true
     if (svgs[draft.char]) return true
     return false

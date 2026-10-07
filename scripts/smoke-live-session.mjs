@@ -120,6 +120,15 @@ async function main() {
   assert(staleCue.json.liveCue?.char === 'b', 'compat liveCue should stay newest')
   console.log('[ok] stale liveCue ignored')
 
+  // Desk B also showing letter a — shared clear should drop both stations' a cues.
+  await req('PUT', `/rooms/${room}`, {
+    liveCue: {
+      char: 'a',
+      station: 'b',
+      liveSvg: '<svg id="live-b-on-a"/>',
+      updatedAt: '2026-10-07T12:00:01.500Z',
+    },
+  })
   const clearA = await req('PUT', `/rooms/${room}`, {
     draftSvgs: { a: '' },
     draftUpdatedAt: { a: '2026-10-07T12:00:02.000Z' },
@@ -133,10 +142,21 @@ async function main() {
   })
   assert(!clearA.json.liveCues?.a, 'empty liveSvg should drop station a')
   assert(!clearA.json.draftSvgs?.a, 'empty draftSvg should drop draft a')
-  assert(clearA.json.liveCues?.b?.liveSvg === '<svg id="live-b"/>', 'clearing a must keep station b')
+  assert(!clearA.json.liveCues?.b, 'clearing letter a must drop every station cue for a')
   assert(clearA.json.draftSvgs?.b, 'clearing a must keep draft b')
-  assert(clearA.json.liveCue?.char === 'b', 'compat liveCue should fall back to b')
-  console.log('[ok] clear station a keeps station b')
+  console.log('[ok] clear letter a drops all live cues for a')
+
+  // Restore desk B on letter b for remaining checks
+  await req('PUT', `/rooms/${room}`, {
+    liveCue: {
+      char: 'b',
+      station: 'b',
+      liveSvg: '<svg id="live-b"/>',
+      updatedAt: '2026-10-07T12:00:03.000Z',
+    },
+    draftSvgs: { b: '<svg id="b-draft"/>' },
+    draftUpdatedAt: { b: '2026-10-07T12:00:03.000Z' },
+  })
 
   const wall = await req('GET', `/rooms/${room}`)
   assert(wall.status === 200, 'wall GET failed')

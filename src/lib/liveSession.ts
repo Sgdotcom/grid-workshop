@@ -289,16 +289,22 @@ export function mergeDrafts(
 export function pruneClearedDrafts(
   drafts: GlyphDraft[],
   room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'>,
-  keepChar?: string,
 ): GlyphDraft[] {
   const times = room.draftUpdatedAt ?? {}
   const svgs = room.draftSvgs ?? {}
   return drafts.filter((draft) => {
-    if (keepChar && draft.char === keepChar) return true
     if (!times[draft.char]) return true
     if (svgs[draft.char]) return true
     return false
   })
+}
+
+/** True when the room has tombstoned this letter (shared clear). */
+export function isLetterClearedInRoom(
+  char: string,
+  room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'>,
+): boolean {
+  return !!(room.draftUpdatedAt?.[char] && !room.draftSvgs?.[char])
 }
 
 /** Apply remote room into a FestivalSession for wall/projection display + localStorage. */
@@ -330,16 +336,18 @@ export function applyRoomToSession(
   const liveCue = room.liveCue
   const activeChar = keepActive ? local!.active.char : (liveCue?.char ?? base.active.char)
   const merged = mergeDrafts(base.drafts, room.drafts ?? [], room.draftUpdatedAt ?? {})
-  // Worker deletes cleared drafts from the array; also honor draftSvg tombstones.
-  const drafts = pruneClearedDrafts(merged, room, keepActive ? activeChar : undefined)
-  const activeDraft = keepActive
-    ? local!.active
-    : (drafts.find((d) => d.char === activeChar) ?? {
-        ...base.active,
-        char: activeChar,
-        filled: [],
-        brokenJoins: [],
-      })
+  // Shared clear tombstones win even for the desk's active letter.
+  const drafts = pruneClearedDrafts(merged, room)
+  const remoteClearedActive = keepActive && isLetterClearedInRoom(activeChar, room)
+  const activeDraft =
+    keepActive && !remoteClearedActive
+      ? local!.active
+      : (drafts.find((d) => d.char === activeChar) ?? {
+          ...base.active,
+          char: activeChar,
+          filled: [],
+          brokenJoins: [],
+        })
 
   return {
     ...base,
@@ -347,7 +355,12 @@ export function applyRoomToSession(
     contributions,
     drafts,
     active: activeDraft,
-    liveSvg: keepActive ? local!.liveSvg : (liveCue?.liveSvg ?? base.liveSvg),
+    liveSvg:
+      keepActive && !remoteClearedActive
+        ? local!.liveSvg
+        : remoteClearedActive
+          ? ''
+          : (liveCue?.liveSvg ?? base.liveSvg),
     library: base.library.length ? base.library : [...PRESET_SHAPES],
   }
 }
@@ -580,28 +593,39 @@ export function createLiveSyncController(options: {
     }, delay)
   }
 
-  const push = (session: FestivalSession) => {
+  const pushNow = async (session: FestivalSession) => {
+    const config = getLiveConfig()
+    if (!config.enabled || stopped) return
+    try {
+      setStatus({ state: 'syncing', message: `Saving · ${config.room}…` })
+      const room = await pushLiveRoom(buildLivePayload(session, { station: config.station }), config)
+      if (room) {
+        lastSeenUpdatedAt = room.updatedAt
+        setStatus({
+          state: 'ok',
+          message: socketLive ? `Live · ${config.room}` : `Connected · ${config.room}`,
+          lastPushAt: new Date().toISOString(),
+        })
+      }
+    } catch (error) {
+      setStatus({
+        state: 'error',
+        message: error instanceof Error ? error.message : 'Live push failed',
+      })
+    }
+  }
+
+  const push = (session: FestivalSession, opts?: { immediate?: boolean }) => {
     const config = getLiveConfig()
     if (!config.enabled || stopped) return
     if (pushTimer) window.clearTimeout(pushTimer)
-    pushTimer = window.setTimeout(async () => {
-      try {
-        setStatus({ state: 'syncing', message: `Saving · ${config.room}…` })
-        const room = await pushLiveRoom(buildLivePayload(session, { station: config.station }), config)
-        if (room) {
-          lastSeenUpdatedAt = room.updatedAt
-          setStatus({
-            state: 'ok',
-            message: socketLive ? `Live · ${config.room}` : `Connected · ${config.room}`,
-            lastPushAt: new Date().toISOString(),
-          })
-        }
-      } catch (error) {
-        setStatus({
-          state: 'error',
-          message: error instanceof Error ? error.message : 'Live push failed',
-        })
-      }
+    if (opts?.immediate) {
+      pushTimer = null
+      void pushNow(session)
+      return
+    }
+    pushTimer = window.setTimeout(() => {
+      void pushNow(session)
     }, 400)
   }
 

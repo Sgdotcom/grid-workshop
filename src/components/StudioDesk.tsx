@@ -48,7 +48,7 @@ import {
 } from '@/lib/festival'
 import { DEFAULT_BRUSH, DEFAULT_GRID } from '@/lib/gridGeometry'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
-import { letterPreviewSvg, mergeContributions } from '@/lib/liveSession'
+import { isLetterClearedInRoom, letterPreviewSvg, mergeContributions } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 import { buildStarterBlueprint, nudgeFilled } from '@/lib/skeletons'
 import { moduleShapeFillRule, moduleShapePath, shapeSupportsRounding } from '@/lib/shapes'
@@ -370,16 +370,22 @@ export function StudioDesk() {
       const nextGlyphs = new Map(glyphsRef.current)
       for (const draft of session.drafts) {
         if (!draft.filled.length) continue
-        // Current letter stays owned by this desk while editing.
-        if (draft.char === activeChar) continue
+        if (draft.char === activeChar && !isLetterClearedInRoom(activeChar, liveRoom)) continue
+        if (isLetterClearedInRoom(draft.char, liveRoom)) continue
         nextGlyphs.set(draft.char, draft)
       }
-      // Remote clear: drop peer draft previews for tombstoned letters.
+      // Shared clear: drop tombstoned letters from the alphabet (including active).
       for (const ch of [...nextGlyphs.keys()]) {
-        if (ch === activeChar) continue
-        if (liveRoom.draftUpdatedAt?.[ch] && !liveRoom.draftSvgs?.[ch]) {
-          nextGlyphs.delete(ch)
-        }
+        if (isLetterClearedInRoom(ch, liveRoom)) nextGlyphs.delete(ch)
+      }
+      if (isLetterClearedInRoom(activeChar, liveRoom) && filledRef.current.size > 0) {
+        const empty = new Map<string, FilledRegion>()
+        const noJoins = new Set<string>()
+        filledRef.current = empty
+        brokenRef.current = noJoins
+        setFilled(empty)
+        setBrokenJoins(noJoins)
+        activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
       }
       glyphsRef.current = nextGlyphs
       setGlyphs(nextGlyphs)
@@ -388,7 +394,9 @@ export function StudioDesk() {
         active: activeRef.current,
         contributions: merged,
         drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
-        liveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
+        liveSvg: isLetterClearedInRoom(activeChar, liveRoom)
+          ? ''
+          : (sessionRef.current?.liveSvg ?? session.liveSvg),
       }
     },
   })
@@ -521,6 +529,9 @@ export function StudioDesk() {
     setFilled(empty)
     setBrokenJoins(noJoins)
     syncGlyphForActive(empty, noJoins)
+    activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+    // Flush clear immediately so peers + wall drop the letter without debounce lag.
+    pushLive(writeSession(), { immediate: true })
   }
 
   const nudge = useCallback(

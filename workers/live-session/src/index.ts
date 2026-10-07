@@ -165,6 +165,10 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
       if (!storedAt || incomingAt >= storedAt) {
         if (svg === '') {
           delete next.draftSvgs[ch]
+          // Shared clear: drop every desk's live cue for this letter.
+          for (const [key, cue] of Object.entries(next.liveCues ?? {})) {
+            if (cue?.char === ch) delete next.liveCues![key]
+          }
         } else {
           next.draftSvgs[ch] = svg
         }

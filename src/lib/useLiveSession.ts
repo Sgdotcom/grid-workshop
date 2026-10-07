@@ -76,9 +76,9 @@ export function useLiveSession(options: {
   }, [room, joined, wallMode])
 
   const pushSession = useCallback(
-    (session: FestivalSession) => {
+    (session: FestivalSession, opts?: { immediate?: boolean }) => {
       if (!joined) return
-      controllerRef.current?.push(session)
+      controllerRef.current?.push(session, opts)
     },
     [joined],
   )

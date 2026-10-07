@@ -179,16 +179,15 @@ try {
     null,
     { timeout: 20000 },
   )
-  // Wall must drop live cue for a (desk B may still be live on b)
+  // Wall must drop live/draft for a (desk B may still be live on b)
   await wall.waitForFunction(
     () => {
-      const a = document.querySelector('.cinematic-ribbon-letter')
-      // First ribbon letter is 'a' in lowercase alphabet
       const letters = [...document.querySelectorAll('.cinematic-ribbon-letter')]
-      const letterA = letters.find((el) => el.textContent?.trim() === 'a' || el.querySelector('img[alt="a"]'))
-        || letters[0]
+      const letterA =
+        letters.find((el) => el.textContent?.trim() === 'a' || el.querySelector('img[alt="a"]')) ||
+        letters[0]
       if (!letterA) return false
-      return !letterA.querySelector('.cinematic-live-dot')
+      return !letterA.querySelector('.cinematic-live-dot') && !letterA.querySelector('img')
     },
     null,
     { timeout: 20000 },

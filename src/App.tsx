@@ -63,7 +63,7 @@ import { downloadBlob } from '@/lib/utils'
 import { prefBoolean, prefNumber, readUiPrefs, writeUiPrefs } from '@/lib/uiPrefs'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, parseSession, readSession, type Contribution, type FestivalSession } from '@/lib/festival'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
-import { mergeContributions } from '@/lib/liveSession'
+import { isLetterClearedInRoom, mergeContributions } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 
 type Screen = 'shape' | 'paint' | 'export'
@@ -391,14 +391,22 @@ export default function App() {
       const activeChar = letterRef.current
       const nextGlyphs = new Map(glyphsRef.current)
       for (const draft of session.drafts) {
-        if (!draft.filled.length || draft.char === activeChar) continue
+        if (!draft.filled.length) continue
+        if (draft.char === activeChar && !isLetterClearedInRoom(activeChar, liveRoom)) continue
+        if (isLetterClearedInRoom(draft.char, liveRoom)) continue
         nextGlyphs.set(draft.char, draft)
       }
       for (const ch of [...nextGlyphs.keys()]) {
-        if (ch === activeChar) continue
-        if (liveRoom.draftUpdatedAt?.[ch] && !liveRoom.draftSvgs?.[ch]) {
-          nextGlyphs.delete(ch)
-        }
+        if (isLetterClearedInRoom(ch, liveRoom)) nextGlyphs.delete(ch)
+      }
+      if (isLetterClearedInRoom(activeChar, liveRoom) && filledRef.current.size > 0) {
+        const empty = new Map<string, FilledRegion>()
+        const noJoins = new Set<string>()
+        filledRef.current = empty
+        brokenRef.current = noJoins
+        setFilled(empty)
+        setBrokenJoins(noJoins)
+        activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
       }
       glyphsRef.current = nextGlyphs
       setGlyphs(nextGlyphs)
@@ -407,7 +415,9 @@ export default function App() {
         active: activeRef.current,
         contributions: merged,
         drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
-        liveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
+        liveSvg: isLetterClearedInRoom(activeChar, liveRoom)
+          ? ''
+          : (sessionRef.current?.liveSvg ?? session.liveSvg),
       }
     },
   })
@@ -599,6 +609,8 @@ export default function App() {
     setFilled(empty)
     setBrokenJoins(noJoins)
     syncGlyphForActive(empty, noJoins)
+    activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+    pushLive(writeSession(), { immediate: true })
     setExportStatus({ state: 'idle' })
   }
 
