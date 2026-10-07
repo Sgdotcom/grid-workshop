@@ -7,10 +7,11 @@ Cloudflare Worker + Durable Object that stores one shared festival room JSON per
 | Method | Path | Auth |
 |--------|------|------|
 | `GET` | `/rooms/:room` | Public |
+| `GET` | `/rooms/:room/ws` | Public WebSocket — initial snapshot + push on PUT/DELETE |
 | `PUT` | `/rooms/:room` | Public unless `LIVE_WRITE_TOKEN` is set |
 | `DELETE` | `/rooms/:room` | Same as PUT — clears the room |
 
-Festival install runs **without** a write token so desks/wall only need the same room name + **Join session**.
+Festival install runs **without** a write token so desks/wall only need the same room name + **Join session**. Realtime uses Durable Object WebSockets (Cloudflare free tier).
 
 ## Deploy
 

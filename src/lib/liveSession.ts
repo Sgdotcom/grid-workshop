@@ -325,6 +325,30 @@ export function letterPreviewSvg(
   return { svg: '', kind: 'empty' }
 }
 
+function roomWsUrl(config: LiveSessionConfig): string {
+  const base = config.baseUrl.replace(/^http/i, 'ws')
+  return `${base}/rooms/${encodeURIComponent(config.room)}/ws`
+}
+
+function parseRoomMessage(raw: string): LiveRoomState | null {
+  try {
+    const data = JSON.parse(raw) as LiveRoomState & { type?: string }
+    if (data?.type === 'pong') return null
+    if (typeof data?.updatedAt !== 'string') return null
+    return {
+      updatedAt: data.updatedAt,
+      contributions: Array.isArray(data.contributions) ? data.contributions : [],
+      drafts: Array.isArray(data.drafts) ? data.drafts : [],
+      draftSvgs: data.draftSvgs && typeof data.draftSvgs === 'object' ? data.draftSvgs : {},
+      draftUpdatedAt:
+        data.draftUpdatedAt && typeof data.draftUpdatedAt === 'object' ? data.draftUpdatedAt : {},
+      liveCue: data.liveCue,
+    }
+  } catch {
+    return null
+  }
+}
+
 export function createLiveSyncController(options: {
   onStatus?: (status: LiveSyncStatus) => void
   onRoom?: (room: LiveRoomState, session: FestivalSession) => void
@@ -337,10 +361,39 @@ export function createLiveSyncController(options: {
 }) {
   let timer: number | null = null
   let pushTimer: number | null = null
+  let reconnectTimer: number | null = null
+  let pingTimer: number | null = null
+  let socket: WebSocket | null = null
   let stopped = false
   let lastSeenUpdatedAt = ''
+  let reconnectAttempt = 0
+  let socketLive = false
 
   const setStatus = (status: LiveSyncStatus) => options.onStatus?.(status)
+
+  const applyRoom = (room: LiveRoomState, source: 'ws' | 'poll') => {
+    if (room.updatedAt === lastSeenUpdatedAt) {
+      setStatus({
+        state: 'ok',
+        message: socketLive ? `Live · ${getLiveConfig().room}` : `Connected · ${getLiveConfig().room}`,
+        lastPullAt: new Date().toISOString(),
+      })
+      return
+    }
+    lastSeenUpdatedAt = room.updatedAt
+    const local = options.getSession?.() ?? readLocalSessionSafe()
+    const painting = options.painting?.() ?? false
+    const session = applyRoomToSession(local, room, {
+      keepLocalActive: options.keepLocalActive || painting,
+    })
+    persistSession(session)
+    options.onRoom?.(room, session)
+    setStatus({
+      state: 'ok',
+      message: source === 'ws' ? `Live · ${getLiveConfig().room}` : `Connected · ${getLiveConfig().room}`,
+      lastPullAt: new Date().toISOString(),
+    })
+  }
 
   const pull = async () => {
     const config = getLiveConfig()
@@ -349,30 +402,10 @@ export function createLiveSyncController(options: {
       return null
     }
     try {
-      setStatus({ state: 'syncing', message: `Connecting · ${config.room}…` })
+      if (!socketLive) setStatus({ state: 'syncing', message: `Connecting · ${config.room}…` })
       const room = await pullLiveRoom(config)
       if (!room || stopped) return null
-      if (room.updatedAt === lastSeenUpdatedAt) {
-        setStatus({
-          state: 'ok',
-          message: `Connected · ${config.room}`,
-          lastPullAt: new Date().toISOString(),
-        })
-        return room
-      }
-      lastSeenUpdatedAt = room.updatedAt
-      const local = options.getSession?.() ?? readLocalSessionSafe()
-      const painting = options.painting?.() ?? false
-      const session = applyRoomToSession(local, room, {
-        keepLocalActive: options.keepLocalActive || painting,
-      })
-      persistSession(session)
-      options.onRoom?.(room, session)
-      setStatus({
-        state: 'ok',
-        message: `Connected · ${config.room}`,
-        lastPullAt: new Date().toISOString(),
-      })
+      applyRoom(room, 'poll')
       return room
     } catch (error) {
       setStatus({
@@ -381,6 +414,87 @@ export function createLiveSyncController(options: {
       })
       return null
     }
+  }
+
+  const clearSocketTimers = () => {
+    if (pingTimer) window.clearInterval(pingTimer)
+    if (reconnectTimer) window.clearTimeout(reconnectTimer)
+    pingTimer = null
+    reconnectTimer = null
+  }
+
+  const connectSocket = () => {
+    const config = getLiveConfig()
+    if (!config.enabled || stopped) return
+    clearSocketTimers()
+    try {
+      socket?.close()
+    } catch {
+      /* ignore */
+    }
+    socket = null
+    socketLive = false
+
+    let ws: WebSocket
+    try {
+      ws = new WebSocket(roomWsUrl(config))
+    } catch (error) {
+      setStatus({
+        state: 'error',
+        message: error instanceof Error ? error.message : 'WebSocket failed',
+      })
+      scheduleReconnect()
+      return
+    }
+    socket = ws
+
+    ws.onopen = () => {
+      if (stopped || socket !== ws) return
+      socketLive = true
+      reconnectAttempt = 0
+      setStatus({ state: 'ok', message: `Live · ${config.room}` })
+      pingTimer = window.setInterval(() => {
+        if (socket === ws && ws.readyState === WebSocket.OPEN) {
+          try {
+            ws.send('ping')
+          } catch {
+            /* ignore */
+          }
+        }
+      }, 25000)
+    }
+
+    ws.onmessage = (event) => {
+      if (stopped || socket !== ws) return
+      const room = parseRoomMessage(String(event.data))
+      if (room) applyRoom(room, 'ws')
+    }
+
+    ws.onerror = () => {
+      /* onclose handles reconnect */
+    }
+
+    ws.onclose = () => {
+      if (socket !== ws) return
+      socketLive = false
+      socket = null
+      clearSocketTimers()
+      if (!stopped) scheduleReconnect()
+    }
+  }
+
+  const scheduleReconnect = () => {
+    if (stopped || reconnectTimer) return
+    const delay = Math.min(10000, 500 * 2 ** reconnectAttempt)
+    reconnectAttempt += 1
+    setStatus({
+      state: 'syncing',
+      message: `Reconnecting · ${getLiveConfig().room}…`,
+    })
+    reconnectTimer = window.setTimeout(() => {
+      reconnectTimer = null
+      connectSocket()
+    }, delay)
   }
 
   const push = (session: FestivalSession) => {
@@ -395,7 +509,7 @@ export function createLiveSyncController(options: {
           lastSeenUpdatedAt = room.updatedAt
           setStatus({
             state: 'ok',
-            message: `Connected · ${config.room}`,
+            message: socketLive ? `Live · ${config.room}` : `Connected · ${config.room}`,
             lastPushAt: new Date().toISOString(),
           })
         }
@@ -408,9 +522,12 @@ export function createLiveSyncController(options: {
     }, 400)
   }
 
-  const start = (pollMs = 1800) => {
+  /** pollMs is fallback GET interval; WebSocket is primary. */
+  const start = (pollMs = 10000) => {
     stopped = false
+    reconnectAttempt = 0
     void pull()
+    connectSocket()
     if (timer) window.clearInterval(timer)
     timer = window.setInterval(() => {
       void pull()
@@ -419,10 +536,18 @@ export function createLiveSyncController(options: {
 
   const stop = () => {
     stopped = true
+    socketLive = false
     if (timer) window.clearInterval(timer)
     if (pushTimer) window.clearTimeout(pushTimer)
+    clearSocketTimers()
     timer = null
     pushTimer = null
+    try {
+      socket?.close()
+    } catch {
+      /* ignore */
+    }
+    socket = null
   }
 
   return { start, stop, pull, push, getConfig: getLiveConfig }

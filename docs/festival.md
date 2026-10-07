@@ -25,7 +25,7 @@ When `VITE_LIVE_SESSION_URL` points at the Cloudflare Worker (`workers/live-sess
 - Open the site on each computer → **Join session** (same room name, default `lettermans`).
 - No write token for the festival install — anyone in the room can sync.
 - Wall page has the same room / Join control.
-- Published letters, drafts, and “drawing now” update across desks + wall.
+- Updates push over WebSocket (free Cloudflare Durable Object) so the wall tracks “drawing now” in near-realtime; a slow GET poll is only a fallback.
 - Refresh reloads from the shared room.
 
 | Query | Meaning |

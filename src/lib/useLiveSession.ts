@@ -64,7 +64,8 @@ export function useLiveSession(options: {
       },
     })
     controllerRef.current = controller
-    controller.start(wallMode ? 1500 : 1800)
+    // WebSocket is primary; 10s GET is fallback only.
+    controller.start(10000)
     return () => {
       controller.stop()
       if (controllerRef.current === controller) controllerRef.current = null
