@@ -49,6 +49,11 @@ async function stamp(page, col, row) {
 }
 
 async function joinIfNeeded(page) {
+  const roomBtn = page.getByTestId(`live-room-${room}`)
+  if (await roomBtn.count()) {
+    await roomBtn.click().catch(() => {})
+    return
+  }
   const join = page.getByTestId('live-session-join-btn')
   if (await join.count()) await join.click().catch(() => {})
 }
