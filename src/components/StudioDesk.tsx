@@ -48,7 +48,7 @@ import {
 } from '@/lib/festival'
 import { DEFAULT_BRUSH, DEFAULT_GRID } from '@/lib/gridGeometry'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
-import { letterPreviewSvg } from '@/lib/liveSession'
+import { letterPreviewSvg, mergeContributions } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 import { buildStarterBlueprint, nudgeFilled } from '@/lib/skeletons'
 import { moduleShapeFillRule, moduleShapePath, shapeSupportsRounding } from '@/lib/shapes'
@@ -362,8 +362,10 @@ export function StudioDesk() {
     getSession: () => sessionRef.current,
     painting: () => strokeStarted.current,
     onRemoteSession: (session) => {
-      setContributions(session.contributions)
-      contributionsRef.current = session.contributions
+      // Union with local so a just-published letter is not wiped by a stale WS frame.
+      const merged = mergeContributions(contributionsRef.current, session.contributions)
+      setContributions(merged)
+      contributionsRef.current = merged
       const activeChar = letterRef.current
       const nextGlyphs = new Map(glyphsRef.current)
       for (const draft of session.drafts) {
@@ -377,7 +379,7 @@ export function StudioDesk() {
       sessionRef.current = {
         ...session,
         active: activeRef.current,
-        contributions: session.contributions,
+        contributions: merged,
         drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
         liveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
       }
@@ -527,7 +529,10 @@ export function StudioDesk() {
         }),
       ),
     }
-    setContributions((previous) => [...previous, contribution])
+    const next = [...contributionsRef.current, contribution]
+    contributionsRef.current = next
+    setContributions(next)
+    pushLive(writeSession())
     setNotice(`${draft.char} added to our typeface. Choose another letter.`)
   }
 

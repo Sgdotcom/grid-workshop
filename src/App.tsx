@@ -63,6 +63,7 @@ import { downloadBlob } from '@/lib/utils'
 import { prefBoolean, prefNumber, readUiPrefs, writeUiPrefs } from '@/lib/uiPrefs'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, parseSession, readSession, type Contribution, type FestivalSession } from '@/lib/festival'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
+import { mergeContributions } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 
 type Screen = 'shape' | 'paint' | 'export'
@@ -384,8 +385,9 @@ export default function App() {
     getSession: () => sessionRef.current,
     painting: () => strokeStarted.current,
     onRemoteSession: (session) => {
-      setContributions(session.contributions)
-      contributionsRef.current = session.contributions
+      const merged = mergeContributions(contributionsRef.current, session.contributions)
+      setContributions(merged)
+      contributionsRef.current = merged
       const activeChar = letterRef.current
       const nextGlyphs = new Map(glyphsRef.current)
       for (const draft of session.drafts) {
@@ -397,7 +399,7 @@ export default function App() {
       sessionRef.current = {
         ...session,
         active: activeRef.current,
-        contributions: session.contributions,
+        contributions: merged,
         drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
         liveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
       }
@@ -438,7 +440,10 @@ export default function App() {
       id: crypto.randomUUID(), createdAt: new Date().toISOString(), draft,
       svg: compactSvgMarkup(buildSvgMarkup(makePayload(draft.char, draft.filled, draft.brokenJoins), { fitContent: false })),
     }
-    setContributions(previous => [...previous, contribution])
+    const next = [...contributionsRef.current, contribution]
+    contributionsRef.current = next
+    setContributions(next)
+    pushLive(writeSession())
     setNotice(`${draft.char} added to our typeface. Choose another letter or try another version.`)
   }
 

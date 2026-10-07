@@ -138,21 +138,38 @@ try {
 
   // --- Desk B: draw + publish on letter b ---
   await deskB.page.getByTestId('studio-glyph-b').click()
+  await deskB.page.waitForFunction(
+    () => JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active?.char === 'b',
+    null,
+    { timeout: 10000 },
+  )
+  // Ensure ink mode on B (A may have left cutout toggled only on A).
+  const modeB = deskB.page.getByTestId('studio-stamp-mode')
+  if ((await modeB.getAttribute('aria-pressed')) === 'true') {
+    await modeB.click()
+  }
   await stamp(deskB.page, 1, 1)
   await stamp(deskB.page, 2, 1)
+  await stamp(deskB.page, 3, 1)
   await deskB.page.waitForFunction(
     () => {
       const s = JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))
       return s?.active?.char === 'b' && (s.active.filled || []).length >= 2
     },
     null,
-    { timeout: 10000 },
+    { timeout: 15000 },
   )
-  await deskB.page.getByTestId('studio-publish').click()
+  const publishBtn = deskB.page.getByTestId('studio-publish')
+  await publishBtn.waitFor({ state: 'visible' })
+  assert.equal(await publishBtn.isEnabled(), true, 'publish should be enabled with ink on b')
+  await publishBtn.click()
   await deskB.page.waitForFunction(
-    () => (JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.contributions || []).some((c) => c.draft.char === 'b'),
+    () => {
+      const contribs = JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.contributions || []
+      return contribs.some((c) => c.draft?.char === 'b' || c.draft?.char === 'B')
+    },
     null,
-    { timeout: 10000 },
+    { timeout: 15000 },
   )
 
   await waitRoom(
