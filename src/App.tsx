@@ -418,13 +418,8 @@ export default function App() {
     const timer = window.setTimeout(() => {
       pushLive(writeSession())
     }, 250)
-    const flush = () => {
-      pushLive(writeSession())
-    }
-    window.addEventListener('pagehide', flush)
     return () => {
       window.clearTimeout(timer)
-      window.removeEventListener('pagehide', flush)
     }
   }, [filled, brokenJoins, grid, softness, cornerRadius, holeMode, displayGuideLetter, glyphs, contributions, writeSession, pushLive, recovery.error])
 

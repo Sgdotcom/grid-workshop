@@ -209,13 +209,7 @@ export function buildLivePayload(
     // Tombstone: Worker deletes this char's draft preview.
     draftSvgs[ch] = ''
   }
-  const liveCue: LiveCue = {
-    char: ch,
-    liveSvg: hasInk && session.liveSvg ? session.liveSvg : '',
-    updatedAt: now,
-    station,
-  }
-  return {
+  const payload: Partial<LiveRoomState> = {
     updatedAt: now,
     contributions: session.contributions,
     drafts: hasInk && activeDraft
@@ -233,9 +227,29 @@ export function buildLivePayload(
         ],
     draftSvgs,
     draftUpdatedAt,
-    liveCue,
-    liveCues: { [station]: liveCue },
   }
+  // Only tombstone live cues when the letter is actually empty. If we still have
+  // ink but liveSvg is briefly missing (unload / race), leave the prior cue alone.
+  if (hasInk && session.liveSvg) {
+    const liveCue: LiveCue = {
+      char: ch,
+      liveSvg: session.liveSvg,
+      updatedAt: now,
+      station,
+    }
+    payload.liveCue = liveCue
+    payload.liveCues = { [station]: liveCue }
+  } else if (!hasInk) {
+    const liveCue: LiveCue = {
+      char: ch,
+      liveSvg: '',
+      updatedAt: now,
+      station,
+    }
+    payload.liveCue = liveCue
+    payload.liveCues = { [station]: liveCue }
+  }
+  return payload
 }
 
 export function mergeContributions(local: Contribution[], remote: Contribution[]): Contribution[] {

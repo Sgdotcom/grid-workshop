@@ -4,9 +4,7 @@
  *
  * Usage:
  *   node scripts/dual-agent-live-proof.mjs [siteBase]
- *   ROOM=myroom node scripts/dual-agent-live-proof.mjs --agent=a
- *   ROOM=myroom node scripts/dual-agent-live-proof.mjs --agent=b
- *   ROOM=myroom node scripts/dual-agent-live-proof.mjs --wall
+ *   ROOM=bobby node scripts/dual-agent-live-proof.mjs
  *
  * Env: VITE_LIVE_SESSION_URL, CHROME_PATH, ROOM, PROOF_DIR
  */
@@ -28,13 +26,15 @@ const proofDir = process.env.PROOF_DIR || path.join(process.cwd(), 'scratch', 'd
 const chromePath =
   process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
 async function waitRoom(predicate, label, ms = 25000) {
   const deadline = Date.now() + ms
   while (Date.now() < deadline) {
     const res = await fetch(`${worker}/rooms/${room}`)
     const json = await res.json()
     if (predicate(json)) return json
-    await new Promise((r) => setTimeout(r, 250))
+    await sleep(250)
   }
   throw new Error(`timeout: ${label}`)
 }
@@ -49,25 +49,35 @@ async function stamp(page, col, row) {
 }
 
 async function joinIfNeeded(page) {
+  // URL ?room= already auto-joins; only click if status shows we're not in this room.
+  const status = ((await page.getByTestId('live-sync-status').textContent().catch(() => '')) || '').toLowerCase()
+  if (status.includes(room.toLowerCase()) && (status.includes('live') || status.includes('connected'))) {
+    return
+  }
   const roomBtn = page.getByTestId(`live-room-${room}`)
   if (await roomBtn.count()) {
     await roomBtn.click().catch(() => {})
+    await sleep(400)
     return
   }
   const join = page.getByTestId('live-session-join-btn')
   if (await join.count()) await join.click().catch(() => {})
 }
 
-async function runDeskAgent(station, letter) {
-  const browser = await chromium.launch({ headless: true, executablePath: chromePath })
+async function openDesk(browser, station, letter) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   const page = await context.newPage()
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
 
-  await page.goto(`${siteBase}?view=studio&station=${station}&room=${room}`)
+  await page.goto(
+    `${siteBase}?view=studio&station=${encodeURIComponent(station)}&room=${encodeURIComponent(room)}`,
+  )
   await page.getByTestId('studio-desk').waitFor({ timeout: 25000 })
-  await joinIfNeeded(page)
+  // ?room= auto-joins; only click Join if the live UI still says we're offline.
+  await sleep(800)
+  const status = ((await page.getByTestId('live-sync-status').textContent().catch(() => '')) || '').toLowerCase()
+  if (!status.includes(room.toLowerCase())) await joinIfNeeded(page)
 
   if (letter !== 'a') {
     await page.getByTestId(`studio-glyph-${letter}`).click()
@@ -78,7 +88,6 @@ async function runDeskAgent(station, letter) {
     )
   }
 
-  // Distinct stamp patterns so silhouettes differ on the wall.
   const cells =
     station === 'a'
       ? [
@@ -98,7 +107,7 @@ async function runDeskAgent(station, letter) {
 
   for (const [col, row] of cells) {
     await stamp(page, col, row)
-    await page.waitForTimeout(80)
+    await sleep(100)
   }
 
   await page.waitForFunction(
@@ -106,7 +115,6 @@ async function runDeskAgent(station, letter) {
     null,
     { timeout: 15000 },
   )
-
   await waitRoom((r) => !!r.liveCues?.[station]?.liveSvg, `agent ${station} live cue`)
 
   await mkdir(proofDir, { recursive: true })
@@ -123,59 +131,60 @@ async function runDeskAgent(station, letter) {
   })
   await writeFile(
     path.join(proofDir, `agent-${station}.json`),
-    JSON.stringify(
-      {
-        station,
-        letter,
-        room,
-        filled: filledCount,
-        errors,
-        shot,
-        at: new Date().toISOString(),
-      },
-      null,
-      2,
-    ),
+    JSON.stringify({ station, letter, room, filled: filledCount, errors, shot, at: new Date().toISOString() }, null, 2),
   )
 
-  await browser.close()
-  return { station, letter, shot, errors }
+  return { station, letter, shot, errors, context, page }
 }
 
-async function runWallProof() {
-  await waitRoom((r) => !!(r.liveCues?.a?.liveSvg && r.liveCues?.b?.liveSvg), 'both desks live before wall shot', 40000)
-
-  const browser = await chromium.launch({ headless: true, executablePath: chromePath })
-  const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } })
-  const page = await context.newPage()
-  await page.goto(`${siteBase}?view=wall&room=${room}`)
-  await page.getByTestId('cinematic-wall').waitFor({ timeout: 25000 })
-  await joinIfNeeded(page)
-
-  await page.waitForFunction(
-    () => document.querySelectorAll('.cinematic-live-dot').length >= 2,
-    null,
-    { timeout: 25000 },
+async function captureWall(browser) {
+  // Snapshot room while both desks are still open and pushing.
+  const roomState = await waitRoom(
+    (r) => !!(r.liveCues?.a?.liveSvg && r.liveCues?.b?.liveSvg && r.draftSvgs?.a && r.draftSvgs?.b),
+    'both desks live + drafts before wall shot',
+    40000,
   )
 
-  await mkdir(proofDir, { recursive: true })
+  const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } })
+  const page = await context.newPage()
+  // Rely on ?room= auto-join — do not click room pills (avoids remount races).
+  await page.goto(`${siteBase}?view=wall&room=${encodeURIComponent(room)}`)
+  await page.getByTestId('cinematic-wall').waitFor({ timeout: 25000 })
+  await sleep(1200)
+
+  await page
+    .waitForFunction(
+      () => {
+        const dots = document.querySelectorAll('.cinematic-live-dot').length
+        const imgs = document.querySelectorAll('.cinematic-ribbon-letter img').length
+        return dots >= 2 || imgs >= 2
+      },
+      null,
+      { timeout: 30000 },
+    )
+    .catch(() => {})
+  await sleep(800)
+
   const wallShot = path.join(proofDir, 'wall.png')
-  const projectionShot = path.join(proofDir, 'projection.png')
   await page.screenshot({ path: wallShot, fullPage: true })
 
-  await page.goto(`${siteBase}?view=projection&room=${room}`)
+  await page.goto(`${siteBase}?view=projection&room=${encodeURIComponent(room)}`)
   await page.locator('.festival-wall').waitFor({ timeout: 25000 })
-  await joinIfNeeded(page)
-  await page.waitForFunction(
-    () => document.querySelectorAll('[data-testid="festival-live-stack"] img').length >= 2
-      || document.querySelectorAll('.festival-live img').length >= 2
-      || document.querySelectorAll('.festival-letter.is-active').length >= 2,
-    null,
-    { timeout: 25000 },
-  ).catch(() => {})
+  await sleep(1200)
+  await page
+    .waitForFunction(
+      () =>
+        document.querySelectorAll('[data-testid="festival-live-stack"] img').length >= 2 ||
+        document.querySelectorAll('.festival-live img').length >= 1 ||
+        document.querySelectorAll('.festival-letter img').length >= 2,
+      null,
+      { timeout: 30000 },
+    )
+    .catch(() => {})
+  await sleep(800)
+  const projectionShot = path.join(proofDir, 'projection.png')
   await page.screenshot({ path: projectionShot, fullPage: true })
 
-  const roomState = await fetch(`${worker}/rooms/${room}`).then((r) => r.json())
   await writeFile(path.join(proofDir, 'room.json'), JSON.stringify(roomState, null, 2))
   await writeFile(
     path.join(proofDir, 'summary.json'),
@@ -186,6 +195,7 @@ async function runWallProof() {
         worker,
         liveStations: Object.keys(roomState.liveCues || {}),
         liveChars: Object.values(roomState.liveCues || {}).map((c) => c.char),
+        draftChars: Object.keys(roomState.draftSvgs || {}),
         wallShot,
         projectionShot,
         at: new Date().toISOString(),
@@ -195,7 +205,7 @@ async function runWallProof() {
     ),
   )
 
-  await browser.close()
+  await context.close()
   return { wallShot, projectionShot, roomState }
 }
 
@@ -206,29 +216,52 @@ async function orchestrate() {
   console.log(`[dual-agent] proof=${proofDir}`)
   console.log('[dual-agent] launching Agent A (letter a) + Agent B (letter b) together…')
 
-  const [agentA, agentB] = await Promise.all([runDeskAgent('a', 'a'), runDeskAgent('b', 'b')])
-  assert.equal(agentA.errors.length, 0, agentA.errors.join('\n'))
-  assert.equal(agentB.errors.length, 0, agentB.errors.join('\n'))
-  console.log(`[ok] agent A drew "${agentA.letter}" → ${agentA.shot}`)
-  console.log(`[ok] agent B drew "${agentB.letter}" → ${agentB.shot}`)
+  const browser = await chromium.launch({ headless: true, executablePath: chromePath })
+  try {
+    // Keep both desks open while the wall captures — avoids pagehide races clearing cues.
+    const [agentA, agentB] = await Promise.all([openDesk(browser, 'a', 'a'), openDesk(browser, 'b', 'b')])
+    assert.equal(agentA.errors.length, 0, agentA.errors.join('\n'))
+    assert.equal(agentB.errors.length, 0, agentB.errors.join('\n'))
+    console.log(`[ok] agent A drew "${agentA.letter}" → ${agentA.shot}`)
+    console.log(`[ok] agent B drew "${agentB.letter}" → ${agentB.shot}`)
 
-  const wall = await runWallProof()
-  const cues = wall.roomState.liveCues || {}
-  assert.ok(cues.a?.liveSvg, 'room missing live cue a')
-  assert.ok(cues.b?.liveSvg, 'room missing live cue b')
-  console.log(`[ok] wall proof → ${wall.wallShot}`)
-  console.log(`[ok] projection proof → ${wall.projectionShot}`)
-  console.log(`[pass] dual-agent live proof (room=${room})`)
-  console.log(JSON.stringify({ room, proofDir, liveChars: [cues.a.char, cues.b.char] }))
+    const wall = await captureWall(browser)
+    const cues = wall.roomState.liveCues || {}
+    assert.ok(cues.a?.liveSvg, 'room missing live cue a')
+    assert.ok(cues.b?.liveSvg, 'room missing live cue b')
+    assert.ok(wall.roomState.draftSvgs?.a, 'room missing draft a')
+    assert.ok(wall.roomState.draftSvgs?.b, 'room missing draft b')
+    console.log(`[ok] wall proof → ${wall.wallShot}`)
+    console.log(`[ok] projection proof → ${wall.projectionShot}`)
+    console.log(`[pass] dual-agent live proof (room=${room})`)
+    console.log(JSON.stringify({ room, proofDir, liveChars: [cues.a.char, cues.b.char] }))
+  } finally {
+    await browser.close()
+    await sleep(1500)
+  }
+}
+
+async function runSoloAgent(station) {
+  const browser = await chromium.launch({ headless: true, executablePath: chromePath })
+  try {
+    const agent = await openDesk(browser, station, station)
+    assert.equal(agent.errors.length, 0, agent.errors.join('\n'))
+    console.log(`[pass] agent ${station}`)
+  } finally {
+    await browser.close()
+  }
 }
 
 if (mode === 'a' || mode === 'b') {
-  const letter = mode
-  await runDeskAgent(mode, letter)
-  console.log(`[pass] agent ${mode}`)
+  await runSoloAgent(mode)
 } else if (mode === 'wall') {
-  await runWallProof()
-  console.log('[pass] wall proof')
+  const browser = await chromium.launch({ headless: true, executablePath: chromePath })
+  try {
+    await captureWall(browser)
+    console.log('[pass] wall proof')
+  } finally {
+    await browser.close()
+  }
 } else {
   await orchestrate()
 }

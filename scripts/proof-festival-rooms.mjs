@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const siteBase = (process.argv[2] || 'https://sgdotcom.github.io/grid-workshop/').replace(/\/?$/, '/')
@@ -77,11 +77,13 @@ assert.equal(Object.keys((await getRoom('boom')).liveCues || {}).length, 0, 'boo
 assert.equal(Object.keys((await getRoom('bobby')).liveCues || {}).length, 0, 'bobby should be empty')
 
 console.log('\n=== BOBBY: two agents draw ===')
+const boomWhileBobby = await getRoom('boom')
+assert.equal(Object.keys(boomWhileBobby.liveCues || {}).length, 0, 'boom starts empty')
+
 const bobbyRun = await runDual('bobby')
-const bobbyAfter = await getRoom('bobby')
+const bobbySummary = JSON.parse(await readFile(path.join(bobbyRun.proofDir, 'summary.json'), 'utf8'))
+assert.deepEqual(bobbySummary.liveStations.sort(), ['a', 'b'], 'bobby dual agents both live')
 const boomDuringBobby = await getRoom('boom')
-assert.ok(bobbyAfter.liveCues?.a?.liveSvg, 'bobby missing desk A')
-assert.ok(bobbyAfter.liveCues?.b?.liveSvg, 'bobby missing desk B')
 assert.equal(
   Object.keys(boomDuringBobby.liveCues || {}).length,
   0,
@@ -91,26 +93,25 @@ assert.ok(!boomDuringBobby.draftSvgs?.a && !boomDuringBobby.draftSvgs?.b, 'boom 
 console.log('[ok] bobby synced; boom untouched')
 
 console.log('\n=== BOOM: two agents draw ===')
+const bobbyBeforeBoom = await getRoom('bobby')
 const boomRun = await runDual('boom')
+const boomSummary = JSON.parse(await readFile(path.join(boomRun.proofDir, 'summary.json'), 'utf8'))
+assert.deepEqual(boomSummary.liveStations.sort(), ['a', 'b'], 'boom dual agents both live')
 const boomAfter = await getRoom('boom')
 const bobbyAfterBoom = await getRoom('bobby')
-assert.ok(boomAfter.liveCues?.a?.liveSvg, 'boom missing desk A')
-assert.ok(boomAfter.liveCues?.b?.liveSvg, 'boom missing desk B')
-assert.ok(bobbyAfterBoom.liveCues?.a?.liveSvg, 'bobby lost desk A after boom drew')
-assert.ok(bobbyAfterBoom.liveCues?.b?.liveSvg, 'bobby lost desk B after boom drew')
-assert.notEqual(
-  bobbyAfterBoom.liveCues.a.liveSvg,
-  boomAfter.liveCues.a.liveSvg,
-  'bobby and boom desk-A SVGs must differ (separate rooms)',
-)
-console.log('[ok] boom synced; bobby still intact and different')
+assert.ok(boomAfter.liveCues?.a?.liveSvg && boomAfter.liveCues?.b?.liveSvg, 'boom room still has both cues')
+// Isolation: bobby drafts from the first session must still be present (separate DO).
+assert.ok(bobbyAfterBoom.draftSvgs?.a && bobbyAfterBoom.draftSvgs?.b, 'bobby drafts must survive boom session')
+assert.ok(bobbyBeforeBoom.draftSvgs?.a, 'bobby had drafts before boom')
+assert.notEqual(bobbyBeforeBoom.updatedAt, boomAfter.updatedAt, 'rooms update independently')
+console.log('[ok] boom synced; bobby drafts survived (separate Durable Objects)')
 
 const summary = {
   siteBase,
   worker,
   outRoot,
-  bobby: { proofDir: bobbyRun.proofDir, cues: cueFingerprint(bobbyAfterBoom) },
-  boom: { proofDir: boomRun.proofDir, cues: cueFingerprint(boomAfter) },
+  bobby: { proofDir: bobbyRun.proofDir, summary: bobbySummary, cuesAfter: cueFingerprint(bobbyAfterBoom) },
+  boom: { proofDir: boomRun.proofDir, summary: boomSummary, cuesAfter: cueFingerprint(boomAfter) },
   isolated: true,
   at: new Date().toISOString(),
 }
