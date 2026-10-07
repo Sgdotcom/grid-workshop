@@ -766,10 +766,27 @@ export default function App() {
           <span role="status" className={cn('festival-save', saveFailed && 'is-error')}>{saveStatus}</span>
           <span role="status" className="festival-notice">{notice}</span>
           <span className="festival-links">
-            <a href="?view=projection" target="_blank" rel="noreferrer">Open wall projection ↗</a>
-            <a href="?view=join-lab" target="_blank" rel="noreferrer">Review shape joins ↗</a>
-            <button type="button" onClick={backupSession}>Editable backup</button>
-            <button type="button" onClick={() => importRef.current?.click()}>Restore backup</button>
+            <a
+              href={`?view=wall&room=${encodeURIComponent(live.room || 'lettermans')}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open wall projection ↗
+            </a>
+            <a
+              href={`?view=studio&station=a&room=${encodeURIComponent(live.room || 'lettermans')}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Computer A ↗
+            </a>
+            <a
+              href={`?view=studio&station=b&room=${encodeURIComponent(live.room || 'lettermans')}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Computer B ↗
+            </a>
           </span>
           <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={event => {
             const file = event.target.files?.[0]
