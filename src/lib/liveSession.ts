@@ -18,12 +18,7 @@ export const LIVE_STATION_KEY = 'gridz-live-station'
 export const LIVE_JOINED_KEY = 'gridz-live-joined'
 /** Two independent festival sessions — each has its own Worker Durable Object. */
 export const FESTIVAL_LIVE_ROOMS = ['boom', 'bobby'] as const
-export type FestivalLiveRoom = (typeof FESTIVAL_LIVE_ROOMS)[number]
 export const DEFAULT_LIVE_ROOM = 'boom'
-
-export function isFestivalLiveRoom(value: string): value is FestivalLiveRoom {
-  return (FESTIVAL_LIVE_ROOMS as readonly string[]).includes(value)
-}
 
 export interface LiveCue {
   char: string
