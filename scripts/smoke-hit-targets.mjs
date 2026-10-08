@@ -11,12 +11,17 @@ import { homedir } from 'node:os'
 const base = process.argv[2] || 'http://127.0.0.1:43127/'
 
 function findChrome() {
+  const mac = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+  if (process.env.CHROME_PATH && existsSync(process.env.CHROME_PATH)) return process.env.CHROME_PATH
+  if (existsSync(mac)) return mac
   const root = join(homedir(), '.cache/ms-playwright')
+  if (!existsSync(root)) throw new Error('No Chrome — set CHROME_PATH or install Google Chrome')
   const dirs = readdirSync(root).filter((d) => d.startsWith('chromium-'))
   if (!dirs.length) throw new Error('No Playwright Chromium cache — run: npx playwright install chromium')
   dirs.sort()
   const base = join(root, dirs.at(-1))
   const candidates = [
+    join(base, 'chrome-mac/Chromium.app/Contents/MacOS/Chromium'),
     join(base, 'chrome-linux64/chrome'),
     join(base, 'chrome-linux/chrome'),
   ]
@@ -33,7 +38,7 @@ const browser = await chromium.launch({
 })
 
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
-await page.goto(base, { waitUntil: 'networkidle' })
+await page.goto(`${base}?view=workshop`, { waitUntil: 'networkidle' })
 
 const fail = []
 

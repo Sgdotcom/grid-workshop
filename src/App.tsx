@@ -52,6 +52,7 @@ import {
   DEFAULT_GRID,
   formatPx,
   gridFromDetail,
+  remapFilledToGrid,
 } from '@/lib/gridGeometry'
 import { moduleShapeFillRule, moduleShapePath, shapeSupportsRounding } from '@/lib/shapes'
 import { softnessHint, type BrokenJoins } from '@/lib/softness'
@@ -62,12 +63,10 @@ import { cn } from '@/lib/utils'
 import { downloadBlob } from '@/lib/utils'
 import { prefBoolean, prefNumber, readUiPrefs, writeUiPrefs } from '@/lib/uiPrefs'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, parseSession, readSession, type Contribution, type FestivalSession } from '@/lib/festival'
+import { ClearRoomControl } from '@/components/ClearRoomControl'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
-import {
-  isEmptyLiveRoom,
-  isLetterClearedInRoom,
-  mergeContributions,
-} from '@/lib/liveSession'
+import { SessionArchives } from '@/components/SessionArchives'
+import { letterUnchanged, planRemoteDeskApply, type LetterClockBase } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 
 type Screen = 'shape' | 'paint' | 'export'
@@ -247,6 +246,11 @@ export default function App() {
   const filledRef = useRef(filled)
   const brokenRef = useRef(brokenJoins)
   const glyphsRef = useRef(glyphs)
+  /** Per-letter draftUpdatedAt we last accepted (local paint or remote apply). */
+  const draftTimesRef = useRef<Record<string, string>>({ ...(restored?.draftUpdatedAt ?? {}) })
+  const applyingRemoteRef = useRef(false)
+  /** False right after publishing: stay on the letter but release presence. */
+  const [holding, setHolding] = useState(true)
   const contributionsRef = useRef(contributions)
   contributionsRef.current = contributions
   const letterRef = useRef('a')
@@ -257,6 +261,10 @@ export default function App() {
   brokenRef.current = brokenJoins
   glyphsRef.current = glyphs
   letterRef.current = displayGuideLetter
+  /** Open-letter state its clock was last stamped, loaded or adopted with (starts as the restored letter). */
+  const clockBaseRef = useRef<LetterClockBase | null>({
+    char: displayGuideLetter, filled, brokenJoins, grid, softness, cornerRadius, holeMode,
+  })
   const activeShape = library.find((s) => s.id === shapeId) ?? library[0]
   const activePreset = activeShape.kind === 'preset' ? activeShape.preset : null
   const activeMeltOff = activePreset ? meltOff.has(activePreset) : false
@@ -301,9 +309,32 @@ export default function App() {
   const loadDraft = useCallback(
     (store: Map<string, GlyphDraft>, ch: string) => {
       const slot = store.get(ch)
-      setFilled(slot ? restoreFilled(slot.filled) : new Map())
-      setBrokenJoins(new Set(slot?.brokenJoins ?? []))
-      if (slot?.grid) setGrid(slot.grid)
+      const nextFilled: Map<string, FilledRegion> = slot ? restoreFilled(slot.filled) : new Map()
+      const nextJoins = new Set(slot?.brokenJoins ?? [])
+      setFilled(nextFilled)
+      setBrokenJoins(nextJoins)
+      // Opening a letter is not an edit: it keeps its clock until this desk changes it.
+      clockBaseRef.current = {
+        char: ch,
+        filled: nextFilled,
+        brokenJoins: nextJoins,
+        grid: slot?.grid ?? settingsRef.current.grid,
+        softness: slot?.softness ?? 0.55,
+        cornerRadius: slot?.cornerRadius ?? 0,
+        holeMode: slot?.holeMode ?? 'open',
+      }
+      // Each letter keeps its own lattice; empty letters inherit the current grid.
+      if (slot?.grid) {
+        const prevCell = settingsRef.current.grid.cellSize
+        const nextGrid = slot.grid
+        setGrid(nextGrid)
+        setGridDetail(
+          Math.min(3, Math.max(1, Math.round((DEFAULT_GRID.cellSize / nextGrid.cellSize) * 2) / 2)),
+        )
+        if (nextGrid.cellSize !== prevCell) {
+          setBrushSize((b) => Math.round(b * (nextGrid.cellSize / prevCell) * 10) / 10)
+        }
+      }
       setSoftness(slot?.softness ?? 0.55)
       setCornerRadius(slot?.cornerRadius ?? 0)
       setHoleMode(slot?.holeMode ?? 'open')
@@ -320,6 +351,7 @@ export default function App() {
       persistCurrent()
       setGuideLetter(base.toLowerCase())
       setGuideUpper(asUpper)
+      setHolding(true)
       loadDraft(glyphsRef.current, nextChar)
     },
     [persistCurrent, loadDraft],
@@ -366,14 +398,24 @@ export default function App() {
     const active = activeRef.current
     const drafts = new Map(glyphsRef.current)
     drafts.set(active.char, active)
+    const updatedAt = new Date().toISOString()
+    const state: LetterClockBase = {
+      char: active.char, filled: filledRef.current, brokenJoins: brokenRef.current, ...settingsRef.current,
+    }
+    // Remote updates re-render this desk too; only an edit made here may move the letter clock.
+    if (!draftTimesRef.current[active.char] || !letterUnchanged(clockBaseRef.current, state)) {
+      draftTimesRef.current[active.char] = updatedAt
+    }
+    clockBaseRef.current = state
     const session: FestivalSession = {
-      version: 1, updatedAt: new Date().toISOString(), active,
+      version: 1, updatedAt, active,
       // Letters that were only visited are not work: they must not come back as painted.
       drafts: [...drafts.values()].filter((draft) => draft.filled.length),
       contributions: contributionsRef.current, library,
       liveSvg: compactSvgMarkup(buildSvgMarkup({ ...active, grid: active.grid!, softness: active.softness!,
         library, filledRegions: active.filled, glyphChar: active.char,
         brokenJoins: new Set(active.brokenJoins) }, { fitContent: false })),
+      draftUpdatedAt: { ...draftTimesRef.current },
     }
     sessionRef.current = session
     try {
@@ -386,6 +428,8 @@ export default function App() {
   }, [library])
 
   const live = useLiveSession({
+    activeChar: displayGuideLetter,
+    holding,
     getSession: () => {
       const s = sessionRef.current
       if (!s) return null
@@ -398,9 +442,23 @@ export default function App() {
       }
     },
     painting: () => strokeStarted.current,
-    onRemoteSession: (session, liveRoom) => {
-      // Shared wipe (Clear shared room): applyRoom cleared active + contributions.
-      if (isEmptyLiveRoom(liveRoom) && session.contributions.length === 0 && session.active.filled.length === 0 && !session.liveSvg) {
+    onRemoteSession: (session, liveRoom, meta) => {
+      const plan = planRemoteDeskApply({
+        session,
+        liveRoom,
+        meta,
+        localContributions: contributionsRef.current,
+        localGlyphs: glyphsRef.current,
+        draftTimes: draftTimesRef.current,
+        activeChar: letterRef.current,
+        painting: strokeStarted.current,
+        activeFilledCount: filledRef.current.size,
+        currentLiveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
+      })
+
+      if (plan.kind === 'wipe') {
+        applyingRemoteRef.current = true
+        draftTimesRef.current = {}
         const empty = new Map<string, FilledRegion>()
         const noJoins = new Set<string>()
         const noGlyphs = new Map()
@@ -408,10 +466,14 @@ export default function App() {
         brokenRef.current = noJoins
         glyphsRef.current = noGlyphs
         contributionsRef.current = []
+        clockBaseRef.current = { char: letterRef.current, filled: empty, brokenJoins: noJoins, ...settingsRef.current }
         setFilled(empty)
         setBrokenJoins(noJoins)
         setGlyphs(noGlyphs)
         setContributions([])
+        past.current = []
+        future.current = []
+        syncHistoryFlags()
         activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
         sessionRef.current = {
           ...session,
@@ -419,6 +481,7 @@ export default function App() {
           contributions: [],
           drafts: [],
           liveSvg: '',
+          draftUpdatedAt: {},
         }
         try {
           localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
@@ -428,44 +491,65 @@ export default function App() {
         return
       }
 
-      const merged = mergeContributions(contributionsRef.current, session.contributions)
-      setContributions(merged)
-      contributionsRef.current = merged
-      const activeChar = letterRef.current
-      const nextGlyphs = new Map(glyphsRef.current)
-      for (const draft of session.drafts) {
-        if (!draft.filled.length) continue
-        if (draft.char === activeChar && !isLetterClearedInRoom(activeChar, liveRoom)) continue
-        if (isLetterClearedInRoom(draft.char, liveRoom)) continue
-        nextGlyphs.set(draft.char, draft)
-      }
-      for (const ch of [...nextGlyphs.keys()]) {
-        if (isLetterClearedInRoom(ch, liveRoom)) nextGlyphs.delete(ch)
-      }
-      if (isLetterClearedInRoom(activeChar, liveRoom) && filledRef.current.size > 0) {
-        // Ignore stale self-echo tombstones from switching to an empty letter, then painting.
-        const remoteAt = liveRoom.draftUpdatedAt?.[activeChar] ?? ''
-        const localAt = sessionRef.current?.updatedAt ?? ''
-        if (!localAt || remoteAt >= localAt) {
-          const empty = new Map<string, FilledRegion>()
-          const noJoins = new Set<string>()
-          filledRef.current = empty
-          brokenRef.current = noJoins
-          setFilled(empty)
-          setBrokenJoins(noJoins)
-          activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+      draftTimesRef.current = plan.draftTimes
+      contributionsRef.current = plan.contributions
+      setContributions(plan.contributions)
+      glyphsRef.current = plan.glyphs
+      setGlyphs(plan.glyphs)
+
+      if (plan.activeChange.type === 'clear') {
+        applyingRemoteRef.current = true
+        const empty = new Map<string, FilledRegion>()
+        const noJoins = new Set<string>()
+        filledRef.current = empty
+        brokenRef.current = noJoins
+        clockBaseRef.current = { char: letterRef.current, filled: empty, brokenJoins: noJoins, ...settingsRef.current }
+        setFilled(empty)
+        setBrokenJoins(noJoins)
+        activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+      } else if (plan.activeChange.type === 'apply') {
+        applyingRemoteRef.current = true
+        const draft = plan.activeChange.draft
+        const nextFilled = restoreFilled(draft.filled)
+        const nextJoins = new Set(draft.brokenJoins)
+        filledRef.current = nextFilled
+        brokenRef.current = nextJoins
+        const current = settingsRef.current
+        clockBaseRef.current = {
+          char: letterRef.current,
+          filled: nextFilled,
+          brokenJoins: nextJoins,
+          grid: draft.grid ?? current.grid,
+          softness: typeof draft.softness === 'number' ? draft.softness : current.softness,
+          cornerRadius: typeof draft.cornerRadius === 'number' ? draft.cornerRadius : current.cornerRadius,
+          holeMode: draft.holeMode ?? current.holeMode,
         }
+        setFilled(nextFilled)
+        setBrokenJoins(nextJoins)
+        if (draft.grid) setGrid(draft.grid)
+        if (typeof draft.softness === 'number') setSoftness(draft.softness)
+        if (typeof draft.cornerRadius === 'number') setCornerRadius(draft.cornerRadius)
+        if (draft.holeMode) setHoleMode(draft.holeMode)
+        past.current = []
+        future.current = []
+        syncHistoryFlags()
+      } else if (plan.applyingRemote) {
+        applyingRemoteRef.current = true
       }
-      glyphsRef.current = nextGlyphs
-      setGlyphs(nextGlyphs)
+
       sessionRef.current = {
         ...session,
         active: activeRef.current,
-        contributions: merged,
-        drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
-        liveSvg: isLetterClearedInRoom(activeChar, liveRoom)
-          ? ''
-          : (sessionRef.current?.liveSvg ?? session.liveSvg),
+        contributions: plan.contributions,
+        drafts: [...plan.glyphs.values()].filter((d) => d.filled.length),
+        liveSvg: plan.liveSvg,
+        draftUpdatedAt: { ...plan.draftTimes },
+      }
+      // UI owns localStorage — persist after applying the remote plan.
+      try {
+        localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
+      } catch {
+        /* ignore */
       }
     },
   })
@@ -473,6 +557,10 @@ export default function App() {
 
   useEffect(() => {
     if (recovery.error) return
+    if (applyingRemoteRef.current) {
+      applyingRemoteRef.current = false
+      return
+    }
     const timer = window.setTimeout(() => {
       pushLive(writeSession())
     }, 250)
@@ -502,7 +590,8 @@ export default function App() {
     const next = [...contributionsRef.current, contribution]
     contributionsRef.current = next
     setContributions(next)
-    pushLive(writeSession())
+    pushLive(writeSession(), { immediate: true })
+    setHolding(false)
     setNotice(`${draft.char} added to our typeface. Choose another letter or try another version.`)
   }
 
@@ -542,8 +631,6 @@ export default function App() {
     }
   }
 
-  const collectionLocked = contributions.length > 0 || glyphs.size > 0 || filled.size > 0
-
   useEffect(() => {
     if (desktop) setPaintAdjustOpen(true)
   }, [desktop])
@@ -577,6 +664,7 @@ export default function App() {
 
   const commitFilled = useCallback(
     (next: Map<string, FilledRegion>) => {
+      setHolding(true)
       // One undo step per stroke, recorded before its first cell lands.
       if (!strokeStarted.current) {
         pushHistory()
@@ -766,20 +854,30 @@ export default function App() {
   const exportPreviewReady = filled.size > 0
   const sessionReady = sessionDrafts.length > 0
 
-  const applyGridDetail = (detail: number) => {
-    if (collectionLocked) {
-      setNotice('The festival grid is fixed while the collection contains work.')
-      return
+  /** Grid belongs to the open letter only; other drafts and published letters keep theirs. */
+  const applySessionGrid = (next: GridConfig, opts?: { brushSize?: number; detail?: number }) => {
+    const prev = grid
+    if (filledRef.current.size) {
+      const nextFilled = remapFilledToGrid(filledRef.current, prev, next)
+      filledRef.current = nextFilled
+      setFilled(nextFilled)
     }
-    const { grid: next, brushSize: nextBrush } = gridFromDetail(detail)
     setCornerRadius((r) => {
-      const scaled = r * (next.cellSize / grid.cellSize)
+      const scaled = r * (next.cellSize / prev.cellSize)
       const max = Math.max(4, Math.round(next.cellSize * 0.45))
       return Math.min(Math.round(scaled * 10) / 10, max)
     })
-    setGridDetail(detail)
     setGrid(next)
-    setBrushSize(nextBrush)
+    if (typeof opts?.detail === 'number') setGridDetail(opts.detail)
+    if (typeof opts?.brushSize === 'number') setBrushSize(opts.brushSize)
+    else if (prev.cellSize !== next.cellSize) {
+      setBrushSize((b) => Math.round(b * (next.cellSize / prev.cellSize) * 10) / 10)
+    }
+  }
+
+  const applyGridDetail = (detail: number) => {
+    const { grid: next, brushSize: nextBrush } = gridFromDetail(detail)
+    applySessionGrid(next, { brushSize: nextBrush, detail })
   }
 
   // 19 outlines; only the selected brush, its rotation and the corner radius can change them.
@@ -860,25 +958,13 @@ export default function App() {
           <span className="festival-links">
             <span className="festival-room-group" aria-label="Room boom">
               <strong>boom</strong>
-              <a href="?view=wall&room=boom" target="_blank" rel="noreferrer">
-                Wall ↗
+              <a href="?view=projection&room=boom" target="_blank" rel="noreferrer">
+                Projection ↗
               </a>
               <a href="?view=studio&station=a&room=boom" target="_blank" rel="noreferrer">
                 Desk A ↗
               </a>
               <a href="?view=studio&station=b&room=boom" target="_blank" rel="noreferrer">
-                Desk B ↗
-              </a>
-            </span>
-            <span className="festival-room-group" aria-label="Room bobby">
-              <strong>bobby</strong>
-              <a href="?view=wall&room=bobby" target="_blank" rel="noreferrer">
-                Wall ↗
-              </a>
-              <a href="?view=studio&station=a&room=bobby" target="_blank" rel="noreferrer">
-                Desk A ↗
-              </a>
-              <a href="?view=studio&station=b&room=bobby" target="_blank" rel="noreferrer">
                 Desk B ↗
               </a>
             </span>
@@ -928,7 +1014,8 @@ export default function App() {
               <SectionTitle className="mt-6 lg:mt-0">Grid</SectionTitle>
               <p className="mb-2 text-[12px] leading-relaxed text-ink-muted">
                 Finer lattice: more cells and smaller stamps. 1× is the original 7×9 · 40px
-                design. The letter stays about the same size.
+                design. Only the letter you are drawing changes; every other letter keeps its
+                own grid. New letters start from the grid you used last.
               </p>
               <GridPreview grid={grid} />
               <Slider
@@ -947,8 +1034,7 @@ export default function App() {
                   max={24}
                   value={grid.cols}
                   onChange={(cols) => {
-                    if (collectionLocked) { setNotice('The festival grid is fixed while the collection contains work.'); return }
-                    setGrid((g) => ({ ...g, cols }))
+                    applySessionGrid({ ...grid, cols })
                   }}
                 />
               </div>
@@ -959,8 +1045,7 @@ export default function App() {
                   max={28}
                   value={grid.rows}
                   onChange={(rows) => {
-                    if (collectionLocked) { setNotice('The festival grid is fixed while the collection contains work.'); return }
-                    setGrid((g) => ({ ...g, rows }))
+                    applySessionGrid({ ...grid, rows })
                   }}
                 />
               </div>
@@ -972,8 +1057,7 @@ export default function App() {
                   step={0.1}
                   value={grid.gap}
                   onChange={(gap) => {
-                    if (collectionLocked) { setNotice('The festival grid is fixed while the collection contains work.'); return }
-                    setGrid((g) => ({ ...g, gap }))
+                    applySessionGrid({ ...grid, gap })
                   }}
                 />
               </div>
@@ -1614,6 +1698,8 @@ export default function App() {
                     setGuideLetter(draft.char.toLowerCase())
                     setGuideUpper(draft.char !== draft.char.toLowerCase())
                     loadDraft(store, draft.char)
+                    // Replacing the letter with an older version is an edit, unlike opening it.
+                    clockBaseRef.current = null
                     setScreen('paint')
                     setNotice(`Editing a copy of ${draft.char}. Submit to add a new version.`)
                   }}>
@@ -1755,34 +1841,30 @@ export default function App() {
                     onJoin={live.joinSession}
                   />
                   <div className="grid grid-cols-2 gap-2">
-                    <a className="options-link" href="?view=wall" target="_blank" rel="noreferrer">Cinematic wall ↗</a>
-                    <a className="options-link" href="?view=projection" target="_blank" rel="noreferrer">Wall projection ↗</a>
+                    <a className="options-link" href="?view=projection&room=boom" target="_blank" rel="noreferrer">Projection ↗</a>
                     <a className="options-link" href="?view=join-lab" target="_blank" rel="noreferrer">Shape joins ↗</a>
-                    <button type="button" className="options-link" onClick={() => void live.copyWallLink('wall')}>Copy wall link</button>
+                    <button type="button" className="options-link" onClick={() => void live.copyWallLink('projection')}>Copy projection link</button>
                     <button type="button" className="options-link" onClick={backupSession}>Editable backup</button>
                     <button type="button" className="options-link" onClick={() => importRef.current?.click()}>Restore backup</button>
-                    <button
-                      type="button"
-                      className="options-link col-span-2"
-                      data-testid="clear-shared-room"
-                      disabled={!live.enabled}
-                      onClick={() => {
-                        if (
-                          !window.confirm(
-                            'Clear the shared room for everyone? Wipes the typeface, drafts, and canvases on all joined desks and walls. Downloaded backups are unchanged.',
-                          )
-                        )
-                          return
-                        void live.clearRoom()
-                      }}
-                    >
-                      Clear shared room
-                    </button>
+                    <ClearRoomControl
+                      className="col-span-2"
+                      buttonClassName="options-link"
+                      enabled={live.enabled}
+                      onClear={live.clearRoom}
+                    />
                     {recovery.error && (
                       <button type="button" data-testid="start-fresh" className="options-link col-span-2" onClick={startFresh}>
                         Save the unreadable session and start fresh
                       </button>
                     )}
+                  </div>
+                  <div className="mt-4">
+                    <SectionTitle>Previous sessions</SectionTitle>
+                    <SessionArchives
+                      enabled={live.enabled && live.joined}
+                      fetchArchives={live.fetchArchives}
+                      onRestore={live.restoreArchive}
+                    />
                   </div>
                   <p className="mt-2 hidden text-[11px] leading-relaxed text-ink-muted lg:block">
                     Keys: R rotate · C punch-out · E erase · M mirror · G guide · arrows nudge · ⌘/Ctrl+Z undo · ⇧⌘Z redo.

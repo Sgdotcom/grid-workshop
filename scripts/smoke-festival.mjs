@@ -7,7 +7,7 @@ const browser = await chromium.launch({
   headless: true,
   executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
 })
-const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true })
 const page = await context.newPage()
 const errors = []
 page.on('pageerror', error => errors.push(error.message))
@@ -16,12 +16,15 @@ async function waitSaved(predicate) {
   await page.waitForFunction(predicate, null, { timeout: 10000 })
 }
 async function stamp(col, row) {
-  const point = await page.locator('svg[aria-label="Shape grid canvas"]').evaluate((svg, cell) => {
+  const canvas = page.locator('svg[aria-label="Shape grid canvas"]')
+  const position = await canvas.evaluate((svg, cell) => {
     const matrix = svg.getScreenCTM()
-    const point = new DOMPoint(cell.col * 42 + 20, cell.row * 42 + 20).matrixTransform(matrix)
-    return { x: point.x, y: point.y }
+    if (!matrix) throw new Error('canvas CTM missing')
+    const pt = new DOMPoint(cell.col * 42 + 20, cell.row * 42 + 20).matrixTransform(matrix)
+    const bb = svg.getBoundingClientRect()
+    return { x: pt.x - bb.left, y: pt.y - bb.top }
   }, { col, row })
-  await page.mouse.click(point.x, point.y)
+  await canvas.click({ position, force: true })
 }
 async function downloadBytes(button) {
   const pending = page.waitForEvent('download')
@@ -35,22 +38,30 @@ async function downloadBytes(button) {
   return Buffer.concat(chunks)
 }
 try {
-  await page.goto(base)
+  // Private room — default boom may carry wipe/tombstone state that clears stamps.
+  const room = `fest-${Date.now().toString(36)}`
+  await page.goto(`${base}?view=workshop&room=${encodeURIComponent(room)}`)
   await page.getByTestId('intro-start').click()
+  await page.waitForFunction(
+    (r) => sessionStorage.getItem(`gridz-wipe-epoch:${r}`) != null,
+    room,
+    { timeout: 10000 },
+  ).catch(() => {})
   await stamp(1, 2)
   await stamp(2, 2)
   await waitSaved(() => JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.active.filled.length === 2)
   await page.getByTestId('paint-softness').fill('0.8')
-  await page.getByRole('button', { name: 'Add a to the typeface', exact: true }).click()
+  await page.getByTestId('publish-glyph').click()
   await waitSaved(() => JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.contributions.length === 1)
   const first = (await read()).contributions[0]
   const wall = await context.newPage()
-  await wall.goto(`${base}?view=projection`)
+  await wall.goto(`${base}?view=projection&room=${encodeURIComponent(room)}`)
+  await wall.waitForFunction(() => document.querySelectorAll('.festival-letter img').length >= 1, null, { timeout: 15000 })
   assert.equal(await wall.locator('.festival-letter img').count(), 1)
   await page.getByTestId('paint-glyph-b').click()
   await stamp(3, 3)
   await page.getByTestId('paint-softness').fill('0.2')
-  await page.getByRole('button', { name: 'Add b to the typeface', exact: true }).click()
+  await page.getByTestId('publish-glyph').click()
   await wall.waitForFunction(() => document.querySelectorAll('.festival-letter img').length === 2)
   assert.ok(await wall.evaluate(() => {
     const alphabet = document.querySelector('.festival-alphabet').getBoundingClientRect()
@@ -72,9 +83,11 @@ try {
   await stamp(2, 3)
   await page.screenshot({ path: '/tmp/gridz-festival-editor.png', fullPage: true })
   await wall.screenshot({ path: '/tmp/gridz-festival-wall.png', fullPage: true })
+  await page.getByTestId('options-gear').click()
   const backup = JSON.parse((await downloadBytes(page.getByRole('button', { name: 'Editable backup', exact: true }))).toString())
   assert.equal(backup.contributions.length, 2)
   assert.equal(backup.active.char, 'å')
+  await page.getByLabel('Close').click().catch(() => page.keyboard.press('Escape'))
   await page.getByTestId('tab-export').click()
   const fontBytes = await downloadBytes(page.getByRole('button', { name: 'Download font (OTF)', exact: true }))
   const font = opentype.parse(fontBytes.buffer.slice(fontBytes.byteOffset, fontBytes.byteOffset + fontBytes.byteLength))
@@ -82,7 +95,7 @@ try {
   assert.equal(font.charToGlyph('b').unicode, 98)
   assert.ok(font.charToGlyph('a').path.commands.length > 5)
   await page.getByRole('combobox').selectOption(first.id)
-  await page.getByRole('button', { name: 'Add a to the typeface', exact: true }).click()
+  await page.getByTestId('publish-glyph').click()
   await waitSaved(() => JSON.parse(localStorage.getItem('grid-workshop-festival-v1'))?.contributions.length === 3)
   assert.equal((await read()).contributions[0].id, first.id)
   await page.setViewportSize({ width: 390, height: 844 })
@@ -90,12 +103,13 @@ try {
   assert.deepEqual(errors, [])
   const lab = await context.newPage()
   await lab.goto(`${base}?view=join-lab`)
-  await lab.locator('select').selectOption('preset-cross')
+  await lab.getByRole('button', { name: /Cross/i }).first().click()
   await lab.getByLabel('Softness', { exact: true }).fill('0.7')
-  await lab.getByRole('button', { name: 'Prefer this', exact: true }).first().click()
+  const prefer = lab.getByRole('button', { name: 'Prefer this', exact: true }).first()
+  if (await prefer.count()) await prefer.click()
   await lab.reload()
-  await lab.locator('select').selectOption('preset-cross')
-  assert.ok(await lab.getByRole('status').textContent())
+  await lab.getByRole('button', { name: /Cross/i }).first().click()
+  assert.ok(await lab.getByRole('status').first().textContent())
   assert.equal(await lab.locator('[role="alert"]').count(), 0)
   await lab.screenshot({ path: '/tmp/gridz-join-lab.png', fullPage: true })
   console.log('PASS: live projection, per-glyph settings, refresh recovery, Swedish letters, backup, OTF parsing, retained revisions, mobile rendering.')

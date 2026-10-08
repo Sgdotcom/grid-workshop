@@ -1,5 +1,5 @@
 /**
- * Shared-session control: boom and bobby are separate live rooms (buttons only).
+ * Shared-session control: join the festival live room (boom).
  */
 import { DEFAULT_LIVE_ROOM, FESTIVAL_LIVE_ROOMS, getLiveConfig } from '@/lib/liveSession'
 import { cn } from '@/lib/utils'
@@ -35,7 +35,7 @@ export function LiveSessionJoin({
       data-testid="live-session-join"
     >
       {!compact && <p className="live-session-join-title">Room</p>}
-      <div className="live-session-join-presets" role="group" aria-label="Festival rooms">
+      <div className="live-session-join-presets" role="group" aria-label="Festival room">
         {FESTIVAL_LIVE_ROOMS.map((name) => {
           const active = joined && room === name
           return (
@@ -66,7 +66,7 @@ export function LiveSessionJoin({
       <p className="live-session-join-status" data-testid="live-sync-status">
         {joined
           ? statusMessage
-          : 'Tap boom or bobby — each is its own live session.'}
+          : 'Tap boom to join the shared live session.'}
       </p>
     </div>
   )

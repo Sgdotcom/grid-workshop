@@ -8,17 +8,22 @@ import { join } from 'node:path'
 import { homedir } from 'node:os'
 
 const base = process.argv[2] || 'http://127.0.0.1:43127/'
-const mediaDir = '/cursor/stores/bc-b8aa350c-82c1-41ef-b9ef-17abad39ac4d/media'
+const mediaDir = process.env.SMOKE_MEDIA_DIR || '/tmp/gw-smoke-media'
 mkdirSync(mediaDir, { recursive: true })
 mkdirSync('/tmp/gw-exports', { recursive: true })
 
 function findChrome() {
+  const mac = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+  if (process.env.CHROME_PATH && existsSync(process.env.CHROME_PATH)) return process.env.CHROME_PATH
+  if (existsSync(mac)) return mac
   const root = join(homedir(), '.cache/ms-playwright')
+  if (!existsSync(root)) throw new Error('No Chrome — set CHROME_PATH or install Google Chrome')
   const dirs = readdirSync(root).filter((d) => d.startsWith('chromium-'))
   if (!dirs.length) throw new Error('No Playwright Chromium')
   dirs.sort()
   const base = join(root, dirs.at(-1))
   const candidates = [
+    join(base, 'chrome-mac/Chromium.app/Contents/MacOS/Chromium'),
     join(base, 'chrome-linux64/chrome'),
     join(base, 'chrome-linux/chrome'),
   ]
@@ -63,7 +68,7 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
 page.setDefaultTimeout(8000)
 
 try {
-  await page.goto(base, { waitUntil: 'networkidle', timeout: 20000 })
+  await page.goto(`${base}?view=workshop`, { waitUntil: 'networkidle', timeout: 20000 })
   await page.waitForTimeout(500)
 
   await section('Intro howto', async () => {

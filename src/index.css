@@ -350,6 +350,7 @@
   color: #0000ee;
 }
 .festival-live-pane img { width: 100%; min-height: 0; flex: 1; object-fit: contain; }
+.festival-live-pane.is-idle .festival-waiting { font-size: 1.4vw; border: 1px dashed #0000ee55; }
 .festival-waiting { flex: 1; display: grid; place-items: center; color: #0000ee; font-size: 2vw; }
 .festival-phrase { border-top: 1px solid #000; padding-top: 1vh; display: flex; align-items: center; justify-content: center; min-height: 0; }
 .festival-phrase img { width: 3.6vw; height: 100%; object-fit: contain; }
@@ -373,132 +374,7 @@ body.install-view {
   margin: 0;
 }
 
-/* --- Install cinematic wall (specimen-first) ---------------------------- */
-.cinematic-wall {
-  box-sizing: border-box;
-  width: 100%;
-  height: 100svh;
-  height: 100dvh;
-  max-height: 100svh;
-  max-height: 100dvh;
-  background: #fff;
-  color: #000;
-  padding: clamp(8px, 1.8vh, 20px) clamp(10px, 2.5vw, 28px);
-  display: grid;
-  /* heading · compact join · alphabet (fills) · specimen */
-  grid-template-rows: auto auto minmax(0, 1.2fr) minmax(0, 0.9fr);
-  gap: clamp(6px, 1.2vh, 14px);
-  overflow: hidden;
-  font-family: Arial, Helvetica, sans-serif;
-}
-.cinematic-wall-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 12px;
-  min-width: 0;
-}
-.cinematic-wall-heading > div { min-width: 0; }
-.cinematic-wall-heading p { font-size: clamp(11px, 1vw, 18px); color: #0000ee; margin: 0; }
-.cinematic-wall-heading h1 {
-  font-size: clamp(22px, 3vw, 56px);
-  font-weight: 700;
-  margin: 0.1em 0 0;
-  line-height: 1.05;
-}
-.cinematic-wall-heading > span {
-  flex: none;
-  font-size: clamp(11px, 1.1vw, 20px);
-  text-align: right;
-  max-width: 40%;
-}
-.cinematic-wall-heading strong { color: #0000ee; }
-.cinematic-specimen {
-  min-height: 0;
-  min-width: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(1px, 0.35vw, 6px);
-  border-top: 1px solid #000;
-  border-bottom: 1px solid #000;
-  padding: clamp(6px, 1.2vh, 14px) 0;
-  overflow: hidden;
-}
-.cinematic-specimen img {
-  flex: 1 1 0;
-  min-width: 0;
-  width: 0;
-  height: min(34vh, 240px);
-  max-height: 100%;
-  object-fit: contain;
-}
-.cinematic-space {
-  flex: 0.45 1 0;
-  min-width: 0;
-  width: 0;
-  height: 1px;
-}
-.cinematic-missing {
-  flex: 1 1 0;
-  min-width: 0;
-  width: 0;
-  text-align: center;
-  font-size: clamp(14px, 4.2vw, 72px);
-  color: #ccc;
-  line-height: 1;
-  overflow: hidden;
-}
-.cinematic-ribbon {
-  display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
-  grid-auto-rows: 1fr;
-  gap: clamp(4px, 0.7vw, 10px);
-  align-content: stretch;
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
-}
-.cinematic-ribbon-letter {
-  position: relative;
-  min-height: 0;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  color: #bbb;
-  font-size: clamp(18px, 3.4vw, 56px);
-  font-weight: 700;
-  line-height: 1;
-}
-.cinematic-ribbon-letter span {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-}
-.cinematic-ribbon-letter img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 4%;
-}
-.cinematic-ribbon-letter.is-done { color: #000; }
-.cinematic-ribbon-letter.is-draft { color: #0000ee; }
-.cinematic-ribbon-letter.is-active { border-color: #0000ee; }
 .festival-letter.is-draft { outline: 1px dashed #0000ee; }
-.cinematic-live-dot {
-  position: absolute;
-  top: 6%;
-  right: 6%;
-  width: clamp(8px, 1vw, 14px);
-  height: clamp(8px, 1vw, 14px);
-  border-radius: 50%;
-  background: #0000ee;
-}
 
 /* --- Install studio desk ------------------------------------------------ */
 .studio-desk {
@@ -905,6 +781,34 @@ body.install-view {
   display: grid;
   gap: 10px;
 }
+.studio-desk-pick { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.studio-desk-pick > span { flex: none; margin-right: 4px; }
+.studio-station-panel h2 { margin: 0; font-size: 20px; }
+.studio-station-panel p { margin: 0; font-size: 13px; color: #555; line-height: 1.4; }
+.studio-station-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.studio-station-choices button {
+  min-height: 72px;
+  border: 1px solid #000;
+  font-size: 20px;
+  font-weight: 700;
+}
+.studio-station-choices button:hover { background: #000; color: #fff; }
+.clear-room-control { display: grid; gap: 6px; }
+.clear-room-control input {
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid #bbb;
+  font-size: 13px;
+  background: #fff;
+}
+.studio-clear-room button {
+  min-height: 36px;
+  border: 1px solid #c00000;
+  color: #c00000;
+  font-size: 13px;
+}
+.studio-clear-room button:disabled { opacity: 0.4; }
+.clear-room-message { margin: 0; font-size: 12px; color: #c00000; }
 .studio-save { margin: 0; font-size: 13px; }
 .studio-save.is-error { color: #c00000; font-weight: 700; }
 .studio-link { color: #0000ee; font-size: 13px; }
@@ -996,7 +900,6 @@ body.install-view {
   color: #666;
 }
 /* Wall/projection: tiny session chip — must not steal a flex/fr row. */
-.cinematic-live-join,
 .festival-live-join {
   width: fit-content;
   max-width: min(360px, 100%);
@@ -1008,14 +911,14 @@ body.install-view {
   background: #fff;
   font-size: 11px;
 }
-.cinematic-live-join .live-session-join-row,
+.live-session-join-row,
 .festival-live-join .live-session-join-row {
   flex: 0 1 auto;
   flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
 }
-.cinematic-live-join .live-session-join-row label,
+.live-session-join-row label,
 .festival-live-join .live-session-join-row label {
   flex: 0 1 auto;
   flex-direction: row;
@@ -1025,7 +928,7 @@ body.install-view {
   font-weight: 600;
   color: #444;
 }
-.cinematic-live-join .live-session-join-row input,
+.live-session-join-row input,
 .festival-live-join .live-session-join-row input {
   width: 120px;
   min-width: 0;
@@ -1035,7 +938,7 @@ body.install-view {
   font-size: 11px;
   font-weight: 500;
 }
-.cinematic-live-join .live-session-join-row button,
+.live-session-join-row button,
 .festival-live-join .live-session-join-row button {
   min-height: 24px;
   height: 24px;
@@ -1044,7 +947,7 @@ body.install-view {
   font-weight: 700;
   white-space: nowrap;
 }
-.cinematic-live-join .live-session-join-status,
+.live-session-join-status,
 .festival-live-join .live-session-join-status {
   flex: 0 1 auto;
   font-size: 10px;
@@ -1196,11 +1099,11 @@ body.install-view {
 .live-session-join.is-compact .live-session-join-row {
   display: none;
 }
-.cinematic-live-join .live-session-join-presets,
+.live-session-join-presets,
 .festival-live-join .live-session-join-presets {
   gap: 4px;
 }
-.cinematic-live-join .live-session-room-pill,
+.live-session-room-pill,
 .festival-live-join .live-session-room-pill {
   min-height: 22px;
   height: 22px;

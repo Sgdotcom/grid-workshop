@@ -4,7 +4,7 @@
  *
  * Usage:
  *   node scripts/dual-agent-live-proof.mjs [siteBase]
- *   ROOM=bobby node scripts/dual-agent-live-proof.mjs
+ *   ROOM=boom node scripts/dual-agent-live-proof.mjs
  *
  * Env: VITE_LIVE_SESSION_URL, CHROME_PATH, ROOM, PROOF_DIR
  */
@@ -148,15 +148,15 @@ async function captureWall(browser) {
   const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } })
   const page = await context.newPage()
   // Rely on ?room= auto-join — do not click room pills (avoids remount races).
-  await page.goto(`${siteBase}?view=wall&room=${encodeURIComponent(room)}`)
-  await page.getByTestId('cinematic-wall').waitFor({ timeout: 25000 })
+  await page.goto(`${siteBase}?view=projection&room=${encodeURIComponent(room)}`)
+  await page.getByTestId('festival-projection').waitFor({ timeout: 25000 })
   await sleep(1200)
 
   await page
     .waitForFunction(
       () => {
-        const dots = document.querySelectorAll('.cinematic-live-dot').length
-        const imgs = document.querySelectorAll('.cinematic-ribbon-letter img').length
+        const dots = document.querySelectorAll('.festival-live-pane').length
+        const imgs = document.querySelectorAll('.festival-letter img').length
         return dots >= 2 || imgs >= 2
       },
       null,

@@ -2,36 +2,35 @@
 
 Run one editor on the visitor computer. Open **Wall projection** from the toolbar in a second window on the same browser profile and move it to the projector. Use the projector as an extended display and click **Full screen**. Keep the exact same address (including host and port) in both windows.
 
-## Studio / wall views (install layout)
-
-Additive layouts for the public GitHub site and the installation desk/wall setup. The default workshop at `/` is unchanged.
+## Views
 
 | Role | URL |
 | --- | --- |
-| Default workshop | `/` |
-| Studio desk | `/?view=studio` |
-| Studio desk label (optional) | `/?view=studio&station=a` or `station=b` |
-| Cinematic wall | `/?view=wall` |
-| Classic projection | `/?view=projection` |
+| Studio desk (default) | `/` (also `/?view=studio`) |
+| Studio desk for a fixed desk | `/?station=a` or `/?station=b` |
+| Full workshop (Shape / Paint / Export) | `/?view=workshop` |
+| Wall projection | `/?view=projection` (old `?view=wall` links open it too) |
 
-**Studio desk** is a three-column layout: large Paint canvas · **tools rail** (drag the left edge to resize) · mini shared alphabet. Tools are grouped (Draw / Show / Mode / Look / Shape). Softness includes a **Melt on / No melt** toggle for the active brush. Facilitator gear: live room / token / station, copy wall link, clear shared room, backup, restore, links to wall / classic projection / default workshop.
+**Studio desk** is a three-column layout: large Paint canvas · **tools rail** (drag the left edge to resize) · mini shared alphabet. Tools are grouped (Draw / Show / Mode / Look / Shape). Softness includes a **Melt on / No melt** toggle for the active brush. With live sync on, the first visit asks **Which desk is this?** (Desk A / Desk B) and remembers the answer; `?station=` overrides it. Facilitator gear: live room, desk switch, copy wall link, clear shared room, backup, restore, link to the full workshop.
 
-**Cinematic wall** is specimen-first (large phrase), with a compact alphabet ribbon and a subtle “drawing now” cue. Alphabet tiles show **published SVG if any, else shared draft / live cue**. Prefer this on the public screen; keep `?view=projection` as the older split wall if needed.
+**Wall projection** shows the alphabet, what Desk A and Desk B are drawing side by side, and the specimen phrase. Alphabet tiles show the published SVG if any, else the shared draft / live drawing.
 
 ## Live session (cross-machine)
 
 When `VITE_LIVE_SESSION_URL` points at the Cloudflare Worker (`workers/live-session/`), both desks and the wall share one **room**:
 
-- Open the site on each computer → **Join session** (same room name, default `lettermans`).
+- Open the site on each computer → **Join session** (same room name, default `boom`).
 - No write token for the festival install — anyone in the room can sync.
 - Wall page has the same room / Join control.
 - Updates push over WebSocket (free Cloudflare Durable Object) so the wall tracks “drawing now” in near-realtime; a slow GET poll is only a fallback.
 - Refresh reloads from the shared room.
+- Both desks may open the same letter. There is no lock: the newest edit to a letter wins, and the other desk switches to it unless someone there is mid-stroke.
+- **Clear shared room** asks for the facilitator password, then wipes the typeface, drafts and canvases on every desk and wall. The Worker saves a copy first; restore it from the full workshop under Options → **Previous sessions** (password again).
 
 | Query | Meaning |
 | --- | --- |
-| `?room=lettermans` | Room id (default `lettermans`) |
-| `?station=a` | Optional desk label |
+| `?room=boom` | Room id (default `boom`) |
+| `?station=a` | Desk label (`a` or `b`); otherwise the desk asks on first visit |
 
 Deploy Worker: see [`workers/live-session/README.md`](../workers/live-session/README.md). Set GitHub Pages build env `VITE_LIVE_SESSION_URL`, then redeploy Pages.
 
@@ -41,9 +40,9 @@ The wall shows the Swedish alphabet, the current draft, and a specimen phrase. B
 
 Visitors choose a letter, draw, and press **Add to the typeface**. **Next visitor** selects an uncontributed letter where possible. Drawing over a letter edits a draft; previously published versions stay intact until a new version is submitted. Export offers previous contributions to build on. Every version is kept in the editable backup.
 
-The browser saves drafts and submissions locally after changes, and (when live sync is enabled) debounced-pushes the active letter + contributions to the shared room. The toolbar / Facilitator Options report save and sync status. Download **Editable backup** regularly and at the end of the day. Backups include stamps, grid settings, join settings, versions, and the shape library. **Restore backup** validates the file and downloads the current session before replacement. Clearing browser data removes the local cache; the shared room still holds the last synced state until you **Clear shared room**. Keep one editor per desk; the wall is read-only (GET poll).
+The browser saves drafts and submissions locally after changes, and (when live sync is enabled) debounced-pushes the active letter + contributions to the shared room. The toolbar / Facilitator Options report save and sync status. Download **Editable backup** regularly and at the end of the day. Backups include stamps, grid settings, join settings, versions, and the shape library. **Restore backup** validates the file and downloads the current session before replacement. Clearing browser data removes the local cache; the shared room still holds the last synced state until you **Clear shared room**. Keep one editor per desk; the wall is read-only.
 
-The grid cannot change while work exists. Each glyph retains its Softness and roundedness. Tracing the Arial letter is optional in Options. Guides and the OTF use the default guide scale of 100%; leave guide size at that value for consistent metrics across contributors.
+Changing the grid applies to the open letter only: other drafts and published letters keep their own grid, and an empty letter starts with the grid the desk used last. Each glyph also retains its Softness and roundedness. Tracing the Arial letter is optional in Options. Guides and the OTF use the default guide scale of 100%; leave guide size at that value for consistent metrics across contributors.
 
 **Download published typeface (SVG)** exports the latest submitted version of each character. **Download font (OTF)** exports an installable monospaced font named Beckmans Together. Only contributed characters and a space are included; kerning and variable-font axes are not generated. Install and proof the font in the applications that will be used at the event. Missing letters display the font's missing-glyph box.
 

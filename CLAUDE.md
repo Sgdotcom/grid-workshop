@@ -14,7 +14,7 @@ npm run lint
 npm run build
 ```
 
-Views: `/` workshop · `/?view=studio` desk · `/?view=wall` cinematic wall · `/?view=projection` classic wall.
+Views: `/` studio desk (also `?view=studio`) · `/?view=workshop` full workshop · `/?view=projection` wall projection (legacy `?view=wall` redirects here).
 
 ## Golden rules
 
@@ -38,8 +38,7 @@ Views: `/` workshop · `/?view=studio` desk · `/?view=wall` cinematic wall · `
 | `src/lib/shapes.ts` | Preset outlines, sizing after rounding, contact samples |
 | `src/lib/export.ts` | `glyphPolygons` — SVG + OTF share this |
 | `src/components/Canvas.tsx` | Live paint + Softness display |
-| `src/components/StudioDesk.tsx` | Install studio (`?view=studio`) |
-| `src/components/CinematicWall.tsx` | Install wall (`?view=wall`) |
+| `src/components/StudioDesk.tsx` | Install studio (`/`, `?view=studio`) |
 | `src/lib/liveSession.ts` | Live room client (pull/push/merge) |
 | `workers/live-session/` | Cloudflare Worker + Durable Object |
 
@@ -57,7 +56,9 @@ Views: `/` workshop · `/?view=studio` desk · `/?view=wall` cinematic wall · `
 ## Install views
 
 - Studio: canvas | **resizable tools rail** | alphabet. Tools width: `gridz-studio-tools-width`.
-- Wall: alphabet ribbon above specimen (published else draft/live SVG).
+- Wall: alphabet, Desk A / Desk B live panes, specimen (published else draft/live SVG).
+- Same letter on two desks is allowed: per-letter `draftUpdatedAt`, newest edit wins. A letter's clock moves only on a local edit (`letterUnchanged`), or idle desks ping-pong PUTs.
+- Clear / restore need the facilitator password (Worker secret `CLEAR_ROOM_PASSWORD`). The repo is public: never commit the password; smoke scripts read it from the env.
 - Same festival session key as the default workshop; optional shared room via Worker.
 - Deploy live Worker + set `VITE_LIVE_SESSION_URL` — see `workers/live-session/README.md` and `docs/festival.md`.
 
@@ -79,7 +80,7 @@ node scripts/smoke-arc-weld.mjs
 node scripts/smoke-arc-flat.mjs
 node scripts/smoke-shape-sizing.mjs
 node scripts/smoke-hole-mode.mjs
-npm run smoke:install   # studio/wall routes (dev server up)
+npm run smoke:install   # studio/projection routes (dev server up)
 ```
 
 ## Scratch / archive

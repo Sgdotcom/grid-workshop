@@ -1,4 +1,5 @@
-import type { GridConfig } from '@/lib/types'
+import type { FilledRegion, GridConfig } from '@/lib/types'
+import { regionKey } from '@/lib/types'
 
 /** Original workshop lattice. Detail > 1 subdivides this recipe. */
 export const DEFAULT_GRID: GridConfig = {
@@ -26,6 +27,42 @@ export function gridFromDetail(detail: number) {
     } satisfies GridConfig,
     brushSize: DEFAULT_BRUSH / detail,
   }
+}
+
+/**
+ * Keep existing stamps when the lattice changes: scale cell indices with cols/rows,
+ * drop anything that lands outside the new bounds, and rescale stamp size with cellSize.
+ */
+export function remapFilledToGrid(
+  filled: Map<string, FilledRegion>,
+  from: GridConfig,
+  to: GridConfig,
+): Map<string, FilledRegion> {
+  if (from.cols === to.cols && from.rows === to.rows && from.cellSize === to.cellSize) {
+    // Only gap/spacing changed — keep cells as-is.
+    if (from.gap === to.gap) return filled
+    return new Map(filled)
+  }
+  const scaleCol = from.cols > 0 ? to.cols / from.cols : 1
+  const scaleRow = from.rows > 0 ? to.rows / from.rows : 1
+  const scaleSize = from.cellSize > 0 ? to.cellSize / from.cellSize : 1
+  const next = new Map<string, FilledRegion>()
+  for (const region of filled.values()) {
+    const col = Math.round(region.col * scaleCol)
+    const row = Math.round(region.row * scaleRow)
+    if (col < 0 || col >= to.cols || row < 0 || row >= to.rows) continue
+    const mode = region.mode ?? 'ink'
+    const key = regionKey(col, row, mode)
+    // Prefer later stamps if two cells collapse onto the same slot.
+    next.set(key, {
+      ...region,
+      key,
+      col,
+      row,
+      size: Math.round(region.size * scaleSize * 10) / 10,
+    })
+  }
+  return next
 }
 
 export function stepSize(grid: GridConfig) {

@@ -178,7 +178,7 @@ export function JoinLab() {
           <p>Circles and rings use metaball welding. Pick the best weld or melt method for all other shapes.</p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-          <a href="/">Back to workshop ↗</a>
+          <a href="?view=workshop">Back to workshop ↗</a>
           <div style={{ display: 'flex', gap: 6, background: '#f1f5f9', padding: '3px 4px', borderRadius: 8, border: '1px solid #cbd5e1' }}>
             <button
               style={{

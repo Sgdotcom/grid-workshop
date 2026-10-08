@@ -8,12 +8,15 @@ import {
   buildLivePayload,
   isEmptyLiveRoom,
   isLetterClearedInRoom,
+  mergeDraftUpdatedAt,
+  planRemoteDeskApply,
   pruneClearedDrafts,
+  remoteDraftIsNewer,
   type LiveRoomState,
 } from '../src/lib/liveSession'
 import type { FestivalSession } from '../src/lib/festival'
-import { DEFAULT_GRID } from '../src/lib/gridGeometry'
-import { PRESET_SHAPES } from '../src/lib/types'
+import { DEFAULT_GRID, gridFromDetail, remapFilledToGrid } from '../src/lib/gridGeometry'
+import { PRESET_SHAPES, regionKey } from '../src/lib/types'
 
 function localSession(overrides: Partial<FestivalSession> = {}): FestivalSession {
   return {
@@ -261,10 +264,102 @@ const emptyActive = localSession({
   drafts: [],
   liveSvg: '',
 })
-const payload = buildLivePayload(emptyActive, { station: 'a', wipeEpoch: 3 })
+const payload = buildLivePayload(
+  {
+    ...emptyActive,
+    updatedAt: '2026-10-07T12:00:00.000Z',
+    draftUpdatedAt: { a: '2026-10-07T12:99:00.000Z' },
+  },
+  { station: 'a', wipeEpoch: 3 },
+)
 assert.equal(payload.draftSvgs?.a, '', 'empty active sends draftSvg tombstone')
-assert.equal(payload.liveCue?.liveSvg, '', 'empty active sends empty liveCue')
+assert.equal(payload.liveCues?.a?.liveSvg, '', 'empty active sends empty liveCues.a')
+assert.equal(payload.liveCue, undefined, 'client no longer writes legacy liveCue')
 assert.equal(payload.wipeEpoch, 3, 'payload echoes wipeEpoch')
+assert.equal(
+  payload.draftUpdatedAt?.a,
+  '2026-10-07T12:99:00.000Z',
+  'letter clock comes from draftUpdatedAt, not session.updatedAt',
+)
+assert.equal(payload.updatedAt, '2026-10-07T12:00:00.000Z', 'room updatedAt stays document clock')
+assert.equal(
+  mergeDraftUpdatedAt({ a: 't1', b: 't2' }, { a: 't3', c: 't0' }).a,
+  't3',
+  'mergeDraftUpdatedAt takes newer a',
+)
 console.log('[ok] buildLivePayload tombstone')
+
+const wipePlan = planRemoteDeskApply({
+  session: emptyActive,
+  liveRoom: emptyRoom({ wipeEpoch: 4 }),
+  meta: { sharedWipe: true },
+  localContributions: localSession().contributions,
+  localGlyphs: new Map([['a', localSession().active]]),
+  draftTimes: { a: '2026-10-07T12:00:00.000Z' },
+  activeChar: 'a',
+  painting: false,
+  activeFilledCount: 1,
+  currentLiveSvg: '<svg/>',
+})
+assert.equal(wipePlan.kind, 'wipe', 'sharedWipe plans a full desk wipe')
+console.log('[ok] planRemoteDeskApply wipe')
+
+assert.equal(
+  remoteDraftIsNewer('a', { draftUpdatedAt: { a: '2026-10-07T14:00:00.000Z' } }, {}),
+  true,
+  'remote wins when local has no stamp',
+)
+assert.equal(
+  remoteDraftIsNewer(
+    'a',
+    { draftUpdatedAt: { a: '2026-10-07T14:00:00.000Z' } },
+    { a: '2026-10-07T14:00:00.000Z' },
+  ),
+  false,
+  'echo same stamp does not rewrite',
+)
+assert.equal(
+  remoteDraftIsNewer(
+    'a',
+    { draftUpdatedAt: { a: '2026-10-07T14:01:00.000Z' } },
+    { a: '2026-10-07T14:00:00.000Z' },
+  ),
+  true,
+  'newer remote wins shared letter',
+)
+assert.equal(
+  remoteDraftIsNewer(
+    'a',
+    { draftUpdatedAt: { a: '2026-10-07T13:59:00.000Z' } },
+    { a: '2026-10-07T14:00:00.000Z' },
+  ),
+  false,
+  'older remote does not clobber',
+)
+console.log('[ok] remoteDraftIsNewer LWW')
+
+const filledMap = new Map([
+  [
+    regionKey(1, 2),
+    {
+      key: regionKey(1, 2),
+      layer: 'a' as const,
+      col: 1,
+      row: 2,
+      kind: 'shape' as const,
+      shapeId: 'circle',
+      size: 40,
+      mode: 'ink' as const,
+    },
+  ],
+])
+const detail2 = gridFromDetail(2).grid
+const remapped = remapFilledToGrid(filledMap, DEFAULT_GRID, detail2)
+assert.equal(remapped.size, 1, 'remap keeps in-bounds stamp')
+const cell = [...remapped.values()][0]
+assert.equal(cell.col, 2, 'col scales with detail 2×')
+assert.equal(cell.row, 4, 'row scales with detail 2×')
+assert.ok(Math.abs(cell.size - 20) < 0.1, 'stamp size scales with cellSize')
+console.log('[ok] remapFilledToGrid')
 
 console.log('[pass] smoke-live-adversarial-unit')

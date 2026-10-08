@@ -7,11 +7,15 @@ import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import { ALPHABET, FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
 import {
   activeLiveCues,
+  isPresenceFresh,
   letterPreviewSvg,
+  normalizeStation,
   readLocalSessionSafe,
   type LiveRoomState,
 } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
+
+const WALL_DESKS = ['a', 'b'] as const
 
 export function Projection() {
   const [session, setSession] = useState<FestivalSession | null>(() => readLocalSessionSafe())
@@ -65,15 +69,24 @@ export function Projection() {
   const complete = letters.filter((char) => published.has(char)).length
   const localLiveSvg =
     session?.liveSvg && session.active.filled.length ? session.liveSvg : ''
-  const panes =
-    liveCues.length > 0
-      ? liveCues
-      : localLiveSvg
-        ? [{ char: activeChar, liveSvg: localLiveSvg, updatedAt: '', station: 'desk' }]
-        : []
+  // Desk A and B always have a pane; any other station that is drawing is appended.
+  const cueByStation = new Map(liveCues.map((cue) => [normalizeStation(cue.station) || 'desk', cue]))
+  const desks = roomBlob?.desks ?? {}
+  const stations = [...new Set([...WALL_DESKS, ...cueByStation.keys()])]
+  if (!roomBlob && localLiveSvg) {
+    cueByStation.set('a', { char: activeChar, liveSvg: localLiveSvg, updatedAt: '', station: 'a' })
+  }
+  const panes = stations.map((station) => {
+    const presence = desks[station]
+    return {
+      station,
+      cue: cueByStation.get(station),
+      heldChar: isPresenceFresh(presence) ? presence!.char : '',
+    }
+  })
 
   return (
-    <main className="festival-wall">
+    <main className="festival-wall" data-testid="festival-projection">
       <header className="festival-wall-heading">
         <div><p>BECKMANS · A TYPEFACE MADE TOGETHER</p><h1>Our letters, today.</h1></div>
         <span>{complete} / {letters.length} letters · {contributions.length} contributions</span>
@@ -100,7 +113,7 @@ export function Projection() {
             return (
               <div
                 key={char}
-                className={`festival-letter ${isLive || (panes.length === 0 && char === activeChar) ? 'is-active' : ''} ${preview.kind === 'draft' || preview.kind === 'live' ? 'is-draft' : ''}`}
+                className={`festival-letter ${isLive || (liveCues.length === 0 && char === activeChar) ? 'is-active' : ''} ${preview.kind === 'draft' || preview.kind === 'live' ? 'is-draft' : ''}`}
               >
                 {preview.svg ? (
                   <img src={svgImage(preview.svg)} alt={char} />
@@ -120,28 +133,29 @@ export function Projection() {
           <p>
             DRAWING NOW <strong>{drawingLabel}</strong>
           </p>
-          {panes.length ? (
-            <div
-              className={`festival-live-stack${panes.length > 1 ? ' is-multi' : ''}`}
-              data-testid="festival-live-stack"
-            >
-              {panes.map((cue) => (
+          <div className="festival-live-stack is-multi" data-testid="festival-live-stack">
+            {panes.map(({ station, cue, heldChar }) => {
+              const desk = station === 'desk' ? 'Desk' : `Desk ${station.toUpperCase()}`
+              const char = cue?.char || heldChar
+              return (
                 <div
-                  key={`${cue.station || 'desk'}-${cue.char}-${cue.updatedAt}`}
-                  className="festival-live-pane"
+                  key={station}
+                  className={`festival-live-pane${cue ? '' : ' is-idle'}`}
+                  data-testid={`festival-live-pane-${station}`}
+                  data-drawing={cue ? cue.char : undefined}
                 >
-                  <small>
-                    {cue.station && cue.station !== 'desk'
-                      ? `Desk ${cue.station.toUpperCase()} · ${cue.char}`
-                      : cue.char}
-                  </small>
-                  <img src={svgImage(cue.liveSvg)} alt={`Live drawing of ${cue.char}`} />
+                  <small>{char ? `${desk} · ${char}` : desk}</small>
+                  {cue ? (
+                    <img src={svgImage(cue.liveSvg)} alt={`${desk} drawing ${cue.char}`} />
+                  ) : (
+                    <div className="festival-waiting">
+                      {heldChar ? `Starting ${heldChar}…` : 'Your letter starts here.'}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="festival-waiting">Your letter starts here.</div>
-          )}
+              )
+            })}
+          </div>
           <p>Choose a letter. Make your mark.<br />Add it to our typeface.</p>
         </section>
       </div>

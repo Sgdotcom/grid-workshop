@@ -12,12 +12,15 @@ export interface Contribution {
 
 export interface FestivalSession {
   version: 1
+  /** Room / document wall-clock — not used as a per-letter freshness clock. */
   updatedAt: string
   active: GlyphDraft
   drafts: GlyphDraft[]
   contributions: Contribution[]
   library: ShapeDef[]
   liveSvg: string
+  /** Per-letter freshness (ISO). Source of truth for live LWW; mirrors room.draftUpdatedAt. */
+  draftUpdatedAt?: Record<string, string>
 }
 
 function isGrid(value: unknown): value is GridConfig {
@@ -58,6 +61,16 @@ export function parseSession(raw: string): FestivalSession {
     throw new Error('This file is not a supported workshop backup.')
   }
   session.library = reconcileLibrary(session.library)
+  // Optional per-letter clocks — ignore junk from older backups.
+  if (session.draftUpdatedAt && typeof session.draftUpdatedAt === 'object') {
+    const clean: Record<string, string> = {}
+    for (const [ch, at] of Object.entries(session.draftUpdatedAt)) {
+      if (typeof ch === 'string' && ch.length === 1 && typeof at === 'string' && at) clean[ch] = at
+    }
+    session.draftUpdatedAt = clean
+  } else {
+    delete session.draftUpdatedAt
+  }
   return session
 }
 

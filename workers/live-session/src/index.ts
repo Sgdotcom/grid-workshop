@@ -1,8 +1,18 @@
 /**
  * Shared festival room for grid-workshop install desks + wall.
  * GET/WS public; PUT/DELETE require LIVE_WRITE_TOKEN when configured.
+ * DELETE also requires CLEAR_ROOM_PASSWORD (X-Clear-Password header) when configured.
  * WebSocket clients receive room broadcasts after each PUT/DELETE.
  */
+
+/** Which letter a desk holds. `char: ''` = holding nothing (published / left). */
+export interface DeskPresence {
+  char: string
+  /** When this desk took the letter — earlier wins a same-letter tie. */
+  since: string
+  /** Heartbeat; stale entries no longer own anything. */
+  seenAt: string
+}
 
 export interface LiveCue {
   char: string
@@ -23,17 +33,20 @@ export interface LiveRoomState {
   liveCues?: Record<string, LiveCue>
   /** Newest cue (compat); prefer liveCues for multi-desk walls. */
   liveCue?: LiveCue
+  /** Letter ownership per desk station. */
+  desks?: Record<string, DeskPresence>
 }
 
 export interface Env {
   ROOMS: DurableObjectNamespace
   LIVE_WRITE_TOKEN?: string
+  CLEAR_ROOM_PASSWORD?: string
 }
 
 const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Clear-Password',
   'Access-Control-Max-Age': '86400',
 }
 
@@ -53,6 +66,7 @@ function emptyRoom(wipeEpoch = 0): LiveRoomState {
     draftSvgs: {},
     draftUpdatedAt: {},
     liveCues: {},
+    desks: {},
   }
 }
 
@@ -70,11 +84,73 @@ function newestLiveCue(cues: Record<string, LiveCue>): LiveCue | undefined {
   return best
 }
 
-/** /rooms/:room or /rooms/:room/ws */
-function parseRoomPath(pathname: string): { room: string; ws: boolean } | null {
-  const match = pathname.match(/^\/rooms\/([a-zA-Z0-9_-]{1,64})(\/ws)?\/?$/)
+const MAX_ARCHIVES = 20
+
+export interface RoomArchiveMeta {
+  id: string
+  clearedAt: string
+  contributionCount: number
+  draftCount: number
+  letterCount: number
+}
+
+export interface RoomArchive extends RoomArchiveMeta {
+  room: LiveRoomState
+}
+
+/** /rooms/:room[/ws|/archives[/:id[/restore]]] */
+function parseRoomPath(pathname: string): {
+  room: string
+  ws: boolean
+  archives: boolean
+  archiveId: string | null
+  restore: boolean
+} | null {
+  const match = pathname.match(
+    /^\/rooms\/([a-zA-Z0-9_-]{1,64})(?:\/(ws)|\/archives(?:\/([a-zA-Z0-9_-]{1,64})(\/restore)?)?)?\/?$/,
+  )
   if (!match) return null
-  return { room: match[1], ws: !!match[2] }
+  return {
+    room: match[1],
+    ws: match[2] === 'ws',
+    archives: pathname.includes('/archives'),
+    archiveId: match[3] ?? null,
+    restore: match[4] === '/restore',
+  }
+}
+
+function roomHasWork(room: LiveRoomState): boolean {
+  if ((room.contributions?.length ?? 0) > 0) return true
+  if ((room.drafts ?? []).some((d) => {
+    const filled = asRecord(d)?.filled
+    return Array.isArray(filled) && filled.length > 0
+  }))
+    return true
+  if (Object.keys(room.draftSvgs ?? {}).length > 0) return true
+  return Object.values(room.liveCues ?? {}).some((c) => !!c?.liveSvg)
+}
+
+function archiveMetaFromRoom(room: LiveRoomState, clearedAt: string, id: string): RoomArchiveMeta {
+  const letters = new Set<string>()
+  for (const item of room.contributions ?? []) {
+    const draft = asRecord(item)?.draft
+    const ch = asRecord(draft)?.char
+    if (typeof ch === 'string') letters.add(ch)
+  }
+  for (const draft of room.drafts ?? []) {
+    const ch = draftChar(draft)
+    if (ch) letters.add(ch)
+  }
+  return {
+    id,
+    clearedAt,
+    contributionCount: room.contributions?.length ?? 0,
+    draftCount: (room.drafts ?? []).filter((d) => {
+      const filled = asRecord(d)?.filled
+      return Array.isArray(filled) && filled.length > 0
+    }).length,
+    letterCount: letters.size,
+  }
 }
 
 function authorized(request: Request, env: Env): boolean {
@@ -85,6 +161,12 @@ function authorized(request: Request, env: Env): boolean {
   const url = new URL(request.url)
   const query = url.searchParams.get('token') ?? ''
   return bearer === expected || query === expected
+}
+
+function clearAllowed(request: Request, env: Env): boolean {
+  const expected = env.CLEAR_ROOM_PASSWORD
+  if (!expected) return true
+  return (request.headers.get('X-Clear-Password') ?? '') === expected
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -105,7 +187,10 @@ function contributionId(item: unknown): string | null {
 
 function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): LiveRoomState {
   const storedEpoch = typeof stored.wipeEpoch === 'number' ? stored.wipeEpoch : 0
-  const incomingEpoch = typeof incoming.wipeEpoch === 'number' ? incoming.wipeEpoch : 0
+  // Legacy clients omit wipeEpoch — treat as current epoch so post-clear painting still works.
+  // Explicit older epochs (stale pre-clear payloads) are still rejected.
+  const incomingEpoch =
+    typeof incoming.wipeEpoch === 'number' ? incoming.wipeEpoch : storedEpoch
   // Stale desk that never saw Clear shared room — do not refill wiped rooms.
   if (incomingEpoch < storedEpoch) {
     return stored
@@ -126,6 +211,23 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
     draftUpdatedAt: { ...stored.draftUpdatedAt },
     liveCues,
     liveCue: stored.liveCue,
+    desks: { ...(stored.desks ?? {}) },
+  }
+
+  if (incoming.desks && typeof incoming.desks === 'object') {
+    for (const [rawKey, value] of Object.entries(incoming.desks)) {
+      const desk = asRecord(value)
+      if (!desk || typeof desk.char !== 'string' || typeof desk.seenAt !== 'string') continue
+      const key = rawKey.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 8)
+      if (!key) continue
+      const existing = next.desks![key]
+      if (existing && existing.seenAt > desk.seenAt) continue
+      next.desks![key] = {
+        char: desk.char.slice(0, 4),
+        since: typeof desk.since === 'string' ? desk.since : desk.seenAt,
+        seenAt: desk.seenAt,
+      }
+    }
   }
 
   if (Array.isArray(incoming.contributions)) {
@@ -245,6 +347,15 @@ export class FestivalRoom implements DurableObject {
     await this.ctx.storage.put('room', room)
   }
 
+  private async loadArchives(): Promise<RoomArchive[]> {
+    const raw = await this.ctx.storage.get<RoomArchive[]>('archives')
+    return Array.isArray(raw) ? raw : []
+  }
+
+  private async saveArchives(archives: RoomArchive[]): Promise<void> {
+    await this.ctx.storage.put('archives', archives.slice(0, MAX_ARCHIVES))
+  }
+
   private broadcast(room: LiveRoomState) {
     const payload = roomMessage(room)
     for (const ws of this.ctx.getWebSockets()) {
@@ -258,7 +369,9 @@ export class FestivalRoom implements DurableObject {
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
-    const isWs = url.pathname.endsWith('/ws') || url.searchParams.get('ws') === '1'
+    const parsed = parseRoomPath(url.pathname)
+    const isWs =
+      (parsed?.ws ?? false) || url.pathname.endsWith('/ws') || url.searchParams.get('ws') === '1'
 
     if (request.method === 'GET' && isWs) {
       if (request.headers.get('Upgrade') !== 'websocket') {
@@ -277,11 +390,60 @@ export class FestivalRoom implements DurableObject {
       return new Response(null, { status: 101, webSocket: client })
     }
 
+    // Cloud archives of cleared sessions (not browser localStorage).
+    if (parsed?.archives) {
+      if (request.method === 'GET' && !parsed.archiveId) {
+        const archives = await this.loadArchives()
+        const list = archives.map(({ room: _room, ...meta }) => meta)
+        return json({ archives: list })
+      }
+      if (request.method === 'GET' && parsed.archiveId && !parsed.restore) {
+        const archives = await this.loadArchives()
+        const hit = archives.find((a) => a.id === parsed.archiveId)
+        if (!hit) return json({ error: 'Archive not found' }, 404)
+        return json(hit)
+      }
+      if (request.method === 'POST' && parsed.archiveId && parsed.restore) {
+        const archives = await this.loadArchives()
+        const hit = archives.find((a) => a.id === parsed.archiveId)
+        if (!hit) return json({ error: 'Archive not found' }, 404)
+        const current = await this.load()
+        const wipeEpoch = typeof current.wipeEpoch === 'number' ? current.wipeEpoch : 0
+        const restored: LiveRoomState = {
+          ...hit.room,
+          wipeEpoch,
+          updatedAt: new Date().toISOString(),
+          liveCues: {},
+          liveCue: undefined,
+          desks: {},
+        }
+        await this.save(restored)
+        this.broadcast(restored)
+        return json(restored)
+      }
+      return json({ error: 'Method not allowed' }, 405)
+    }
+
     if (request.method === 'GET') {
       return json(await this.load())
     }
     if (request.method === 'DELETE') {
       const prev = await this.load()
+      if (roomHasWork(prev)) {
+        const clearedAt = new Date().toISOString()
+        const id = `arch-${Date.now().toString(36)}`
+        const entry: RoomArchive = {
+          ...archiveMetaFromRoom(prev, clearedAt, id),
+          room: {
+            ...prev,
+            liveCues: prev.liveCues ?? {},
+            desks: {},
+          },
+        }
+        const archives = await this.loadArchives()
+        archives.unshift(entry)
+        await this.saveArchives(archives)
+      }
       const prevEpoch = typeof prev.wipeEpoch === 'number' ? prev.wipeEpoch : 0
       const cleared = emptyRoom(prevEpoch + 1)
       cleared.updatedAt = new Date().toISOString()
@@ -342,10 +504,16 @@ export default {
     if (request.method !== 'GET' && !authorized(request, env)) {
       return json({ error: 'Unauthorized' }, 401)
     }
+    // Clear and restore both rewrite the live room — same password gate.
+    const needsClearPassword =
+      request.method === 'DELETE' || (request.method === 'POST' && parsed.restore)
+    if (needsClearPassword && !clearAllowed(request, env)) {
+      return json({ error: 'Wrong password' }, 403)
+    }
 
     const id = env.ROOMS.idFromName(parsed.room.toLowerCase())
     const stub = env.ROOMS.get(id)
-    // Preserve /ws on the path for the DO handler.
+    // Preserve path (/ws, /archives/…) for the DO handler.
     return stub.fetch(request)
   },
 }

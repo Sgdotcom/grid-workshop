@@ -48,8 +48,8 @@ try {
   const deskB = await openDesk('b')
   const wallCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   const wall = await wallCtx.newPage()
-  await wall.goto(`${viteBase}?view=wall&room=${room}`)
-  await wall.getByTestId('cinematic-wall').waitFor({ timeout: 20000 })
+  await wall.goto(`${viteBase}?view=projection&room=${room}`)
+  await wall.getByTestId('festival-projection').waitFor({ timeout: 20000 })
 
   await stamp(deskA.page, 1, 2)
   await stamp(deskA.page, 2, 2)
@@ -86,11 +86,9 @@ try {
     { timeout: 20000 },
   )
 
-  // Wall alphabet should show published (is-done) or at least a draft tile with an img.
+  // Projection alphabet should show a published or draft tile with an img.
   await wall.waitForFunction(
-    () =>
-      document.querySelectorAll('.cinematic-ribbon-letter.is-done').length >= 1 ||
-      document.querySelectorAll('.cinematic-ribbon-letter img').length >= 1,
+    () => document.querySelectorAll('.festival-letter img').length >= 1,
     null,
     { timeout: 20000 },
   )

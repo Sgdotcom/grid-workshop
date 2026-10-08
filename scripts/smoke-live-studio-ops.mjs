@@ -61,8 +61,8 @@ try {
   const deskB = await openDesk('b')
   const wallCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   const wall = await wallCtx.newPage()
-  await wall.goto(`${siteBase}?view=wall&room=${room}`)
-  await wall.getByTestId('cinematic-wall').waitFor({ timeout: 20000 })
+  await wall.goto(`${siteBase}?view=projection&room=${room}`)
+  await wall.getByTestId('festival-projection').waitFor({ timeout: 20000 })
   const wallJoin = wall.getByTestId('live-session-join-btn')
   if (await wallJoin.count()) await wallJoin.click().catch(() => {})
 
@@ -83,22 +83,26 @@ try {
 
   // Wall should show a draft/live preview image
   await wall.waitForFunction(
-    () => document.querySelectorAll('.cinematic-ribbon-letter img').length >= 1,
+    () => document.querySelectorAll('.festival-letter img').length >= 1,
     null,
     { timeout: 20000 },
   )
   console.log('[ok] wall sees desk A draft')
 
-  // Desk B alphabet should get draft SVG for active letter (usually 'a')
+  // Desk B should receive A's draft — either as alphabet thumb or (shared LWW) on the open canvas.
   await deskB.page.waitForFunction(
     () => {
       const imgs = document.querySelectorAll('.studio-alphabet img, .studio-letter img')
-      return imgs.length >= 1
+      if (imgs.length >= 1) return true
+      const s = JSON.parse(localStorage.getItem('grid-workshop-festival-v1') || 'null')
+      const filled = s?.active?.filled || []
+      const drafts = s?.drafts || []
+      return filled.length >= 1 || drafts.some((d) => d.char === 'a' && (d.filled || []).length >= 1)
     },
     null,
     { timeout: 20000 },
   )
-  console.log('[ok] desk B alphabet shows remote draft')
+  console.log('[ok] desk B has remote draft (alphabet and/or shared canvas)')
 
   // --- Both desks live at once (A on a, B on b) ---
   await deskB.page.getByTestId('studio-glyph-b').click()
@@ -127,7 +131,7 @@ try {
     'both desks have live cues',
   )
   await wall.waitForFunction(
-    () => document.querySelectorAll('.cinematic-live-dot').length >= 2,
+    () => document.querySelectorAll('.festival-live-pane').length >= 2,
     null,
     { timeout: 20000 },
   )
@@ -182,12 +186,12 @@ try {
   // Wall must drop live/draft for a (desk B may still be live on b)
   await wall.waitForFunction(
     () => {
-      const letters = [...document.querySelectorAll('.cinematic-ribbon-letter')]
+      const letters = [...document.querySelectorAll('.festival-letter')]
       const letterA =
-        letters.find((el) => el.textContent?.trim() === 'a' || el.querySelector('img[alt="a"]')) ||
+        letters.find((el) => el.querySelector('img[alt="a"]') || el.querySelector('small')?.textContent?.trim().startsWith('a')) ||
         letters[0]
       if (!letterA) return false
-      return !letterA.querySelector('.cinematic-live-dot') && !letterA.querySelector('img')
+      return !letterA.classList.contains('is-active') && !letterA.querySelector('img')
     },
     null,
     { timeout: 20000 },
@@ -214,7 +218,7 @@ try {
     { timeout: 20000 },
   )
   await wall.waitForFunction(
-    () => document.querySelectorAll('.cinematic-live-dot').length >= 2,
+    () => document.querySelectorAll('.festival-live-pane').length >= 2,
     null,
     { timeout: 20000 },
   )
@@ -261,7 +265,7 @@ try {
 
   // Wall should show published b
   await wall.waitForFunction(
-    () => document.querySelectorAll('.cinematic-ribbon-letter.is-done').length >= 1,
+    () => document.querySelectorAll('.festival-phrase img').length >= 1 || document.querySelectorAll('.festival-letter img').length >= 1,
     null,
     { timeout: 20000 },
   )

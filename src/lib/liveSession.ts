@@ -10,14 +10,20 @@ import {
   parseSession,
   readSession,
 } from '@/lib/festival'
-import { PRESET_SHAPES, type GlyphDraft } from '@/lib/types'
+import {
+  PRESET_SHAPES,
+  type FilledRegion,
+  type GlyphDraft,
+  type GridConfig,
+  type HoleMode,
+} from '@/lib/types'
 
 export const LIVE_ROOM_KEY = 'gridz-live-room'
 export const LIVE_TOKEN_KEY = 'gridz-live-token'
 export const LIVE_STATION_KEY = 'gridz-live-station'
 export const LIVE_JOINED_KEY = 'gridz-live-joined'
-/** Two independent festival sessions — each has its own Worker Durable Object. */
-export const FESTIVAL_LIVE_ROOMS = ['boom', 'bobby'] as const
+/** Festival live room name(s) shown in the join UI. */
+export const FESTIVAL_LIVE_ROOMS = ['boom'] as const
 export const DEFAULT_LIVE_ROOM = 'boom'
 
 export interface LiveCue {
@@ -26,6 +32,21 @@ export interface LiveCue {
   liveSvg: string
   updatedAt: string
 }
+
+/** Which letter a desk is painting. `char: ''` = published / left. */
+export interface DeskPresence {
+  char: string
+  since: string
+  /** Heartbeat; Worker / clients drop stale desks after PRESENCE_TTL_MS. */
+  seenAt: string
+}
+
+/** Stale presence TTL (desk closed / crashed without releasing). */
+export const PRESENCE_TTL_MS = 60_000
+const PRESENCE_HEARTBEAT_MS = 20_000
+
+/** SHA-256 of the Clear shared room password; the Worker checks the plain value. */
+const CLEAR_ROOM_PASSWORD_SHA256 = 'fc64ad09595e7739718c814b23ca6335906ef7916c20372cff02e046bad53d18'
 
 export interface LiveRoomState {
   updatedAt: string
@@ -39,6 +60,8 @@ export interface LiveRoomState {
   liveCues?: Record<string, LiveCue>
   /** Newest cue (compat); prefer liveCues on the wall. */
   liveCue?: LiveCue
+  /** Per-desk presence (which letter each station is on). */
+  desks?: Record<string, DeskPresence>
 }
 
 export interface LiveSessionConfig {
@@ -55,6 +78,9 @@ export type LiveSyncStatus = {
   lastPullAt?: string
   lastPushAt?: string
 }
+
+/** Flags delivered with a room apply (e.g. Clear shared room / restore archive). */
+export type LiveRoomApplyMeta = { sharedWipe?: boolean; restore?: boolean }
 
 function trimSlash(url: string) {
   return url.replace(/\/+$/, '')
@@ -134,7 +160,7 @@ export function persistLivePrefs(partial: {
   }
 }
 
-export function wallLink(view: 'wall' | 'projection' | 'studio' = 'wall'): string {
+export function wallLink(view: 'projection' | 'studio' = 'projection'): string {
   const { room } = getLiveConfig()
   const url = new URL(window.location.href)
   url.search = ''
@@ -143,15 +169,34 @@ export function wallLink(view: 'wall' | 'projection' | 'studio' = 'wall'): strin
   return url.pathname + url.search
 }
 
+export function normalizeStation(raw: string | null | undefined): string {
+  return (raw ?? '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 8)
+}
+
+export function isPresenceFresh(desk: DeskPresence | undefined, now = Date.now()): boolean {
+  if (!desk?.char || !desk.seenAt) return false
+  const seen = Date.parse(desk.seenAt)
+  return Number.isFinite(seen) && now - seen < PRESENCE_TTL_MS
+}
+
+export async function checkClearRoomPassword(password: string): Promise<boolean> {
+  const bytes = new TextEncoder().encode(password)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+  return hex === CLEAR_ROOM_PASSWORD_SHA256
+}
+
 async function request(
   method: 'GET' | 'PUT' | 'DELETE',
   config: LiveSessionConfig,
   body?: unknown,
+  extraHeaders?: Record<string, string>,
+  init?: { keepalive?: boolean },
 ): Promise<LiveRoomState> {
   if (!config.enabled) throw new Error('Live session URL is not configured')
   const url = new URL(`${config.baseUrl}/rooms/${encodeURIComponent(config.room)}`)
   if (config.token && method !== 'GET') url.searchParams.set('token', config.token)
-  const headers: Record<string, string> = { Accept: 'application/json' }
+  const headers: Record<string, string> = { Accept: 'application/json', ...extraHeaders }
   if (method !== 'GET') {
     headers['Content-Type'] = 'application/json'
     if (config.token) headers.Authorization = `Bearer ${config.token}`
@@ -160,6 +205,7 @@ async function request(
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
+    keepalive: init?.keepalive,
   })
   if (!response.ok) {
     const text = await response.text().catch(() => '')
@@ -181,22 +227,82 @@ export async function pushLiveRoom(
   return request('PUT', config, payload)
 }
 
-export async function clearLiveRoom(config = getLiveConfig()): Promise<LiveRoomState | null> {
+export async function clearLiveRoom(
+  password: string,
+  config = getLiveConfig(),
+): Promise<LiveRoomState | null> {
   if (!config.enabled) return null
-  return request('DELETE', config)
+  return request('DELETE', config, undefined, { 'X-Clear-Password': password })
+}
+
+/** Summary of a room snapshot archived on Clear shared room (Cloudflare DO). */
+export interface LiveRoomArchiveMeta {
+  id: string
+  clearedAt: string
+  contributionCount: number
+  draftCount: number
+  letterCount: number
+}
+
+export async function listRoomArchives(
+  config = getLiveConfig(),
+): Promise<LiveRoomArchiveMeta[]> {
+  if (!config.enabled) return []
+  const url = new URL(`${config.baseUrl}/rooms/${encodeURIComponent(config.room)}/archives`)
+  const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } })
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(text || `List archives failed (${response.status})`)
+  }
+  const data = (await response.json()) as { archives?: LiveRoomArchiveMeta[] }
+  return Array.isArray(data.archives) ? data.archives : []
+}
+
+/** Put an archived room back as the live room (password same as clear). */
+export async function restoreRoomArchive(
+  archiveId: string,
+  password: string,
+  config = getLiveConfig(),
+): Promise<LiveRoomState | null> {
+  if (!config.enabled) return null
+  const url = new URL(
+    `${config.baseUrl}/rooms/${encodeURIComponent(config.room)}/archives/${encodeURIComponent(archiveId)}/restore`,
+  )
+  if (config.token) url.searchParams.set('token', config.token)
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    'X-Clear-Password': password,
+  }
+  if (config.token) headers.Authorization = `Bearer ${config.token}`
+  const response = await fetch(url.toString(), { method: 'POST', headers, body: '{}' })
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(text || `Restore failed (${response.status})`)
+  }
+  return (await response.json()) as LiveRoomState
 }
 
 /**
  * Push only this desk's active letter + full contribution list.
- * Avoids last-writer stomping the other desk's drafts for letters they own.
- * Empty active letter sends a clear (empty draftSvg + empty liveCue) so wall/peers drop it.
+ * Same-letter peers may fight — Worker LWW on draftUpdatedAt decides.
+ * Empty active letter sends a clear (empty draftSvg + empty live cue) so wall/peers drop it.
+ * Writes `liveCues[station]` only — Worker still derives legacy `liveCue` for old readers.
  */
 export function buildLivePayload(
   session: FestivalSession,
-  opts?: { station?: string; wipeEpoch?: number },
+  opts?: {
+    station?: string
+    wipeEpoch?: number
+    presence?: DeskPresence
+  },
 ): Partial<LiveRoomState> {
-  const now = session.updatedAt || new Date().toISOString()
+  const roomAt = session.updatedAt || new Date().toISOString()
   const ch = session.active.char
+  const presenceKey = normalizeStation(opts?.station ?? getLiveConfig().station) || 'desk'
+  const desks = opts?.presence ? { [presenceKey]: opts.presence } : undefined
+  // Per-letter clock only — never fall back to session.updatedAt for LWW.
+  const letterAt = session.draftUpdatedAt?.[ch] || roomAt
   const activeDraft =
     session.drafts.find((d) => d.char === ch) ??
     (session.active.filled.length ? session.active : null)
@@ -204,7 +310,7 @@ export function buildLivePayload(
   const stationRaw = (opts?.station ?? getLiveConfig().station ?? 'desk').slice(0, 8)
   const station = stationRaw.replace(/[^a-zA-Z0-9_-]/g, '') || 'desk'
   const draftSvgs: Record<string, string> = {}
-  const draftUpdatedAt: Record<string, string> = { [ch]: now }
+  const draftUpdatedAt: Record<string, string> = { [ch]: letterAt }
   if (hasInk && session.liveSvg) {
     draftSvgs[ch] = session.liveSvg
   } else if (!hasInk) {
@@ -212,7 +318,7 @@ export function buildLivePayload(
     draftSvgs[ch] = ''
   }
   const payload: Partial<LiveRoomState> = {
-    updatedAt: now,
+    updatedAt: roomAt,
     wipeEpoch: typeof opts?.wipeEpoch === 'number' ? opts.wipeEpoch : 0,
     contributions: session.contributions,
     drafts: hasInk && activeDraft
@@ -230,29 +336,55 @@ export function buildLivePayload(
         ],
     draftSvgs,
     draftUpdatedAt,
+    ...(desks ? { desks } : {}),
   }
   // Only tombstone live cues when the letter is actually empty. If we still have
   // ink but liveSvg is briefly missing (unload / race), leave the prior cue alone.
   if (hasInk && session.liveSvg) {
-    const liveCue: LiveCue = {
-      char: ch,
-      liveSvg: session.liveSvg,
-      updatedAt: now,
-      station,
+    payload.liveCues = {
+      [station]: {
+        char: ch,
+        liveSvg: session.liveSvg,
+        updatedAt: letterAt,
+        station,
+      },
     }
-    payload.liveCue = liveCue
-    payload.liveCues = { [station]: liveCue }
   } else if (!hasInk) {
-    const liveCue: LiveCue = {
-      char: ch,
-      liveSvg: '',
-      updatedAt: now,
-      station,
+    payload.liveCues = {
+      [station]: {
+        char: ch,
+        liveSvg: '',
+        updatedAt: letterAt,
+        station,
+      },
     }
-    payload.liveCue = liveCue
-    payload.liveCues = { [station]: liveCue }
   }
   return payload
+}
+
+/** What a push would change in the room: letter clocks, room time and presence excluded. */
+export function pushContentKey(payload: Partial<LiveRoomState>): string {
+  return JSON.stringify([
+    payload.wipeEpoch ?? 0,
+    payload.drafts ?? null,
+    payload.draftSvgs ?? null,
+    (payload.contributions ?? []).map((c) => c.id),
+    Object.entries(payload.liveCues ?? {}).map(([station, cue]) => [station, cue.char, cue.liveSvg]),
+  ])
+}
+
+/** Merge per-letter clocks; newer ISO string wins per char. */
+export function mergeDraftUpdatedAt(
+  local: Record<string, string> = {},
+  remote: Record<string, string> = {},
+): Record<string, string> {
+  const next = { ...local }
+  for (const [ch, remoteAt] of Object.entries(remote)) {
+    if (!remoteAt) continue
+    const localAt = next[ch] ?? ''
+    if (!localAt || remoteAt >= localAt) next[ch] = remoteAt
+  }
+  return next
 }
 
 export function mergeContributions(local: Contribution[], remote: Contribution[]): Contribution[] {
@@ -308,6 +440,173 @@ export function isLetterClearedInRoom(
   room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'>,
 ): boolean {
   return !!(room.draftUpdatedAt?.[char] && !room.draftSvgs?.[char])
+}
+
+/**
+ * Last-write-wins for shared letter drafts.
+ * Uses strict `>` so a desk's own echo (same draftUpdatedAt) does not rewrite the canvas.
+ */
+export function remoteDraftIsNewer(
+  char: string,
+  room: Pick<LiveRoomState, 'draftUpdatedAt'>,
+  localTimes: Record<string, string>,
+): boolean {
+  const remoteAt = room.draftUpdatedAt?.[char] ?? ''
+  if (!remoteAt) return false
+  const localAt = localTimes[char] ?? ''
+  return !localAt || remoteAt > localAt
+}
+
+/**
+ * The open letter's state objects when its clock was last stamped, loaded or adopted.
+ * Compared by reference, so every local edit must replace at least one of them.
+ */
+export interface LetterClockBase {
+  char: string
+  filled: ReadonlyMap<string, FilledRegion>
+  brokenJoins: ReadonlySet<string>
+  grid: GridConfig
+  softness: number
+  cornerRadius: number
+  holeMode: HoleMode
+}
+
+/** True when the open letter is exactly as it was at `base`, so its clock must not move. */
+export function letterUnchanged(base: LetterClockBase | null, now: LetterClockBase): boolean {
+  return (
+    !!base &&
+    base.char === now.char &&
+    base.filled === now.filled &&
+    base.brokenJoins === now.brokenJoins &&
+    base.grid === now.grid &&
+    base.softness === now.softness &&
+    base.cornerRadius === now.cornerRadius &&
+    base.holeMode === now.holeMode
+  )
+}
+
+/** What a desk should do to its open letter when a remote room arrives. */
+export type RemoteDeskActiveChange =
+  | { type: 'none' }
+  | { type: 'clear'; remoteAt: string }
+  | { type: 'apply'; draft: GlyphDraft }
+
+/**
+ * Pure plan for App / StudioDesk: one place for wipe + LWW + mid-stroke skip.
+ * Callers apply the plan to React state / refs.
+ */
+export type RemoteDeskApplyPlan =
+  | { kind: 'wipe' }
+  | {
+      kind: 'merge'
+      contributions: Contribution[]
+      glyphs: Map<string, GlyphDraft>
+      draftTimes: Record<string, string>
+      activeChange: RemoteDeskActiveChange
+      applyingRemote: boolean
+      liveSvg: string
+    }
+
+export function planRemoteDeskApply(input: {
+  session: FestivalSession
+  liveRoom: LiveRoomState
+  meta?: LiveRoomApplyMeta
+  localContributions: Contribution[]
+  localGlyphs: Map<string, GlyphDraft>
+  draftTimes: Record<string, string>
+  activeChar: string
+  painting: boolean
+  activeFilledCount: number
+  currentLiveSvg: string
+}): RemoteDeskApplyPlan {
+  const { session, liveRoom, meta } = input
+  const roomEmpty = isEmptyLiveRoom(liveRoom)
+  const sessionWiped =
+    session.contributions.length === 0 &&
+    session.drafts.length === 0 &&
+    session.active.filled.length === 0 &&
+    !session.liveSvg
+  if (meta?.sharedWipe || (roomEmpty && sessionWiped)) {
+    return { kind: 'wipe' }
+  }
+
+  // Cloud archive restore: replace local typeface/drafts with the archived room.
+  if (meta?.restore) {
+    const glyphs = new Map<string, GlyphDraft>()
+    for (const draft of session.drafts) {
+      if (draft.filled.length) glyphs.set(draft.char, draft)
+    }
+    const draftTimes = mergeDraftUpdatedAt(
+      session.draftUpdatedAt ?? {},
+      liveRoom.draftUpdatedAt ?? {},
+    )
+    const active = session.active
+    const activeChange: RemoteDeskActiveChange = active.filled.length
+      ? { type: 'apply', draft: active }
+      : { type: 'clear', remoteAt: draftTimes[active.char] ?? liveRoom.updatedAt }
+    return {
+      kind: 'merge',
+      contributions: session.contributions,
+      glyphs,
+      draftTimes,
+      activeChange,
+      applyingRemote: true,
+      liveSvg: session.liveSvg,
+    }
+  }
+
+  const contributions = mergeContributions(input.localContributions, session.contributions)
+  const draftTimes = { ...input.draftTimes }
+  const nextGlyphs = new Map(input.localGlyphs)
+  const activeChar = input.activeChar
+  const painting = input.painting
+  let appliedActive: GlyphDraft | null = null
+
+  for (const draft of session.drafts) {
+    if (!draft.filled.length) continue
+    if (isLetterClearedInRoom(draft.char, liveRoom)) continue
+    // Mid-stroke: keep our ink for the letter we are painting; push wins after.
+    if (draft.char === activeChar && painting) continue
+    if (!remoteDraftIsNewer(draft.char, liveRoom, draftTimes)) {
+      if (!nextGlyphs.has(draft.char) && draft.char !== activeChar) nextGlyphs.set(draft.char, draft)
+      continue
+    }
+    nextGlyphs.set(draft.char, draft)
+    const remoteAt = liveRoom.draftUpdatedAt?.[draft.char]
+    if (remoteAt) draftTimes[draft.char] = remoteAt
+    if (draft.char === activeChar) appliedActive = draft
+  }
+  for (const ch of [...nextGlyphs.keys()]) {
+    if (isLetterClearedInRoom(ch, liveRoom)) nextGlyphs.delete(ch)
+  }
+
+  let activeChange: RemoteDeskActiveChange = { type: 'none' }
+  let applyingRemote = false
+  if (isLetterClearedInRoom(activeChar, liveRoom) && input.activeFilledCount > 0 && !painting) {
+    const remoteAt = liveRoom.draftUpdatedAt?.[activeChar] ?? ''
+    const localAt = draftTimes[activeChar] ?? ''
+    // Strict `>` — same stamp is our echo, not a newer peer clear.
+    if (!localAt || remoteAt > localAt) {
+      applyingRemote = true
+      activeChange = { type: 'clear', remoteAt }
+      if (remoteAt) draftTimes[activeChar] = remoteAt
+    }
+  } else if (appliedActive) {
+    applyingRemote = true
+    activeChange = { type: 'apply', draft: appliedActive }
+  }
+
+  return {
+    kind: 'merge',
+    contributions,
+    glyphs: nextGlyphs,
+    draftTimes,
+    activeChange,
+    applyingRemote,
+    liveSvg: isLetterClearedInRoom(activeChar, liveRoom)
+      ? ''
+      : (input.currentLiveSvg || session.liveSvg),
+  }
 }
 
 /** True after DELETE / full shared wipe — no publishes, drafts, or live cues. */
@@ -373,24 +672,26 @@ export function applyRoomToSession(
       ...base,
       updatedAt: room.updatedAt || base.updatedAt,
       contributions,
+      // Keep this desk's other unpushed drafts too (only the active letter is ever pushed).
       drafts: sharedWipe
         ? []
-        : keepActive && local!.active.filled.length
+        : keepActive
           ? [
-              {
-                ...local!.active,
-                char: activeChar,
-              },
+              ...local!.drafts.filter((d) => d.filled.length && d.char !== activeChar),
+              ...(local!.active.filled.length ? [{ ...local!.active, char: activeChar }] : []),
             ]
           : [],
       active: wipedActive,
       liveSvg: sharedWipe ? '' : keepActive ? local!.liveSvg : '',
+      draftUpdatedAt: sharedWipe ? {} : keepActive ? (local?.draftUpdatedAt ?? {}) : {},
       library: base.library.length ? base.library : [...PRESET_SHAPES],
     }
   }
 
+  const localTimes = local?.draftUpdatedAt ?? {}
+  const remoteTimes = room.draftUpdatedAt ?? {}
   const contributions = mergeContributions(base.contributions, room.contributions ?? [])
-  const merged = mergeDrafts(base.drafts, room.drafts ?? [], room.draftUpdatedAt ?? {})
+  const merged = mergeDrafts(base.drafts, room.drafts ?? [], remoteTimes, localTimes)
   // Shared clear tombstones win even for the desk's active letter.
   const drafts = pruneClearedDrafts(merged, room)
   const remoteClearedActive = keepActive && isLetterClearedInRoom(activeChar, room)
@@ -416,6 +717,7 @@ export function applyRoomToSession(
         : remoteClearedActive
           ? ''
           : (liveCue?.liveSvg ?? base.liveSvg),
+    draftUpdatedAt: mergeDraftUpdatedAt(localTimes, remoteTimes),
     library: base.library.length ? base.library : [...PRESET_SHAPES],
   }
 }
@@ -497,36 +799,79 @@ function parseRoomMessage(raw: string): LiveRoomState | null {
         data.liveCues && typeof data.liveCues === 'object'
           ? (data.liveCues as Record<string, LiveCue>)
           : undefined,
+      desks:
+        data.desks && typeof data.desks === 'object'
+          ? (data.desks as Record<string, DeskPresence>)
+          : undefined,
     }
   } catch {
     return null
   }
 }
 
+const WIPE_EPOCH_PREFIX = 'gridz-wipe-epoch:'
+
+function readStoredWipeEpoch(room: string): number {
+  try {
+    const raw = sessionStorage.getItem(`${WIPE_EPOCH_PREFIX}${room}`)
+    const n = raw == null ? 0 : Number(raw)
+    return Number.isFinite(n) && n >= 0 ? n : 0
+  } catch {
+    return 0
+  }
+}
+
+function storeWipeEpoch(room: string, epoch: number) {
+  try {
+    sessionStorage.setItem(`${WIPE_EPOCH_PREFIX}${room}`, String(epoch))
+  } catch {
+    /* ignore */
+  }
+}
+
 export function createLiveSyncController(options: {
   onStatus?: (status: LiveSyncStatus) => void
-  onRoom?: (room: LiveRoomState, session: FestivalSession) => void
+  onRoom?: (room: LiveRoomState, session: FestivalSession, meta?: LiveRoomApplyMeta) => void
   getSession?: () => FestivalSession | null
   painting?: () => boolean
   /** Desk mode: merge room into storage but keep this machine's active canvas letter. */
   keepLocalActive?: boolean
+  /** Desk presence for the wall; omit on projection. `char: ''` = released. */
+  getPresence?: () => { char: string; since: string } | null
 }) {
   let timer: number | null = null
   let pushTimer: number | null = null
   let reconnectTimer: number | null = null
   let pingTimer: number | null = null
+  let heartbeatTimer: number | null = null
   let socket: WebSocket | null = null
   let stopped = false
   let lastSeenUpdatedAt = ''
-  let wipeEpoch = 0
+  let lastRoom: LiveRoomState | null = null
+  // Persist per room so React remounts / Strict Mode do not re-fire sharedWipe.
+  let wipeEpoch = readStoredWipeEpoch(getLiveConfig().room)
   let reconnectAttempt = 0
   let socketLive = false
+  /** pushContentKey of the last push the Worker accepted. */
+  let lastPushedKey = ''
+  let retryTimer: number | null = null
+  let retryAttempt = 0
 
   const setStatus = (status: LiveSyncStatus) => options.onStatus?.(status)
 
+  const currentPresence = (): DeskPresence | undefined => {
+    const p = options.getPresence?.()
+    if (!p) return undefined
+    return { char: p.char, since: p.since, seenAt: new Date().toISOString() }
+  }
+
   const noteRoomMeta = (room: LiveRoomState) => {
     lastSeenUpdatedAt = room.updatedAt
-    if (typeof room.wipeEpoch === 'number') wipeEpoch = room.wipeEpoch
+    lastRoom = room
+    if (typeof room.wipeEpoch === 'number') {
+      wipeEpoch = room.wipeEpoch
+      storeWipeEpoch(getLiveConfig().room, wipeEpoch)
+    }
   }
 
   const applyRoom = (room: LiveRoomState, source: 'ws' | 'poll') => {
@@ -546,24 +891,14 @@ export function createLiveSyncController(options: {
       window.clearTimeout(pushTimer)
       pushTimer = null
     }
-    // Desks: ignore empty non-wipe snapshots. Polling an empty room while painting would
-    // otherwise persist a stale session snapshot and fight the live canvas / publish button.
-    if (isEmptyLiveRoom(room) && !sharedWipe && options.keepLocalActive) {
-      setStatus({
-        state: 'ok',
-        message: source === 'ws' ? `Live · ${getLiveConfig().room}` : `Connected · ${getLiveConfig().room}`,
-        lastPullAt: new Date().toISOString(),
-      })
-      return
-    }
     const local = options.getSession?.() ?? readLocalSessionSafe()
     const painting = options.painting?.() ?? false
     const session = applyRoomToSession(local, room, {
       keepLocalActive: options.keepLocalActive || painting,
       sharedWipe,
     })
-    persistSession(session)
-    options.onRoom?.(room, session)
+    // UI owns localStorage — deliver the plan only; desks persist after they apply it.
+    options.onRoom?.(room, session, { sharedWipe })
     setStatus({
       state: 'ok',
       message: source === 'ws' ? `Live · ${getLiveConfig().room}` : `Connected · ${getLiveConfig().room}`,
@@ -673,16 +1008,33 @@ export function createLiveSyncController(options: {
     }, delay)
   }
 
+  /** Nothing else re-sends a failed push now that idle desks stay quiet. */
+  const scheduleRetry = () => {
+    if (stopped || retryTimer) return
+    const delay = Math.min(15000, 2000 * 2 ** retryAttempt)
+    retryAttempt += 1
+    retryTimer = window.setTimeout(() => {
+      retryTimer = null
+      const latest = options.getSession?.()
+      if (latest && !stopped) void pushNow(latest)
+    }, delay)
+  }
+
   const pushNow = async (session: FestivalSession) => {
     const config = getLiveConfig()
     if (!config.enabled || stopped) return
+    // Always push the active letter — peers may fight; Worker LWW decides.
+    const payload = buildLivePayload(session, { station: config.station, wipeEpoch, presence: currentPresence() })
+    // Every PUT is broadcast and re-renders the other desks; re-sending unchanged
+    // content from those re-renders would bounce between desks forever.
+    const key = pushContentKey(payload)
+    if (key === lastPushedKey) return
     try {
       setStatus({ state: 'syncing', message: `Saving · ${config.room}…` })
-      const room = await pushLiveRoom(
-        buildLivePayload(session, { station: config.station, wipeEpoch }),
-        config,
-      )
+      const room = await pushLiveRoom(payload, config)
       if (room) {
+        lastPushedKey = key
+        retryAttempt = 0
         noteRoomMeta(room)
         setStatus({
           state: 'ok',
@@ -695,6 +1047,7 @@ export function createLiveSyncController(options: {
         state: 'error',
         message: error instanceof Error ? error.message : 'Live push failed',
       })
+      scheduleRetry()
     }
   }
 
@@ -712,6 +1065,32 @@ export function createLiveSyncController(options: {
     }, 400)
   }
 
+  /** Presence-only PUT (heartbeat / release). Never touches letters. */
+  const pushPresence = async (override?: { char: string }, keepalive = false) => {
+    const config = getLiveConfig()
+    if (!config.enabled || !options.getPresence) return
+    const presence = currentPresence()
+    if (!presence) return
+    if (override) presence.char = override.char
+    const key = normalizeStation(config.station) || 'desk'
+    try {
+      const room = await request(
+        'PUT',
+        config,
+        { wipeEpoch, desks: { [key]: presence } },
+        undefined,
+        { keepalive },
+      )
+      if (!keepalive) noteRoomMeta(room)
+    } catch {
+      /* next heartbeat retries */
+    }
+  }
+
+  const releaseOnHide = () => {
+    void pushPresence({ char: '' }, true)
+  }
+
   /** pollMs is fallback GET interval; WebSocket is primary. */
   const start = (pollMs = 10000) => {
     stopped = false
@@ -722,13 +1101,28 @@ export function createLiveSyncController(options: {
     timer = window.setInterval(() => {
       void pull()
     }, pollMs)
+    if (options.getPresence) {
+      if (heartbeatTimer) window.clearInterval(heartbeatTimer)
+      heartbeatTimer = window.setInterval(() => {
+        if (!stopped) void pushPresence()
+      }, PRESENCE_HEARTBEAT_MS)
+      window.addEventListener('pagehide', releaseOnHide)
+    }
   }
 
   const stop = () => {
+    if (options.getPresence && !stopped) {
+      window.removeEventListener('pagehide', releaseOnHide)
+      void pushPresence({ char: '' }, true)
+    }
     stopped = true
     socketLive = false
     if (timer) window.clearInterval(timer)
     if (pushTimer) window.clearTimeout(pushTimer)
+    if (heartbeatTimer) window.clearInterval(heartbeatTimer)
+    if (retryTimer) window.clearTimeout(retryTimer)
+    heartbeatTimer = null
+    retryTimer = null
     clearSocketTimers()
     timer = null
     pushTimer = null
@@ -740,5 +1134,13 @@ export function createLiveSyncController(options: {
     socket = null
   }
 
-  return { start, stop, pull, push, getConfig: getLiveConfig }
+  return {
+    start,
+    stop,
+    pull,
+    push,
+    pushPresence: () => pushPresence(),
+    getRoom: () => lastRoom,
+    getConfig: getLiveConfig,
+  }
 }

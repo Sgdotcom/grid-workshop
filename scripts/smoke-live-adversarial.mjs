@@ -21,6 +21,9 @@ const worker =
 const chrome =
   process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const stampId = Date.now().toString(36)
+// Public repo: the facilitator password only ever comes from the environment.
+const clearPassword = process.env.CLEAR_ROOM_PASSWORD || ''
+if (!clearPassword) throw new Error('Set CLEAR_ROOM_PASSWORD to the facilitator password.')
 
 function log(msg) {
   console.log(msg)
@@ -54,7 +57,13 @@ async function req(method, roomPath, body) {
   const url = new URL(`${worker}${roomPath}`)
   const res = await fetch(url, {
     method,
-    headers: method === 'GET' ? { Accept: 'application/json' } : { 'Content-Type': 'application/json', Accept: 'application/json' },
+    headers: method === 'GET'
+      ? { Accept: 'application/json' }
+      : {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(method === 'DELETE' ? { 'X-Clear-Password': clearPassword } : {}),
+        },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
   const json = await res.json().catch(() => ({}))
@@ -83,7 +92,7 @@ async function layerWorker() {
 
   const room = `adv-w-${stampId}`
   const boom = `adv-boom-${stampId}`
-  const bobby = `adv-bobby-${stampId}`
+  const roomB = `adv-room-b-${stampId}`
 
   // Seed then DELETE + stale epoch
   await req('PUT', `/rooms/${room}`, {
@@ -167,7 +176,7 @@ async function layerWorker() {
   assert.ok(!Object.keys(raceClear.json.draftSvgs || {}).length, 'race draftSvgs empty')
   log('[ok] rapid dual PUT then DELETE empties room')
 
-  // boom vs bobby isolation under DELETE
+  // two rooms isolation under DELETE
   await req('PUT', `/rooms/${boom}`, {
     wipeEpoch: 0,
     contributions: [contrib('boom-only', 'x', '2026-10-07T12:00:00.000Z')],
@@ -180,28 +189,28 @@ async function layerWorker() {
       updatedAt: '2026-10-07T12:00:00.000Z',
     },
   })
-  await req('PUT', `/rooms/${bobby}`, {
+  await req('PUT', `/rooms/${roomB}`, {
     wipeEpoch: 0,
-    contributions: [contrib('bobby-only', 'y', '2026-10-07T12:00:00.000Z')],
-    draftSvgs: { y: '<svg id="bobby"/>' },
+    contributions: [contrib('roomB-only', 'y', '2026-10-07T12:00:00.000Z')],
+    draftSvgs: { y: '<svg id="roomB"/>' },
     draftUpdatedAt: { y: '2026-10-07T12:00:00.000Z' },
     liveCue: {
       char: 'y',
       station: 'a',
-      liveSvg: '<svg id="bobby-live"/>',
+      liveSvg: '<svg id="roomB-live"/>',
       updatedAt: '2026-10-07T12:00:00.000Z',
     },
   })
   await req('DELETE', `/rooms/${boom}`)
   const boomGet = await req('GET', `/rooms/${boom}`)
-  const bobbyGet = await req('GET', `/rooms/${bobby}`)
+  const roomBGet = await req('GET', `/rooms/${roomB}`)
   assert.equal((boomGet.json.contributions || []).length, 0, 'boom cleared')
   assert.ok(
-    (bobbyGet.json.contributions || []).some((c) => c.id === 'bobby-only'),
-    'bobby untouched after boom DELETE',
+    (roomBGet.json.contributions || []).some((c) => c.id === 'roomB-only'),
+    'roomB untouched after boom DELETE',
   )
-  assert.equal(bobbyGet.json.draftSvgs?.y, '<svg id="bobby"/>', 'bobby draft survives')
-  log('[ok] boom DELETE leaves bobby intact')
+  assert.equal(roomBGet.json.draftSvgs?.y, '<svg id="roomB"/>', 'roomB draft survives')
+  log('[ok] DELETE leaves other room intact')
   log('[pass] Worker chaos')
 }
 
@@ -296,7 +305,7 @@ async function layerPlaywright() {
     await joinRoot.waitFor({ state: 'visible', timeout: 10000 })
     const off = await joinRoot.evaluate((el) => el.classList.contains('is-off'))
     assert.equal(off, false, 'live session must be enabled (set VITE_LIVE_SESSION_URL for Vite)')
-    if (room === 'boom' || room === 'bobby') {
+    if (room === 'boom') {
       await page.getByTestId(`live-room-${room}`).click()
     } else {
       const join = page.getByTestId('live-session-join-btn')
@@ -320,9 +329,9 @@ async function layerPlaywright() {
   async function openWall(room) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
     const page = await context.newPage()
-    await page.goto(`${siteBase}?view=wall&room=${encodeURIComponent(room)}`)
-    await page.getByTestId('cinematic-wall').waitFor({ timeout: 25000 })
-    if (room === 'boom' || room === 'bobby') {
+    await page.goto(`${siteBase}?view=projection&room=${encodeURIComponent(room)}`)
+    await page.getByTestId('festival-projection').waitFor({ timeout: 25000 })
+    if (room === 'boom') {
       await page.getByTestId(`live-room-${room}`).click().catch(() => {})
     } else {
       const join = page.getByTestId('live-session-join-btn')
@@ -358,6 +367,7 @@ async function layerPlaywright() {
   async function clearSharedRoom(page) {
     await page.getByTestId('studio-options').click()
     await page.getByTestId('clear-shared-room').waitFor({ state: 'visible', timeout: 10000 })
+    await page.getByTestId('clear-room-password').fill(clearPassword)
     await page.getByTestId('clear-shared-room').click()
     await page.getByLabel('Close options').click().catch(async () => {
       await page.keyboard.press('Escape').catch(() => {})
@@ -399,7 +409,7 @@ async function layerPlaywright() {
         { timeout: 20000 },
       )
       await wall.page.waitForFunction(
-        () => document.querySelectorAll('.cinematic-ribbon-letter.is-done').length >= 1,
+        () => document.querySelectorAll('.festival-letter img').length >= 1,
         null,
         { timeout: 20000 },
       )
@@ -431,8 +441,8 @@ async function layerPlaywright() {
       )
       await wall.page.waitForFunction(
         () =>
-          document.querySelectorAll('.cinematic-ribbon-letter.is-done').length === 0 &&
-          document.querySelectorAll('.cinematic-live-dot').length === 0,
+          document.querySelectorAll('.festival-live-pane img').length === 0 &&
+          document.querySelectorAll('.festival-phrase img').length === 0,
         null,
         { timeout: 15000 },
       )
@@ -458,7 +468,7 @@ async function layerPlaywright() {
         'post-wipe live/draft accepted',
       )
       await wall.page.waitForFunction(
-        () => document.querySelectorAll('.cinematic-ribbon-letter img').length >= 1,
+        () => document.querySelectorAll('.festival-letter img').length >= 1,
         null,
         { timeout: 20000 },
       )
@@ -633,13 +643,13 @@ async function layerPlaywright() {
 
     // --- 6. Room switch dirty storage ---
     {
-      const bobby = `bobby` // festival names — use unique via Worker isolation by also using UUID rooms?
-      // Plan: publish in bobby, join empty boom. Use real festival room names with unique
-      // prefix isn't possible for boom/bobby buttons — use synthetic rooms via URL for
-      // paint, then for boom/bobby isolation we DELETE unique rooms above.
-      // For dirty switch: open desk on room adv-bobby-sw, publish, then navigate/join
+      const roomB = `roomB` // festival names — use unique via Worker isolation by also using UUID rooms?
+      // Plan: publish in roomB, join empty boom. Use real festival room names with unique
+      // prefix isn't possible for boom/roomB buttons — use synthetic rooms via URL for
+      // paint, then for boom/roomB isolation we DELETE unique rooms above.
+      // For dirty switch: open desk on room adv-room-b-sw, publish, then navigate/join
       // adv-boom-sw via URL (joinSession with custom room through history).
-      // LiveSessionJoin only has boom/bobby buttons. joinSession accepts any room string
+      // LiveSessionJoin only has boom/roomB buttons. joinSession accepts any room string
       // via live-session-join-btn after setting room in URL.
       const fromRoom = `adv-from-${stampId}`
       const toRoom = `adv-to-${stampId}`
@@ -710,7 +720,7 @@ async function layerPlaywright() {
         30000,
       )
       await wall.page.waitForFunction(
-        () => document.querySelectorAll('.cinematic-live-dot').length >= 1,
+        () => document.querySelectorAll('.festival-live-pane').length >= 1,
         null,
         { timeout: 20000 },
       )
@@ -724,7 +734,7 @@ async function layerPlaywright() {
       )
       assert.ok(afterClose.liveCues.b.liveSvg, 'B live cue still present')
       await wall.page.waitForFunction(
-        () => document.querySelectorAll('.cinematic-live-dot').length >= 1,
+        () => document.querySelectorAll('.festival-live-pane').length >= 1,
         null,
         { timeout: 15000 },
       )

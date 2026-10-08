@@ -13,6 +13,10 @@ function headers(method) {
     h['Content-Type'] = 'application/json'
     if (token) h.Authorization = `Bearer ${token}`
   }
+  // Public repo: the facilitator password only ever comes from the environment.
+  if (method === 'DELETE' && process.env.CLEAR_ROOM_PASSWORD) {
+    h['X-Clear-Password'] = process.env.CLEAR_ROOM_PASSWORD
+  }
   return h
 }
 
@@ -194,8 +198,31 @@ async function main() {
   assert(!stale.json.draftSvgs?.z, 'stale PUT must not restore draftSvg')
   console.log('[ok] stale PUT ignored after wipe')
 
+  // Legacy clients omit wipeEpoch — must still paint after a clear.
+  const legacy = await req('PUT', `/rooms/${room}`, {
+    contributions: [
+      {
+        id: 'legacy-post-wipe',
+        createdAt: '2026-10-07T12:06:00.000Z',
+        draft: { char: 'l', filled: [{ key: '1' }], brokenJoins: [] },
+        svg: '<svg id="legacy"/>',
+      },
+    ],
+    draftSvgs: { l: '<svg id="legacy-draft"/>' },
+    draftUpdatedAt: { l: '2026-10-07T12:06:00.000Z' },
+  })
+  assert(
+    (legacy.json.contributions || []).some((c) => c.id === 'legacy-post-wipe'),
+    'legacy PUT without wipeEpoch should apply after clear',
+  )
+  console.log('[ok] legacy PUT without wipeEpoch applies')
+
+  const cleared2 = await req('DELETE', `/rooms/${room}`)
+  const wipeEpoch2 = cleared2.json.wipeEpoch
+  assert(typeof wipeEpoch2 === 'number' && wipeEpoch2 > wipeEpoch, 'second DELETE bumps wipeEpoch')
+
   const fresh = await req('PUT', `/rooms/${room}`, {
-    wipeEpoch,
+    wipeEpoch: wipeEpoch2,
     contributions: [
       {
         id: 'post-wipe',
@@ -211,9 +238,9 @@ async function main() {
   assert(fresh.json.contributions?.some((c) => c.id === 'post-wipe'), 'post-wipe PUT should apply')
   console.log('[ok] post-wipe PUT applies')
 
-  // boom vs bobby must stay isolated Durable Object rooms
+  // boom vs roomB must stay isolated Durable Object rooms
   const boom = `boom-iso-${Date.now().toString(36)}`
-  const bobby = `bobby-iso-${Date.now().toString(36)}`
+  const roomB = `room-b-iso-${Date.now().toString(36)}`
   await req('PUT', `/rooms/${boom}`, {
     liveCue: {
       char: 'x',
@@ -224,23 +251,23 @@ async function main() {
     draftSvgs: { x: '<svg id="boom-draft"/>' },
     draftUpdatedAt: { x: '2026-10-07T13:00:00.000Z' },
   })
-  await req('PUT', `/rooms/${bobby}`, {
+  await req('PUT', `/rooms/${roomB}`, {
     liveCue: {
       char: 'y',
       station: 'a',
-      liveSvg: '<svg id="bobby"/>',
+      liveSvg: '<svg id="roomB"/>',
       updatedAt: '2026-10-07T13:00:00.000Z',
     },
-    draftSvgs: { y: '<svg id="bobby-draft"/>' },
+    draftSvgs: { y: '<svg id="roomB-draft"/>' },
     draftUpdatedAt: { y: '2026-10-07T13:00:00.000Z' },
   })
   const boomGet = await req('GET', `/rooms/${boom}`)
-  const bobbyGet = await req('GET', `/rooms/${bobby}`)
+  const roomBGet = await req('GET', `/rooms/${roomB}`)
   assert(boomGet.json.liveCues?.a?.liveSvg === '<svg id="boom"/>', 'boom room own cue')
-  assert(bobbyGet.json.liveCues?.a?.liveSvg === '<svg id="bobby"/>', 'bobby room own cue')
-  assert(!boomGet.json.draftSvgs?.y, 'boom must not see bobby draft')
-  assert(!bobbyGet.json.draftSvgs?.x, 'bobby must not see boom draft')
-  console.log('[ok] boom and bobby rooms are isolated')
+  assert(roomBGet.json.liveCues?.a?.liveSvg === '<svg id="roomB"/>', 'roomB room own cue')
+  assert(!boomGet.json.draftSvgs?.y, 'boom must not see roomB draft')
+  assert(!roomBGet.json.draftSvgs?.x, 'roomB must not see boom draft')
+  console.log('[ok] two rooms are isolated')
 
   console.log('[pass] live-session smoke')
 }

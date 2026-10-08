@@ -5,7 +5,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -47,12 +46,18 @@ import {
   type FestivalSession,
 } from '@/lib/festival'
 import { DEFAULT_BRUSH, DEFAULT_GRID } from '@/lib/gridGeometry'
+import { ClearRoomControl } from '@/components/ClearRoomControl'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import {
-  isEmptyLiveRoom,
-  isLetterClearedInRoom,
+  LIVE_STATION_KEY,
+  getLiveConfig,
   letterPreviewSvg,
-  mergeContributions,
+  letterUnchanged,
+  normalizeStation,
+  persistLivePrefs,
+  planRemoteDeskApply,
+  pushLiveRoom,
+  type LetterClockBase,
 } from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 import { buildStarterBlueprint, nudgeFilled } from '@/lib/skeletons'
@@ -82,10 +87,33 @@ function restoreFilled(list: FilledRegion[]) {
   return new Map(list.map((r) => [r.key, { ...r }]))
 }
 
+const DESK_STATIONS = ['a', 'b'] as const
+
+/** URL ?station= wins, else the station this computer picked before. */
 function stationLabel() {
-  const raw = new URLSearchParams(window.location.search).get('station')
-  if (!raw) return null
-  return raw.trim().toLowerCase().slice(0, 8) || null
+  const fromUrl = normalizeStation(new URLSearchParams(window.location.search).get('station'))
+  if (fromUrl) return fromUrl
+  try {
+    return normalizeStation(localStorage.getItem(LIVE_STATION_KEY)) || null
+  } catch {
+    return null
+  }
+}
+
+function rememberStation(next: string) {
+  const previous = normalizeStation(getLiveConfig().station)
+  if (previous && previous !== next && getLiveConfig().enabled) {
+    const at = new Date().toISOString()
+    void pushLiveRoom({ desks: { [previous]: { char: '', since: at, seenAt: at } } }).catch(() => {})
+  }
+  persistLivePrefs({ station: next })
+  try {
+    const url = new URL(window.location.href)
+    url.searchParams.set('station', next)
+    window.history.replaceState({}, '', url.pathname + url.search)
+  } catch {
+    /* ignore */
+  }
 }
 
 const TOOLS_WIDTH_KEY = 'gridz-studio-tools-width'
@@ -108,7 +136,7 @@ function clampToolsWidth(n: number) {
 }
 
 export function StudioDesk() {
-  const station = useMemo(() => stationLabel(), [])
+  const [station, setStation] = useState(() => stationLabel())
   const [recovery] = useState(() => {
     try {
       return { session: readSession(), error: '' }
@@ -127,7 +155,7 @@ export function StudioDesk() {
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [library] = useState<ShapeDef[]>(() => reconcileLibrary(restored?.library))
   const [shapeId, setShapeId] = useState('preset-circle')
-  const [grid] = useState<GridConfig>(restored?.active.grid ?? DEFAULT_GRID)
+  const [grid, setGrid] = useState<GridConfig>(restored?.active.grid ?? DEFAULT_GRID)
   const [filled, setFilled] = useState<Map<string, FilledRegion>>(() =>
     restoreFilled(restored?.active.filled ?? []),
   )
@@ -168,6 +196,8 @@ export function StudioDesk() {
   const [canRedo, setCanRedo] = useState(false)
   const [meltOff, setMeltOff] = useState(() => loadMeltOffPresets())
   const [meltOffRevision, setMeltOffRevision] = useState(0)
+  /** False right after publishing: the desk stays on the letter but releases it to peers. */
+  const [holding, setHolding] = useState(true)
 
   const displayGuideLetter = guideUpper ? guideLetter.toUpperCase() : guideLetter
   const activeShape = library.find((s) => s.id === shapeId) ?? library[0]
@@ -189,6 +219,19 @@ export function StudioDesk() {
   brokenRef.current = brokenJoins
   const glyphsRef = useRef(glyphs)
   glyphsRef.current = glyphs
+  /** Per-letter draftUpdatedAt we last accepted (local paint or remote apply). */
+  const draftTimesRef = useRef<Record<string, string>>({ ...(restored?.draftUpdatedAt ?? {}) })
+  /** Open-letter state its clock was last stamped, loaded or adopted with (starts as the restored letter). */
+  const clockBaseRef = useRef<LetterClockBase | null>({
+    char: displayGuideLetter,
+    filled,
+    brokenJoins,
+    grid,
+    softness,
+    cornerRadius,
+    holeMode,
+  })
+  const applyingRemoteRef = useRef(false)
   const contributionsRef = useRef(contributions)
   contributionsRef.current = contributions
   const sessionRef = useRef<FestivalSession | null>(restored)
@@ -276,8 +319,28 @@ export function StudioDesk() {
   const loadDraft = useCallback(
     (store: Map<string, GlyphDraft>, ch: string) => {
       const slot = store.get(ch)
-      setFilled(slot ? restoreFilled(slot.filled) : new Map())
-      setBrokenJoins(new Set(slot?.brokenJoins ?? []))
+      const nextFilled: Map<string, FilledRegion> = slot ? restoreFilled(slot.filled) : new Map()
+      const nextJoins = new Set(slot?.brokenJoins ?? [])
+      setFilled(nextFilled)
+      setBrokenJoins(nextJoins)
+      // Opening a letter is not an edit: it keeps its clock until this desk changes it.
+      clockBaseRef.current = {
+        char: ch,
+        filled: nextFilled,
+        brokenJoins: nextJoins,
+        grid: slot?.grid ?? settingsRef.current.grid,
+        softness: slot?.softness ?? 0.55,
+        cornerRadius: slot?.cornerRadius ?? 0,
+        holeMode: slot?.holeMode ?? 'open',
+      }
+      // Each letter keeps its own lattice; empty letters inherit the desk's current grid.
+      const prevCell = settingsRef.current.grid.cellSize
+      if (slot?.grid) {
+        setGrid(slot.grid)
+        if (slot.grid.cellSize !== prevCell) {
+          setBrushSize((b) => Math.round(b * (slot.grid!.cellSize / prevCell) * 10) / 10)
+        }
+      }
       setSoftness(slot?.softness ?? 0.55)
       setCornerRadius(slot?.cornerRadius ?? 0)
       setHoleMode(slot?.holeMode ?? 'open')
@@ -293,6 +356,7 @@ export function StudioDesk() {
       persistCurrent()
       setGuideLetter(base.toLowerCase())
       setGuideUpper(asUpper)
+      setHolding(true)
       loadDraft(glyphsRef.current, nextChar)
     },
     [persistCurrent, loadDraft],
@@ -331,9 +395,21 @@ export function StudioDesk() {
     const active = activeRef.current
     const drafts = new Map(glyphsRef.current)
     drafts.set(active.char, active)
+    const updatedAt = new Date().toISOString()
+    const state: LetterClockBase = {
+      char: active.char,
+      filled: filledRef.current,
+      brokenJoins: brokenRef.current,
+      ...settingsRef.current,
+    }
+    // Remote updates re-render this desk too; only an edit made here may move the letter clock.
+    if (!draftTimesRef.current[active.char] || !letterUnchanged(clockBaseRef.current, state)) {
+      draftTimesRef.current[active.char] = updatedAt
+    }
+    clockBaseRef.current = state
     const session: FestivalSession = {
       version: 1,
-      updatedAt: new Date().toISOString(),
+      updatedAt,
       active,
       drafts: [...drafts.values()].filter((d) => d.filled.length),
       contributions: contributionsRef.current,
@@ -352,6 +428,7 @@ export function StudioDesk() {
           { fitContent: false },
         ),
       ),
+      draftUpdatedAt: { ...draftTimesRef.current },
     }
     sessionRef.current = session
     try {
@@ -364,6 +441,8 @@ export function StudioDesk() {
   }, [library])
 
   const live = useLiveSession({
+    activeChar: displayGuideLetter,
+    holding,
     getSession: () => {
       const s = sessionRef.current
       if (!s) return null
@@ -376,9 +455,23 @@ export function StudioDesk() {
       }
     },
     painting: () => strokeStarted.current,
-    onRemoteSession: (session, liveRoom) => {
-      // Shared wipe (Clear shared room): applyRoom cleared active + contributions.
-      if (isEmptyLiveRoom(liveRoom) && session.contributions.length === 0 && session.active.filled.length === 0 && !session.liveSvg) {
+    onRemoteSession: (session, liveRoom, meta) => {
+      const plan = planRemoteDeskApply({
+        session,
+        liveRoom,
+        meta,
+        localContributions: contributionsRef.current,
+        localGlyphs: glyphsRef.current,
+        draftTimes: draftTimesRef.current,
+        activeChar: letterRef.current,
+        painting: strokeStarted.current,
+        activeFilledCount: filledRef.current.size,
+        currentLiveSvg: sessionRef.current?.liveSvg ?? session.liveSvg,
+      })
+
+      if (plan.kind === 'wipe') {
+        applyingRemoteRef.current = true
+        draftTimesRef.current = {}
         const empty = new Map<string, FilledRegion>()
         const noJoins = new Set<string>()
         const noGlyphs = new Map()
@@ -386,10 +479,19 @@ export function StudioDesk() {
         brokenRef.current = noJoins
         glyphsRef.current = noGlyphs
         contributionsRef.current = []
+        clockBaseRef.current = {
+          char: letterRef.current,
+          filled: empty,
+          brokenJoins: noJoins,
+          ...settingsRef.current,
+        }
         setFilled(empty)
         setBrokenJoins(noJoins)
         setGlyphs(noGlyphs)
         setContributions([])
+        past.current = []
+        future.current = []
+        syncHistoryFlags()
         activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
         sessionRef.current = {
           ...session,
@@ -397,6 +499,7 @@ export function StudioDesk() {
           contributions: [],
           drafts: [],
           liveSvg: '',
+          draftUpdatedAt: {},
         }
         try {
           localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
@@ -406,46 +509,70 @@ export function StudioDesk() {
         return
       }
 
-      // Union with local so a just-published letter is not wiped by a stale WS frame.
-      const merged = mergeContributions(contributionsRef.current, session.contributions)
-      setContributions(merged)
-      contributionsRef.current = merged
-      const activeChar = letterRef.current
-      const nextGlyphs = new Map(glyphsRef.current)
-      for (const draft of session.drafts) {
-        if (!draft.filled.length) continue
-        if (draft.char === activeChar && !isLetterClearedInRoom(activeChar, liveRoom)) continue
-        if (isLetterClearedInRoom(draft.char, liveRoom)) continue
-        nextGlyphs.set(draft.char, draft)
-      }
-      // Shared clear: drop tombstoned letters from the alphabet (including active).
-      for (const ch of [...nextGlyphs.keys()]) {
-        if (isLetterClearedInRoom(ch, liveRoom)) nextGlyphs.delete(ch)
-      }
-      if (isLetterClearedInRoom(activeChar, liveRoom) && filledRef.current.size > 0) {
-        // Ignore stale self-echo tombstones from switching to an empty letter, then painting.
-        const remoteAt = liveRoom.draftUpdatedAt?.[activeChar] ?? ''
-        const localAt = sessionRef.current?.updatedAt ?? ''
-        if (!localAt || remoteAt >= localAt) {
-          const empty = new Map<string, FilledRegion>()
-          const noJoins = new Set<string>()
-          filledRef.current = empty
-          brokenRef.current = noJoins
-          setFilled(empty)
-          setBrokenJoins(noJoins)
-          activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+      draftTimesRef.current = plan.draftTimes
+      contributionsRef.current = plan.contributions
+      setContributions(plan.contributions)
+      glyphsRef.current = plan.glyphs
+      setGlyphs(plan.glyphs)
+
+      if (plan.activeChange.type === 'clear') {
+        applyingRemoteRef.current = true
+        const empty = new Map<string, FilledRegion>()
+        const noJoins = new Set<string>()
+        filledRef.current = empty
+        brokenRef.current = noJoins
+        clockBaseRef.current = {
+          char: letterRef.current,
+          filled: empty,
+          brokenJoins: noJoins,
+          ...settingsRef.current,
         }
+        setFilled(empty)
+        setBrokenJoins(noJoins)
+        activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+      } else if (plan.activeChange.type === 'apply') {
+        applyingRemoteRef.current = true
+        const draft = plan.activeChange.draft
+        const nextFilled = restoreFilled(draft.filled)
+        const nextJoins = new Set(draft.brokenJoins)
+        filledRef.current = nextFilled
+        brokenRef.current = nextJoins
+        const current = settingsRef.current
+        clockBaseRef.current = {
+          char: letterRef.current,
+          filled: nextFilled,
+          brokenJoins: nextJoins,
+          grid: draft.grid ?? current.grid,
+          softness: typeof draft.softness === 'number' ? draft.softness : current.softness,
+          cornerRadius:
+            typeof draft.cornerRadius === 'number' ? draft.cornerRadius : current.cornerRadius,
+          holeMode: draft.holeMode ?? current.holeMode,
+        }
+        setFilled(nextFilled)
+        setBrokenJoins(nextJoins)
+        if (draft.grid) setGrid(draft.grid)
+        if (typeof draft.softness === 'number') setSoftness(draft.softness)
+        if (typeof draft.cornerRadius === 'number') setCornerRadius(draft.cornerRadius)
+        if (draft.holeMode) setHoleMode(draft.holeMode)
+        past.current = []
+        future.current = []
+        syncHistoryFlags()
+      } else if (plan.applyingRemote) {
+        applyingRemoteRef.current = true
       }
-      glyphsRef.current = nextGlyphs
-      setGlyphs(nextGlyphs)
+
       sessionRef.current = {
         ...session,
         active: activeRef.current,
-        contributions: merged,
-        drafts: [...nextGlyphs.values()].filter((d) => d.filled.length),
-        liveSvg: isLetterClearedInRoom(activeChar, liveRoom)
-          ? ''
-          : (sessionRef.current?.liveSvg ?? session.liveSvg),
+        contributions: plan.contributions,
+        drafts: [...plan.glyphs.values()].filter((d) => d.filled.length),
+        liveSvg: plan.liveSvg,
+        draftUpdatedAt: { ...plan.draftTimes },
+      }
+      try {
+        localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
+      } catch {
+        /* ignore */
       }
     },
   })
@@ -453,6 +580,10 @@ export function StudioDesk() {
 
   useEffect(() => {
     if (recovery.error) return
+    if (applyingRemoteRef.current) {
+      applyingRemoteRef.current = false
+      return
+    }
     const timer = window.setTimeout(() => {
       pushLive(writeSession())
     }, 250)
@@ -503,6 +634,7 @@ export function StudioDesk() {
 
   const commitFilled = useCallback(
     (next: Map<string, FilledRegion>) => {
+      setHolding(true)
       if (!strokeStarted.current) {
         pushHistory()
         strokeStarted.current = true
@@ -620,7 +752,8 @@ export function StudioDesk() {
     const next = [...contributionsRef.current, contribution]
     contributionsRef.current = next
     setContributions(next)
-    pushLive(writeSession())
+    pushLive(writeSession(), { immediate: true })
+    setHolding(false)
     setNotice(`${draft.char} added to our typeface. Choose another letter.`)
   }
 
@@ -629,10 +762,10 @@ export function StudioDesk() {
     setStampMode('ink')
     setBrushRotation(0)
     setSymmetryMode('none')
-    const next = LETTERS.find(
-      (char) =>
-        !published.has(guideUpper ? char.toUpperCase() : char) && char !== guideLetter,
-    )
+    const next = LETTERS.find((char) => {
+      const shown = guideUpper ? char.toUpperCase() : char
+      return !published.has(shown) && char !== guideLetter
+    })
     if (next) {
       switchToLetter(next, guideUpper)
       setNotice(
@@ -898,15 +1031,7 @@ export function StudioDesk() {
                 type="button"
                 className={cn('studio-chip', guideUpper && 'is-on')}
                 title="Uppercase / lowercase"
-                onClick={() => {
-                  persistCurrent()
-                  const nextUpper = !guideUpper
-                  setGuideUpper(nextUpper)
-                  loadDraft(
-                    glyphsRef.current,
-                    nextUpper ? guideLetter.toUpperCase() : guideLetter.toLowerCase(),
-                  )
-                }}
+                onClick={() => switchToLetter(guideLetter, !guideUpper)}
               >
                 {guideUpper ? 'ABC' : 'abc'}
               </button>
@@ -1113,6 +1238,24 @@ export function StudioDesk() {
               </button>
             </div>
             <p className={cn('studio-save', saveFailed && 'is-error')}>{saveStatus}</p>
+            <div className="studio-desk-pick" role="group" aria-label="This desk">
+              <span>This desk</span>
+              {DESK_STATIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={cn('studio-chip', station === s && 'is-on')}
+                  aria-pressed={station === s}
+                  data-testid={`studio-station-${s}`}
+                  onClick={() => {
+                    rememberStation(s)
+                    setStation(s)
+                  }}
+                >
+                  Desk {s.toUpperCase()}
+                </button>
+              ))}
+            </div>
             <LiveSessionJoin
               room={live.room}
               enabled={live.enabled}
@@ -1120,9 +1263,6 @@ export function StudioDesk() {
               statusMessage={live.status.message}
               onJoin={live.joinSession}
             />
-            <Button type="button" variant="outline" className="w-full" onClick={() => void live.copyWallLink('wall')}>
-              Copy wall link
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -1131,20 +1271,11 @@ export function StudioDesk() {
             >
               Copy projection link
             </Button>
-            <a className="studio-link" href="?view=wall&room=boom" target="_blank" rel="noreferrer">
-              Wall · boom ↗
-            </a>
-            <a className="studio-link" href="?view=wall&room=bobby" target="_blank" rel="noreferrer">
-              Wall · bobby ↗
-            </a>
             <a className="studio-link" href="?view=projection&room=boom" target="_blank" rel="noreferrer">
-              Projection · boom ↗
+              Projection ↗
             </a>
-            <a className="studio-link" href="?view=projection&room=bobby" target="_blank" rel="noreferrer">
-              Projection · bobby ↗
-            </a>
-            <a className="studio-link" href="./">
-              Default workshop ↗
+            <a className="studio-link" href="?view=workshop" target="_blank" rel="noreferrer">
+              Full workshop (Shape / Paint / Export) ↗
             </a>
             <Button type="button" variant="outline" className="w-full" onClick={backupSession}>
               Editable backup
@@ -1157,24 +1288,11 @@ export function StudioDesk() {
             >
               Restore backup
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              data-testid="clear-shared-room"
-              disabled={!live.enabled}
-              onClick={() => {
-                if (
-                  !window.confirm(
-                    'Clear the shared room for everyone? Wipes the typeface, drafts, and canvases on all joined desks and walls. Downloaded backups are unchanged.',
-                  )
-                )
-                  return
-                void live.clearRoom()
-              }}
-            >
-              Clear shared room
-            </Button>
+            <ClearRoomControl
+              className="studio-clear-room"
+              enabled={live.enabled}
+              onClear={live.clearRoom}
+            />
             <input
               ref={importRef}
               type="file"
@@ -1188,7 +1306,7 @@ export function StudioDesk() {
             />
             <p className="studio-options-note">
               {live.enabled
-                ? 'Both desks and the wall join the same room name. No password — just Join session.'
+                ? 'Desks and the projection join boom — tap boom to join. Each desk owns its letter until it publishes or moves on.'
                 : 'Shared session is not configured on this build.'}
             </p>
           </div>
@@ -1198,6 +1316,30 @@ export function StudioDesk() {
             aria-label="Dismiss"
             onClick={() => setOptionsOpen(false)}
           />
+        </div>
+      )}
+
+      {!station && live.enabled && (
+        <div className="studio-options" role="dialog" aria-label="Choose desk" data-testid="studio-station-picker">
+          <div className="studio-options-panel studio-station-panel">
+            <h2>Which desk is this?</h2>
+            <p>The wall shows each desk side by side. Pick once; this computer remembers it.</p>
+            <div className="studio-station-choices">
+              {DESK_STATIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  data-testid={`studio-station-pick-${s}`}
+                  onClick={() => {
+                    rememberStation(s)
+                    setStation(s)
+                  }}
+                >
+                  Desk {s.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

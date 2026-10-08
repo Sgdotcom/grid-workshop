@@ -49,6 +49,11 @@ export function buildFestivalFont(contributions: Contribution[], library: ShapeD
     (a, b) => a.draft.char.codePointAt(0)! - b.draft.char.codePointAt(0)!,
   )
   for (const { draft } of ordered) {
+    // Letters can sit on different lattices: normalise each to the em by its own grid.
+    const own = canvasPixelSize(draft.grid ?? grid)
+    const glyphScale = UNITS_PER_EM / own.height
+    const glyphBaseline = letterGuideMetrics(own.width, own.height, 1).baseline
+    const glyphAdvance = Math.round(own.width * glyphScale + SIDE_BEARING * 2)
     const path = new Path()
     // Built from the unioned polygons, so contours never overlap and cannot cancel
     // each other under the font's non-zero winding rule.
@@ -62,8 +67,8 @@ export function buildFestivalFont(contributions: Contribution[], library: ShapeD
         const last = ring[ring.length - 1]
         const open = ring.length > 1 && ring[0][0] === last[0] && ring[0][1] === last[1] ? ring.slice(0, -1) : ring
         const points = open.map(([x, y]): [number, number] => [
-          Math.round(x * scale + SIDE_BEARING),
-          Math.round((baseline - y) * scale),
+          Math.round(x * glyphScale + SIDE_BEARING),
+          Math.round((glyphBaseline - y) * glyphScale),
         ]).filter((point, index, all) => {
           const previous = all[(index - 1 + all.length) % all.length]
           return all.length < 2 || point[0] !== previous[0] || point[1] !== previous[1]
@@ -78,7 +83,7 @@ export function buildFestivalFont(contributions: Contribution[], library: ShapeD
         path.close()
       })
     }
-    glyphs.push(new Glyph({ name: glyphName(draft.char), unicode: draft.char.codePointAt(0), advanceWidth, path }))
+    glyphs.push(new Glyph({ name: glyphName(draft.char), unicode: draft.char.codePointAt(0), advanceWidth: glyphAdvance, path }))
   }
   return new Font({
     familyName: 'Beckmans Together', styleName: 'Regular', unitsPerEm: UNITS_PER_EM,

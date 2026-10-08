@@ -9,7 +9,10 @@ Cloudflare Worker + Durable Object that stores one shared festival room JSON per
 | `GET` | `/rooms/:room` | Public |
 | `GET` | `/rooms/:room/ws` | Public WebSocket — initial snapshot + push on PUT/DELETE |
 | `PUT` | `/rooms/:room` | Public unless `LIVE_WRITE_TOKEN` is set |
-| `DELETE` | `/rooms/:room` | Same as PUT — clears the room |
+| `DELETE` | `/rooms/:room` | Same as PUT, plus `X-Clear-Password` when `CLEAR_ROOM_PASSWORD` is set — archives the room, then clears it |
+| `GET` | `/rooms/:room/archives` | Public — list of archived (cleared) sessions |
+| `GET` | `/rooms/:room/archives/:id` | Public — one archived room |
+| `POST` | `/rooms/:room/archives/:id/restore` | Same as DELETE — replaces the room with the archive |
 
 Festival install runs **without** a write token so desks/wall only need the same room name + **Join session**. Realtime uses Durable Object WebSockets (Cloudflare free tier).
 
@@ -20,15 +23,19 @@ cd workers/live-session
 npm install
 npx wrangler login
 npm run deploy
+# facilitator password for Clear / restore (the repo is public: never commit it)
+npx wrangler secret put CLEAR_ROOM_PASSWORD
 # optional lock: npx wrangler secret put LIVE_WRITE_TOKEN
 ```
+
+Until `CLEAR_ROOM_PASSWORD` is set, the Worker accepts any clear or restore; only the app's own password prompt stands in the way.
 
 Copy the Worker URL into the app:
 
 - Local: `.env.local` → `VITE_LIVE_SESSION_URL=https://…`
 - GitHub Pages: repository variable `VITE_LIVE_SESSION_URL`
 
-In the app: **Join session** (room default `lettermans`) on desks and wall.
+In the app: **Join session** (room default `boom`) on desks and wall.
 
 ## Local Worker
 
@@ -36,13 +43,13 @@ In the app: **Join session** (room default `lettermans`) on desks and wall.
 npm run dev   # wrangler dev — usually http://127.0.0.1:8787
 ```
 
-Optional local secret file (gitignored): `.dev.vars` with `LIVE_WRITE_TOKEN=…`.
+Optional local secret file (gitignored): `.dev.vars` with `CLEAR_ROOM_PASSWORD=…` and/or `LIVE_WRITE_TOKEN=…`.
 
 Point the Vite app at that URL with `VITE_LIVE_SESSION_URL`.
 
 ## Smoke
 
-From repo root (Worker URL set; festival Worker is open/no token):
+From repo root (Worker URL set; festival Worker is open/no token). Export `CLEAR_ROOM_PASSWORD` when the Worker enforces it:
 
 ```bash
 npm run smoke:live -- https://grid-workshop-live.sgdotcom.workers.dev

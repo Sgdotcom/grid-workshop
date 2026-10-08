@@ -48,7 +48,7 @@ try {
     const context = await browser.newContext({ viewport: { width, height }, hasTouch: true })
     const page = await context.newPage()
     watch(page, `phone-${height}`)
-    await page.goto(base, { waitUntil: 'networkidle' })
+    await page.goto(`${base}?view=workshop`, { waitUntil: 'networkidle' })
     await page.getByTestId('intro-start').click()
     await settle(page)
     const drawn = await gridHeight(page)
@@ -84,7 +84,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true })
   const page = await context.newPage()
   watch(page, 'desktop')
-  await page.goto(base, { waitUntil: 'networkidle' })
+  await page.goto(`${base}?view=workshop`, { waitUntil: 'networkidle' })
   await page.getByTestId('intro-start').click()
   await settle(page)
 
