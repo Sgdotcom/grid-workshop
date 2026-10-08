@@ -7,6 +7,7 @@ import {
   clearLiveRoom,
   createLiveSyncController,
   getLiveConfig,
+  isEphemeralStation,
   isLiveJoined,
   listRoomArchives,
   persistLivePrefs,
@@ -59,7 +60,10 @@ export function useLiveSession(options: {
 
   useEffect(() => {
     const config = getLiveConfig()
-    if (config.station) persistLivePrefs({ station: config.station })
+    // Studio A/B remember the desk; workshop `w_…` stations stay in sessionStorage only.
+    if (config.station && !isEphemeralStation(config.station)) {
+      persistLivePrefs({ station: config.station })
+    }
   }, [])
 
   useEffect(() => {
@@ -114,13 +118,14 @@ export function useLiveSession(options: {
   const joinSession = useCallback((nextRoom: string) => {
     const clean = nextRoom.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) || DEFAULT_LIVE_ROOM
     const station = getLiveConfig().station
-    persistLivePrefs({ room: clean, joined: true, ...(station ? { station } : {}) })
+    const persistStation = !!station && !isEphemeralStation(station)
+    persistLivePrefs({ room: clean, joined: true, ...(persistStation ? { station } : {}) })
     setRoom(clean)
     setJoined(true)
     try {
       const url = new URL(window.location.href)
       url.searchParams.set('room', clean)
-      if (station) url.searchParams.set('station', station)
+      if (persistStation) url.searchParams.set('station', station)
       window.history.replaceState({}, '', url.pathname + url.search)
     } catch {
       /* ignore */

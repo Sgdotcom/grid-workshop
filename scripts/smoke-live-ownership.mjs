@@ -85,6 +85,24 @@ try {
     const shop = await openPage(`?view=workshop&room=${room}`)
     await shop.page.getByTestId('intro-screen').waitFor({ timeout: 20000 })
     check('?view=workshop opens the full workshop', (await shop.page.getByTestId('studio-desk').count()) === 0)
+    await shop.page.getByTestId('intro-start').click().catch(() => {})
+    await shop.page.waitForTimeout(800)
+    const shopMeta = await shop.page.evaluate(() => ({
+      tab: sessionStorage.getItem('gridz-workshop-station-tab'),
+      saved: localStorage.getItem('gridz-live-station'),
+      desks: null,
+    }))
+    // Presence push may take a beat; read the room after a short wait.
+    await sleep(1200)
+    const roomAfter = await getRoom()
+    const workshopKeys = Object.keys(roomAfter.desks || {}).filter((k) => /^w_/i.test(k))
+    check(
+      'workshop tab uses a w_ station without overwriting desk storage',
+      /^w_/i.test(shopMeta.tab || '') &&
+        !/^w_/i.test(shopMeta.saved || '') &&
+        workshopKeys.length >= 1,
+      JSON.stringify({ tab: shopMeta.tab, saved: shopMeta.saved, desks: Object.keys(roomAfter.desks || {}) }),
+    )
     await shop.context.close()
   }
 

@@ -31,6 +31,7 @@ When `VITE_LIVE_SESSION_URL` points at the Cloudflare Worker (`workers/live-sess
 | --- | --- |
 | `?room=boom` | Room id (default `boom`) |
 | `?station=a` | Desk label (`a` or `b`); otherwise the desk asks on first visit |
+| (workshop tabs) | Each `?view=workshop` tab gets its own short-lived station (`w_…`) so it does not share Desk A's wall pane. The wall labels it **Workshop** and hides that pane when the tab closes. |
 
 Deploy Worker: see [`workers/live-session/README.md`](../workers/live-session/README.md). Set GitHub Pages build env `VITE_LIVE_SESSION_URL`, then redeploy Pages.
 

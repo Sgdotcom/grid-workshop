@@ -69,10 +69,17 @@ export function Projection() {
   const complete = letters.filter((char) => published.has(char)).length
   const localLiveSvg =
     session?.liveSvg && session.active.filled.length ? session.liveSvg : ''
-  // Desk A and B always have a pane; any other station that is drawing is appended.
+  // Desk A and B always have a pane; workshop / other stations only while presence is fresh
+  // (closing the tab releases presence so leftover cues do not pile up on the wall).
   const cueByStation = new Map(liveCues.map((cue) => [normalizeStation(cue.station) || 'desk', cue]))
   const desks = roomBlob?.desks ?? {}
-  const stations = [...new Set([...WALL_DESKS, ...cueByStation.keys()])]
+  const fixedDesks = new Set<string>(WALL_DESKS)
+  const extras = new Set<string>()
+  for (const key of [...cueByStation.keys(), ...Object.keys(desks)]) {
+    if (fixedDesks.has(key)) continue
+    if (isPresenceFresh(desks[key])) extras.add(key)
+  }
+  const stations = [...WALL_DESKS, ...extras]
   if (!roomBlob && localLiveSvg) {
     cueByStation.set('a', { char: activeChar, liveSvg: localLiveSvg, updatedAt: '', station: 'a' })
   }
@@ -135,7 +142,14 @@ export function Projection() {
           </p>
           <div className="festival-live-stack is-multi" data-testid="festival-live-stack">
             {panes.map(({ station, cue, heldChar }) => {
-              const desk = station === 'desk' ? 'Desk' : `Desk ${station.toUpperCase()}`
+              const desk =
+                station === 'a' || station === 'b'
+                  ? `Desk ${station.toUpperCase()}`
+                  : /^w_/i.test(station)
+                    ? 'Workshop'
+                    : station === 'desk'
+                      ? 'Desk'
+                      : `Desk ${station.toUpperCase()}`
               const char = cue?.char || heldChar
               return (
                 <div

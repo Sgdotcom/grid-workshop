@@ -21,6 +21,8 @@ import {
 export const LIVE_ROOM_KEY = 'gridz-live-room'
 export const LIVE_TOKEN_KEY = 'gridz-live-token'
 export const LIVE_STATION_KEY = 'gridz-live-station'
+/** Per-tab workshop station (sessionStorage); never written to LIVE_STATION_KEY. */
+export const LIVE_WORKSHOP_STATION_KEY = 'gridz-workshop-station-tab'
 export const LIVE_JOINED_KEY = 'gridz-live-joined'
 /** Festival live room name(s) shown in the join UI. */
 export const FESTIVAL_LIVE_ROOMS = ['boom'] as const
@@ -86,6 +88,25 @@ function trimSlash(url: string) {
   return url.replace(/\/+$/, '')
 }
 
+/** Workshop tab stations are ephemeral (`w_….`); studio A/B stay in localStorage. */
+export function isEphemeralStation(station: string | null | undefined): boolean {
+  return /^w_/i.test(normalizeStation(station))
+}
+
+function workshopTabStation(): string {
+  try {
+    let id = sessionStorage.getItem(LIVE_WORKSHOP_STATION_KEY) || ''
+    id = normalizeStation(id)
+    if (!isEphemeralStation(id)) {
+      id = normalizeStation(`w_${Math.random().toString(36).slice(2, 6)}`) || 'w_tab'
+      sessionStorage.setItem(LIVE_WORKSHOP_STATION_KEY, id)
+    }
+    return id
+  } catch {
+    return normalizeStation(`w_${Math.random().toString(36).slice(2, 6)}`) || 'w_tab'
+  }
+}
+
 export function getLiveConfig(): LiveSessionConfig {
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const envUrl =
@@ -109,7 +130,14 @@ export function getLiveConfig(): LiveSessionConfig {
   }
   const room = (params?.get('room') || storedRoom || DEFAULT_LIVE_ROOM).slice(0, 64)
   const token = params?.get('token') || storedToken || envToken
-  const station = (params?.get('station') || storedStation || '').slice(0, 8)
+  const view = params?.get('view') || ''
+  const urlStation = params?.get('station')
+  // ?station= always wins. Workshop tabs get a per-tab id so they never share Desk A's pane.
+  const station = urlStation
+    ? urlStation.slice(0, 8)
+    : view === 'workshop'
+      ? workshopTabStation()
+      : (storedStation || '').slice(0, 8)
   return {
     enabled: !!envUrl,
     baseUrl: envUrl ? trimSlash(envUrl) : '',

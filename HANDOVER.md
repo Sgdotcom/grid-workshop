@@ -120,7 +120,8 @@ Festival ops: [`docs/festival.md`](docs/festival.md). Worker deploy: [`workers/l
 - **A letter's clock moves only on a local edit.** `writeSession` compares the letter with `clockBaseRef` (`letterUnchanged`), which is reset when a letter is opened, adopted from a peer, cleared or wiped. Without this, a remote update re-rendered the other desk, which restamped and re-pushed, and two idle desks ping-ponged about 175 PUTs a minute.
 - **The client skips identical pushes** (`pushContentKey` ignores timestamps and presence) and retries failed pushes with backoff (2 s, doubling up to 15 s).
 - **Presence:** each desk reports `{char, since, seenAt}` every 20 s. The wall treats it as stale after 60 s (`isPresenceFresh`).
-- **Wall panes:** Desk A and Desk B are always shown, plus any other station with a live cue.
+- **Wall panes:** Desk A and Desk B are always shown. Extra stations (workshop tabs) appear only while their presence is fresh, labelled **Workshop**.
+- **Workshop stations:** `?view=workshop` without `?station=` uses a per-tab `w_…` id in `sessionStorage` (`gridz-workshop-station-tab`). It never overwrites the studio's saved Desk A/B (`gridz-live-station`).
 - **Clear shared room / restore an archive** need the facilitator password: in the UI (the bundle holds a SHA-256 of it) and at the Worker (`X-Clear-Password`) once the secret `CLEAR_ROOM_PASSWORD` is set. **The secret is not set in production yet**, so the Worker accepts any clear until it is. The Worker archives the room before every clear; restore from the full workshop under Options → Previous sessions.
 - **The repo is public: never commit the password.** Smoke scripts read it from `CLEAR_ROOM_PASSWORD`; the local Worker reads it from `workers/live-session/.dev.vars` (gitignored).
 
