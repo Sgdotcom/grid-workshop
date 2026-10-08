@@ -66,7 +66,12 @@ import { ALPHABET, FESTIVAL_KEY, latestContributions, parseSession, readSession,
 import { ClearRoomControl } from '@/components/ClearRoomControl'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
 import { SessionArchives } from '@/components/SessionArchives'
-import { letterUnchanged, planRemoteDeskApply, type LetterClockBase } from '@/lib/liveSession'
+import {
+  letterUnchanged,
+  mergeContributions,
+  planRemoteDeskApply,
+  type LetterClockBase,
+} from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 
 type Screen = 'shape' | 'paint' | 'export'
@@ -582,7 +587,14 @@ export default function App() {
   const publishGlyph = () => {
     if (!filled.size) return
     persistCurrent()
-    const draft = activeRef.current
+    // Snapshot so Clear letter cannot empty the published entry via a shared object.
+    const source = activeRef.current
+    const draft: GlyphDraft = {
+      ...source,
+      filled: source.filled.map((region) => ({ ...region })),
+      brokenJoins: [...source.brokenJoins],
+      grid: source.grid ? { ...source.grid } : source.grid,
+    }
     const contribution: Contribution = {
       id: crypto.randomUUID(), createdAt: new Date().toISOString(), draft,
       svg: compactSvgMarkup(buildSvgMarkup(makePayload(draft.char, draft.filled, draft.brokenJoins), { fitContent: false })),
@@ -594,6 +606,13 @@ export default function App() {
     setHolding(false)
     setNotice(`${draft.char} added to our typeface. Choose another letter or try another version.`)
   }
+
+  // Export / alphabet: prefer shared room publishes when live is on (wall source of truth).
+  const typefaceContributions = mergeContributions(
+    contributions,
+    live.liveRoom?.contributions ?? [],
+  )
+  const publishedTypeface = latestContributions(typefaceContributions)
 
   const backupSession = () => {
     if (recovery.error) {
@@ -1082,8 +1101,7 @@ export default function App() {
                   setBrushRotation(0)
                   setSymmetryMode('none')
                   setShowJoinDots(false)
-                  const published = latestContributions(contributions)
-                  const next = LETTERS.find(char => !published.has(guideUpper ? char.toUpperCase() : char) && char !== guideLetter)
+                  const next = LETTERS.find(char => !publishedTypeface.has(guideUpper ? char.toUpperCase() : char) && char !== guideLetter)
                   if (next) {
                     switchToLetter(next, guideUpper)
                     setNotice(`Your letter is ${guideUpper ? next.toUpperCase() : next}. Draw it, then add it to the typeface.`)
@@ -1664,11 +1682,17 @@ export default function App() {
               </div>
 
               <div>
-              <section className="festival-versions">
-                <h2>The festival collection · {latestContributions(contributions).size} letters</h2>
-                <p>Every submission is kept. The wall shows the latest version of each letter.</p>
-                <Button disabled={!contributions.length} onClick={() => {
-                  const payloads = [...latestContributions(contributions).values()].map(({ draft }) => ({
+              <section className="festival-versions" data-testid="festival-collection">
+                <h2>The festival collection · {publishedTypeface.size} letters</h2>
+                <p>
+                  Every submission is kept in the shared room. Clear letter only empties the canvas —
+                  published letters stay on the wall and here for export.
+                </p>
+                <Button
+                  data-testid="export-typeface-svg"
+                  disabled={!typefaceContributions.length}
+                  onClick={() => {
+                  const payloads = [...publishedTypeface.values()].map(({ draft }) => ({
                     grid: draft.grid!, library, filledRegions: draft.filled, glyphChar: draft.char,
                     softness: draft.softness!, cornerRadius: draft.cornerRadius,
                     brokenJoins: new Set(draft.brokenJoins),
@@ -1676,10 +1700,13 @@ export default function App() {
                   }))
                   exportGlyphSet(payloads)
                 }}>Download published typeface (SVG)</Button>
-                <Button disabled={!contributions.length} onClick={async () => {
+                <Button
+                  data-testid="export-typeface-otf"
+                  disabled={!typefaceContributions.length}
+                  onClick={async () => {
                   try {
                     const { exportFestivalFont } = await import('@/lib/fontExport')
-                    await exportFestivalFont([...latestContributions(contributions).values()], library)
+                    await exportFestivalFont([...publishedTypeface.values()], library)
                     setNotice('Your installable festival font has downloaded.')
                   } catch (error) {
                     setNotice(error instanceof Error ? error.message : 'Font export failed.')
@@ -1687,7 +1714,7 @@ export default function App() {
                 }}>Download font (OTF)</Button>
                 <label>Build on a previous version
                   <select value="" onChange={event => {
-                    const contribution = contributions.find(item => item.id === event.target.value)
+                    const contribution = typefaceContributions.find(item => item.id === event.target.value)
                     if (!contribution) return
                     persistCurrent()
                     const draft = contribution.draft
@@ -1704,7 +1731,7 @@ export default function App() {
                     setNotice(`Editing a copy of ${draft.char}. Submit to add a new version.`)
                   }}>
                     <option value="">Choose a contribution</option>
-                    {contributions.map((item, index) => <option key={item.id} value={item.id}>
+                    {typefaceContributions.map((item, index) => <option key={item.id} value={item.id}>
                       {item.draft.char} · contribution {index + 1} · {new Date(item.createdAt).toLocaleTimeString()}
                     </option>)}
                   </select>

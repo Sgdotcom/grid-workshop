@@ -176,6 +176,33 @@ try {
   await waitRoom((r) => (r.contributions || []).length === 1, 'publish adds contribution')
   check('publish still works while peers may share the letter', true)
 
+  // Clear letter empties the canvas only — published letter stays in the room and Export.
+  await A.page.getByTestId('studio-clear').click()
+  await waitRoom(
+    (r) =>
+      (r.contributions || []).length === 1 &&
+      !r.draftSvgs?.a &&
+      !(r.liveCues?.a?.liveSvg),
+    'clear letter keeps contribution, drops draft cue',
+  )
+  check('clear letter keeps the published contribution in the room', true)
+
+  const exp = await openPage(`?view=workshop&room=${room}`)
+  await exp.page.getByTestId('intro-start').click({ timeout: 20000 }).catch(() => {})
+  await exp.page.getByTestId('tab-export').click({ timeout: 10000 })
+  await exp.page.getByTestId('festival-collection').waitFor({ timeout: 15000 })
+  await exp.page.waitForFunction(
+    () => {
+      const h = document.querySelector('[data-testid="festival-collection"] h2')?.textContent || ''
+      const m = h.match(/·\s*(\d+)\s*letters/)
+      return m && Number(m[1]) >= 1
+    },
+    null,
+    { timeout: 20000 },
+  )
+  check('Export shows the published letter after clear (live room merge)', true)
+  await exp.context.close()
+
   // Closing a desk releases its presence.
   await B.context.close()
   await waitRoom((r) => r.desks?.b?.char === '', 'close releases b', 10000)

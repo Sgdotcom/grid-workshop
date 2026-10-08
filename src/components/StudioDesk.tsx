@@ -53,6 +53,7 @@ import {
   getLiveConfig,
   letterPreviewSvg,
   letterUnchanged,
+  mergeContributions,
   normalizeStation,
   persistLivePrefs,
   planRemoteDeskApply,
@@ -207,7 +208,6 @@ export function StudioDesk() {
   const fillMin = Math.max(4, Math.round(grid.cellSize * 0.4))
   const fillMax = Math.max(Math.round(grid.cellSize * 1.6), Math.round(grid.cellSize * 2))
   const cornerMax = Math.max(4, Math.round(grid.cellSize * 0.45))
-  const published = latestContributions(contributions)
 
   const settingsRef = useRef({ grid, softness, cornerRadius, holeMode })
   settingsRef.current = { grid, softness, cornerRadius, holeMode }
@@ -738,7 +738,14 @@ export function StudioDesk() {
   const publishGlyph = () => {
     if (!filled.size) return
     persistCurrent()
-    const draft = activeRef.current
+    // Snapshot so Clear letter cannot empty the published entry via a shared object.
+    const source = activeRef.current
+    const draft: GlyphDraft = {
+      ...source,
+      filled: source.filled.map((region) => ({ ...region })),
+      brokenJoins: [...source.brokenJoins],
+      grid: source.grid ? { ...source.grid } : source.grid,
+    }
     const contribution: Contribution = {
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
@@ -756,6 +763,13 @@ export function StudioDesk() {
     setHolding(false)
     setNotice(`${draft.char} added to our typeface. Choose another letter.`)
   }
+
+  // Alphabet / next letter: include publishes from the shared room (same as the wall).
+  const typefaceContributions = mergeContributions(
+    contributions,
+    live.liveRoom?.contributions ?? [],
+  )
+  const published = latestContributions(typefaceContributions)
 
   const nextFreeLetter = () => {
     setPaintTool('stamp')
@@ -1187,7 +1201,7 @@ export function StudioDesk() {
               const contribution = published.get(shown)
               const draft = glyphs.get(shown)
               const hasDraft = !!(draft && draft.filled.length)
-              const preview = letterPreviewSvg(shown, contributions, live.draftSvgs)
+              const preview = letterPreviewSvg(shown, typefaceContributions, live.draftSvgs)
               const previewSvg =
                 contribution?.svg ||
                 (isActive && filled.size
