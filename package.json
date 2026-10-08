@@ -18,6 +18,7 @@
     "smoke:live-e2e": "node scripts/smoke-live-e2e.mjs",
     "smoke:live-ws": "node scripts/smoke-live-ws.mjs",
     "smoke:live-ops": "node scripts/smoke-live-studio-ops.mjs",
+    "smoke:live-adversarial": "node scripts/smoke-live-adversarial.mjs",
     "fuse:matrix": "vite-node scripts/fuse-matrix.ts"
   },
   "dependencies": {

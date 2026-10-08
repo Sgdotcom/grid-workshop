@@ -2,11 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FestivalSession } from '@/lib/festival'
 import {
   DEFAULT_LIVE_ROOM,
+  applyRoomToSession,
   clearLiveRoom,
   createLiveSyncController,
   getLiveConfig,
   isLiveJoined,
   persistLivePrefs,
+  persistSession,
   type LiveRoomState,
   type LiveSyncStatus,
   wallLink,
@@ -103,17 +105,27 @@ export function useLiveSession(options: {
   const clearRoom = useCallback(async () => {
     try {
       setStatus({ state: 'syncing', message: 'Clearing shared room…' })
-      await clearLiveRoom()
+      const cleared = await clearLiveRoom()
       setDraftSvgs({})
+      // Wipe this client immediately so the next push cannot resurrect the room.
+      if (cleared) {
+        const wiped = applyRoomToSession(getSessionRef.current(), cleared, {
+          keepLocalActive: !wallMode,
+          sharedWipe: true,
+        })
+        persistSession(wiped)
+        onRemoteRef.current(wiped, cleared)
+      }
+      // Pull refreshes wipeEpoch so later paints are accepted by the Worker.
+      await controllerRef.current?.pull()
       setStatus({ state: 'ok', message: `Cleared · ${getLiveConfig().room}` })
-      void controllerRef.current?.pull()
     } catch (error) {
       setStatus({
         state: 'error',
         message: error instanceof Error ? error.message : 'Clear failed',
       })
     }
-  }, [])
+  }, [wallMode])
 
   const copyWallLink = useCallback(async (view: 'wall' | 'projection' | 'studio' = 'wall') => {
     const link = wallLink(view)

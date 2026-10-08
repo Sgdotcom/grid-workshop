@@ -48,7 +48,12 @@ import {
 } from '@/lib/festival'
 import { DEFAULT_BRUSH, DEFAULT_GRID } from '@/lib/gridGeometry'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
-import { isLetterClearedInRoom, letterPreviewSvg, mergeContributions } from '@/lib/liveSession'
+import {
+  isEmptyLiveRoom,
+  isLetterClearedInRoom,
+  letterPreviewSvg,
+  mergeContributions,
+} from '@/lib/liveSession'
 import { useLiveSession } from '@/lib/useLiveSession'
 import { buildStarterBlueprint, nudgeFilled } from '@/lib/skeletons'
 import { moduleShapeFillRule, moduleShapePath, shapeSupportsRounding } from '@/lib/shapes'
@@ -359,9 +364,48 @@ export function StudioDesk() {
   }, [library])
 
   const live = useLiveSession({
-    getSession: () => sessionRef.current,
+    getSession: () => {
+      const s = sessionRef.current
+      if (!s) return null
+      // Prefer live refs so empty-room polls do not persist a stale empty canvas.
+      return {
+        ...s,
+        active: activeRef.current,
+        contributions: contributionsRef.current,
+        drafts: [...glyphsRef.current.values()].filter((d) => d.filled.length),
+      }
+    },
     painting: () => strokeStarted.current,
     onRemoteSession: (session, liveRoom) => {
+      // Shared wipe (Clear shared room): applyRoom cleared active + contributions.
+      if (isEmptyLiveRoom(liveRoom) && session.contributions.length === 0 && session.active.filled.length === 0 && !session.liveSvg) {
+        const empty = new Map<string, FilledRegion>()
+        const noJoins = new Set<string>()
+        const noGlyphs = new Map()
+        filledRef.current = empty
+        brokenRef.current = noJoins
+        glyphsRef.current = noGlyphs
+        contributionsRef.current = []
+        setFilled(empty)
+        setBrokenJoins(noJoins)
+        setGlyphs(noGlyphs)
+        setContributions([])
+        activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+        sessionRef.current = {
+          ...session,
+          active: activeRef.current,
+          contributions: [],
+          drafts: [],
+          liveSvg: '',
+        }
+        try {
+          localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
+        } catch {
+          /* ignore */
+        }
+        return
+      }
+
       // Union with local so a just-published letter is not wiped by a stale WS frame.
       const merged = mergeContributions(contributionsRef.current, session.contributions)
       setContributions(merged)
@@ -379,13 +423,18 @@ export function StudioDesk() {
         if (isLetterClearedInRoom(ch, liveRoom)) nextGlyphs.delete(ch)
       }
       if (isLetterClearedInRoom(activeChar, liveRoom) && filledRef.current.size > 0) {
-        const empty = new Map<string, FilledRegion>()
-        const noJoins = new Set<string>()
-        filledRef.current = empty
-        brokenRef.current = noJoins
-        setFilled(empty)
-        setBrokenJoins(noJoins)
-        activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+        // Ignore stale self-echo tombstones from switching to an empty letter, then painting.
+        const remoteAt = liveRoom.draftUpdatedAt?.[activeChar] ?? ''
+        const localAt = sessionRef.current?.updatedAt ?? ''
+        if (!localAt || remoteAt >= localAt) {
+          const empty = new Map<string, FilledRegion>()
+          const noJoins = new Set<string>()
+          filledRef.current = empty
+          brokenRef.current = noJoins
+          setFilled(empty)
+          setBrokenJoins(noJoins)
+          activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
+        }
       }
       glyphsRef.current = nextGlyphs
       setGlyphs(nextGlyphs)
@@ -648,6 +697,7 @@ export function StudioDesk() {
           <button
             type="button"
             className="studio-gear"
+            data-testid="studio-options"
             aria-label="Facilitator options"
             onClick={() => setOptionsOpen(true)}
           >
@@ -1111,9 +1161,15 @@ export function StudioDesk() {
               type="button"
               variant="outline"
               className="w-full"
+              data-testid="clear-shared-room"
               disabled={!live.enabled}
               onClick={() => {
-                if (!window.confirm('Clear the shared room for everyone? Local backups are unchanged.')) return
+                if (
+                  !window.confirm(
+                    'Clear the shared room for everyone? Wipes the typeface, drafts, and canvases on all joined desks and walls. Downloaded backups are unchanged.',
+                  )
+                )
+                  return
                 void live.clearRoom()
               }}
             >

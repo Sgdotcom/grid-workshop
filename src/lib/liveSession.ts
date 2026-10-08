@@ -29,6 +29,8 @@ export interface LiveCue {
 
 export interface LiveRoomState {
   updatedAt: string
+  /** Bumps on DELETE; clients echo this so stale pre-clear PUTs are ignored. */
+  wipeEpoch?: number
   contributions: Contribution[]
   drafts: GlyphDraft[]
   draftSvgs: Record<string, string>
@@ -191,7 +193,7 @@ export async function clearLiveRoom(config = getLiveConfig()): Promise<LiveRoomS
  */
 export function buildLivePayload(
   session: FestivalSession,
-  opts?: { station?: string },
+  opts?: { station?: string; wipeEpoch?: number },
 ): Partial<LiveRoomState> {
   const now = session.updatedAt || new Date().toISOString()
   const ch = session.active.char
@@ -211,6 +213,7 @@ export function buildLivePayload(
   }
   const payload: Partial<LiveRoomState> = {
     updatedAt: now,
+    wipeEpoch: typeof opts?.wipeEpoch === 'number' ? opts.wipeEpoch : 0,
     contributions: session.contributions,
     drafts: hasInk && activeDraft
       ? [activeDraft]
@@ -307,11 +310,19 @@ export function isLetterClearedInRoom(
   return !!(room.draftUpdatedAt?.[char] && !room.draftSvgs?.[char])
 }
 
+/** True after DELETE / full shared wipe — no publishes, drafts, or live cues. */
+export function isEmptyLiveRoom(room: LiveRoomState): boolean {
+  const hasDraftInk = (room.drafts ?? []).some((d) => Array.isArray(d.filled) && d.filled.length > 0)
+  const hasSvg = Object.keys(room.draftSvgs ?? {}).length > 0
+  const hasLive = activeLiveCues(room).length > 0
+  return (room.contributions?.length ?? 0) === 0 && !hasDraftInk && !hasSvg && !hasLive
+}
+
 /** Apply remote room into a FestivalSession for wall/projection display + localStorage. */
 export function applyRoomToSession(
   local: FestivalSession | null,
   room: LiveRoomState,
-  opts?: { keepLocalActive?: boolean },
+  opts?: { keepLocalActive?: boolean; /** True after DELETE / Clear shared room (wipeEpoch bump). */ sharedWipe?: boolean },
 ): FestivalSession {
   const base: FestivalSession = local ?? {
     version: 1,
@@ -331,10 +342,54 @@ export function applyRoomToSession(
     liveSvg: '',
   }
 
-  const contributions = mergeContributions(base.contributions, room.contributions ?? [])
   const keepActive = !!opts?.keepLocalActive && !!local
   const liveCue = room.liveCue
   const activeChar = keepActive ? local!.active.char : (liveCue?.char ?? base.active.char)
+
+  // Empty shared room: never union leftover publishes back in.
+  // Full canvas wipe only on sharedWipe (DELETE / Clear shared room) — otherwise a desk
+  // painting into a still-empty room would lose stamps on every poll/WS snapshot.
+  if (isEmptyLiveRoom(room)) {
+    const sharedWipe = !!opts?.sharedWipe
+    const wipedActive = sharedWipe
+      ? {
+          ...(keepActive ? local!.active : base.active),
+          char: activeChar,
+          filled: [] as FestivalSession['active']['filled'],
+          brokenJoins: [] as string[],
+        }
+      : keepActive
+        ? local!.active
+        : {
+            ...base.active,
+            char: activeChar,
+            filled: [],
+            brokenJoins: [],
+          }
+    // Desks painting/publishing into an empty room must keep local contributions until
+    // the Worker catches up — only sharedWipe (DELETE) drops them.
+    const contributions = sharedWipe ? [] : keepActive ? (local?.contributions ?? []) : []
+    return {
+      ...base,
+      updatedAt: room.updatedAt || base.updatedAt,
+      contributions,
+      drafts: sharedWipe
+        ? []
+        : keepActive && local!.active.filled.length
+          ? [
+              {
+                ...local!.active,
+                char: activeChar,
+              },
+            ]
+          : [],
+      active: wipedActive,
+      liveSvg: sharedWipe ? '' : keepActive ? local!.liveSvg : '',
+      library: base.library.length ? base.library : [...PRESET_SHAPES],
+    }
+  }
+
+  const contributions = mergeContributions(base.contributions, room.contributions ?? [])
   const merged = mergeDrafts(base.drafts, room.drafts ?? [], room.draftUpdatedAt ?? {})
   // Shared clear tombstones win even for the desk's active letter.
   const drafts = pruneClearedDrafts(merged, room)
@@ -431,6 +486,7 @@ function parseRoomMessage(raw: string): LiveRoomState | null {
     if (typeof data?.updatedAt !== 'string') return null
     return {
       updatedAt: data.updatedAt,
+      wipeEpoch: typeof data.wipeEpoch === 'number' ? data.wipeEpoch : 0,
       contributions: Array.isArray(data.contributions) ? data.contributions : [],
       drafts: Array.isArray(data.drafts) ? data.drafts : [],
       draftSvgs: data.draftSvgs && typeof data.draftSvgs === 'object' ? data.draftSvgs : {},
@@ -462,10 +518,16 @@ export function createLiveSyncController(options: {
   let socket: WebSocket | null = null
   let stopped = false
   let lastSeenUpdatedAt = ''
+  let wipeEpoch = 0
   let reconnectAttempt = 0
   let socketLive = false
 
   const setStatus = (status: LiveSyncStatus) => options.onStatus?.(status)
+
+  const noteRoomMeta = (room: LiveRoomState) => {
+    lastSeenUpdatedAt = room.updatedAt
+    if (typeof room.wipeEpoch === 'number') wipeEpoch = room.wipeEpoch
+  }
 
   const applyRoom = (room: LiveRoomState, source: 'ws' | 'poll') => {
     if (room.updatedAt === lastSeenUpdatedAt) {
@@ -476,11 +538,29 @@ export function createLiveSyncController(options: {
       })
       return
     }
-    lastSeenUpdatedAt = room.updatedAt
+    const incomingEpoch = typeof room.wipeEpoch === 'number' ? room.wipeEpoch : 0
+    const sharedWipe = isEmptyLiveRoom(room) && incomingEpoch > wipeEpoch
+    noteRoomMeta(room)
+    // Shared wipe: drop any pending push that still holds pre-clear letters.
+    if (sharedWipe && pushTimer) {
+      window.clearTimeout(pushTimer)
+      pushTimer = null
+    }
+    // Desks: ignore empty non-wipe snapshots. Polling an empty room while painting would
+    // otherwise persist a stale session snapshot and fight the live canvas / publish button.
+    if (isEmptyLiveRoom(room) && !sharedWipe && options.keepLocalActive) {
+      setStatus({
+        state: 'ok',
+        message: source === 'ws' ? `Live · ${getLiveConfig().room}` : `Connected · ${getLiveConfig().room}`,
+        lastPullAt: new Date().toISOString(),
+      })
+      return
+    }
     const local = options.getSession?.() ?? readLocalSessionSafe()
     const painting = options.painting?.() ?? false
     const session = applyRoomToSession(local, room, {
       keepLocalActive: options.keepLocalActive || painting,
+      sharedWipe,
     })
     persistSession(session)
     options.onRoom?.(room, session)
@@ -598,9 +678,12 @@ export function createLiveSyncController(options: {
     if (!config.enabled || stopped) return
     try {
       setStatus({ state: 'syncing', message: `Saving · ${config.room}…` })
-      const room = await pushLiveRoom(buildLivePayload(session, { station: config.station }), config)
+      const room = await pushLiveRoom(
+        buildLivePayload(session, { station: config.station, wipeEpoch }),
+        config,
+      )
       if (room) {
-        lastSeenUpdatedAt = room.updatedAt
+        noteRoomMeta(room)
         setStatus({
           state: 'ok',
           message: socketLive ? `Live · ${config.room}` : `Connected · ${config.room}`,

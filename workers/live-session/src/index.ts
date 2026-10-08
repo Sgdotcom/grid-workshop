@@ -13,6 +13,8 @@ export interface LiveCue {
 
 export interface LiveRoomState {
   updatedAt: string
+  /** Bumps on DELETE so stale pre-clear PUTs are ignored. */
+  wipeEpoch?: number
   contributions: unknown[]
   drafts: unknown[]
   draftSvgs: Record<string, string>
@@ -42,9 +44,10 @@ function json(data: unknown, status = 200): Response {
   })
 }
 
-function emptyRoom(): LiveRoomState {
+function emptyRoom(wipeEpoch = 0): LiveRoomState {
   return {
     updatedAt: new Date(0).toISOString(),
+    wipeEpoch,
     contributions: [],
     drafts: [],
     draftSvgs: {},
@@ -101,6 +104,13 @@ function contributionId(item: unknown): string | null {
 }
 
 function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): LiveRoomState {
+  const storedEpoch = typeof stored.wipeEpoch === 'number' ? stored.wipeEpoch : 0
+  const incomingEpoch = typeof incoming.wipeEpoch === 'number' ? incoming.wipeEpoch : 0
+  // Stale desk that never saw Clear shared room — do not refill wiped rooms.
+  if (incomingEpoch < storedEpoch) {
+    return stored
+  }
+
   const liveCues: Record<string, LiveCue> = { ...(stored.liveCues ?? {}) }
   // Migrate legacy single cue into the map once.
   if (stored.liveCue?.liveSvg) {
@@ -109,6 +119,7 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
   }
   const next: LiveRoomState = {
     updatedAt: new Date().toISOString(),
+    wipeEpoch: storedEpoch,
     contributions: [...stored.contributions],
     drafts: [...stored.drafts],
     draftSvgs: { ...stored.draftSvgs },
@@ -270,7 +281,9 @@ export class FestivalRoom implements DurableObject {
       return json(await this.load())
     }
     if (request.method === 'DELETE') {
-      const cleared = emptyRoom()
+      const prev = await this.load()
+      const prevEpoch = typeof prev.wipeEpoch === 'number' ? prev.wipeEpoch : 0
+      const cleared = emptyRoom(prevEpoch + 1)
       cleared.updatedAt = new Date().toISOString()
       await this.save(cleared)
       this.broadcast(cleared)

@@ -169,9 +169,47 @@ async function main() {
   const cleared = await req('DELETE', `/rooms/${room}`)
   assert(cleared.status === 200, `DELETE failed: ${cleared.status}`)
   assert((cleared.json.contributions || []).length === 0, 'DELETE did not clear contributions')
+  const wipeEpoch = cleared.json.wipeEpoch
+  assert(typeof wipeEpoch === 'number' && wipeEpoch >= 1, 'DELETE should bump wipeEpoch')
   const after = await req('GET', `/rooms/${room}`)
   assert((after.json.contributions || []).length === 0, 'room not empty after DELETE')
   console.log('[ok] DELETE clears room')
+
+  // Stale pre-clear PUT must not resurrect contributions.
+  const stale = await req('PUT', `/rooms/${room}`, {
+    wipeEpoch: wipeEpoch - 1,
+    contributions: [
+      {
+        id: 'ghost',
+        createdAt: '2026-10-07T12:00:00.000Z',
+        draft: { char: 'z', filled: [{ key: '1' }], brokenJoins: [] },
+        svg: '<svg id="ghost"/>',
+      },
+    ],
+    draftSvgs: { z: '<svg id="ghost-draft"/>' },
+    draftUpdatedAt: { z: '2026-10-07T12:00:00.000Z' },
+  })
+  assert(stale.status === 200, 'stale PUT should still 200')
+  assert((stale.json.contributions || []).length === 0, 'stale PUT must not refill room')
+  assert(!stale.json.draftSvgs?.z, 'stale PUT must not restore draftSvg')
+  console.log('[ok] stale PUT ignored after wipe')
+
+  const fresh = await req('PUT', `/rooms/${room}`, {
+    wipeEpoch,
+    contributions: [
+      {
+        id: 'post-wipe',
+        createdAt: '2026-10-07T12:05:00.000Z',
+        draft: { char: 'm', filled: [{ key: '1' }], brokenJoins: [] },
+        svg: '<svg id="m"/>',
+      },
+    ],
+    drafts: [{ char: 'm', filled: [{ key: '1' }], brokenJoins: [] }],
+    draftSvgs: { m: '<svg id="m-draft"/>' },
+    draftUpdatedAt: { m: '2026-10-07T12:05:00.000Z' },
+  })
+  assert(fresh.json.contributions?.some((c) => c.id === 'post-wipe'), 'post-wipe PUT should apply')
+  console.log('[ok] post-wipe PUT applies')
 
   // boom vs bobby must stay isolated Durable Object rooms
   const boom = `boom-iso-${Date.now().toString(36)}`
