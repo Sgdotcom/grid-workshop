@@ -38,7 +38,7 @@ export function JoinLab() {
   })
   const [status, setStatus] = useState(() =>
     getJoinEngineMode() === 'main'
-      ? '★ Main Engine active: Optimal per-shape fusion is running.'
+      ? 'Main Engine active: Optimal per-shape fusion is running.'
       : getJoinEngineMode() === 'fork-weld'
       ? '⑂ Fork: Pure Weld (Method B across all shapes) is running.'
       : '⑂ Fork: Legacy Workshop (Method A) is running.'
@@ -178,7 +178,7 @@ export function JoinLab() {
           <p>Circles and rings use metaball welding. Pick the best weld or melt method for all other shapes.</p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-          <a href="?view=workshop">Back to workshop ↗</a>
+          <a href={`?view=workshop&room=${encodeURIComponent(new URLSearchParams(window.location.search).get('room') ?? 'boom')}`}>Back to workshop →</a>
           <div style={{ display: 'flex', gap: 6, background: '#f1f5f9', padding: '3px 4px', borderRadius: 8, border: '1px solid #cbd5e1' }}>
             <button
               style={{
@@ -194,10 +194,10 @@ export function JoinLab() {
               onClick={() => {
                 setEngineMode('main')
                 setJoinEngineMode('main')
-                setStatus('★ Main Engine active: Optimal per-shape joins.')
+                setStatus('Main Engine active: Optimal per-shape joins.')
               }}
             >
-              ★ Main (Optimal)
+              Main (Optimal)
             </button>
             <button
               style={{
@@ -248,8 +248,7 @@ export function JoinLab() {
         </span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <a
-            href="/docs/all-shapes-softness-lab.html"
-            target="_blank"
+            href={`${import.meta.env.BASE_URL}docs/all-shapes-softness-lab.html`}
             rel="noreferrer"
             style={{
               padding: '4px 10px',
@@ -295,7 +294,7 @@ export function JoinLab() {
               </svg>
               <span>{preset.label}</span>
               <span className="method-badge">
-                {locked ? '🔒 Metaball' : primary.toUpperCase()}
+                {locked ? 'Metaball (locked)' : primary.toUpperCase()}
               </span>
             </button>
           )
@@ -326,7 +325,7 @@ export function JoinLab() {
                   onClick={() => assignShapeMethod(method.id)}
                 >
                   {method.label}
-                  {isSelected && ' ✓'}
+                  {isSelected && ' (selected)'}
                 </button>
               )
             })}
@@ -414,7 +413,7 @@ export function JoinLab() {
                     aria-pressed={matching}
                     onClick={() => chooseDirection(test.id, method.id)}
                   >
-                    {isLocked ? 'Locked (Metaball)' : matching ? 'Selected ✓' : selected ? 'Update saved' : 'Prefer this'}
+                    {isLocked ? 'Locked (Metaball)' : matching ? 'Selected' : selected ? 'Update saved' : 'Prefer this'}
                   </button>
                   {selected && !matching && choice && (
                     <small>Saved at softness {choice.settings.softness}.</small>

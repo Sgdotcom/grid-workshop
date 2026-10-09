@@ -1,6 +1,6 @@
 # Grid workshop — context for Claude Code
 
-Modular letter-design workshop (Beckmans festival). Visitors stamp shapes on a grid, Softness melts neighbours into one silhouette, letters are added to a shared typeface, and a wall projection shows the alphabet. Session is `localStorage` plus an optional Cloudflare Worker live room (`VITE_LIVE_SESSION_URL`).
+Modular letter-design workshop (Beckmans festival). Visitors stamp shapes on a grid, Softness melts neighbours into one silhouette, letters are added to a shared typeface, and a wall projection shows the alphabet. Schema v2 projects read v1 backups; glyph design settings and custom-symbol metadata are described in `HANDOVER.md`. Session is `localStorage` plus an optional Cloudflare Worker live room (`VITE_LIVE_SESSION_URL`).
 
 **Authoritative handover for humans / Claude Code:** [`HANDOVER.md`](HANDOVER.md). Older handovers live under [`docs/archive/handovers/`](docs/archive/handovers/).
 
@@ -45,13 +45,13 @@ Views: `/` studio desk (also `?view=studio`) · `/?view=workshop` full workshop 
 ### Dispatch summary
 
 - **Same preset:** `joinSamePreset` → registry method (or locked metaball for circle/ring). Engine forks: `main` | `fork-weld` | `fork-current`.
-- **Mixed preset:** `getMixedPairJoinMethod` → `weld` / `sdf` / `offset` / `current` / `none`. Unlisted pairs → legacy mixed blend.
+- **Main preset flow:** `usesContourFlow` → `flowBlend` rounded closing with a gap-scaled fallback. Explicit stored shape preferences, disabled pairs, arc-flat references, and same Circle/Ring/Diamond/Square/Arc retain their existing dispatch. Legacy engine forks retain registry methods.
 - **Melt off (UI):** `isPresetMeltOff(preset)` — no Softness neck; touch/overlap still boolean-unions. Toggle in Softness panel (studio + main Paint). Stored in `localStorage` key `gridz-melt-off-presets-v1`.
 - **Arc ↔ flat:** `usesArcFlatBlend` short-circuits to `arcFlatBlend` (unless melt-off or `fork-current`).
 
 ### Known footgun
 
-`pairAxis` returns `'h' | 'v' | 'd'`, but `DEFAULT_DIRECTION_OVERRIDES` keys use names like `horizontal` / `diagonal-right`. Direction overrides currently **do not match** production axes — fix carefully before relying on them.
+`pairAxis` returns `'h' | 'v' | 'd'`; `joinSamePreset` maps these to registry direction names, including the sign of diagonal slope. Square horizontal/vertical defaults explicitly preserve their approved weld geometry. Diamond uses the rotated Square frame plus its approved full-Softness corner bridge.
 
 ## Install views
 

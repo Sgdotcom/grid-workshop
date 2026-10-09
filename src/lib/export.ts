@@ -1,7 +1,10 @@
+import { SHAPE_JOIN_STORAGE_KEY, JOIN_ENGINE_STORAGE_KEY, MELT_OFF_STORAGE_KEY } from './shapeJoinRegistry'
+import { DEFAULT_FONT_DESIGN, type FontDesign } from './fontDesign'
+import { weightContours } from './outlineWeight'
 import { canvasPixelSize, cellCenter, cellOrigin, stepSize } from '@/lib/gridGeometry'
 import {
   makeSoftStamp,
-  softnessExpandStroke,
+  softEdgeKey,
   softnessFinishPolygons,
   type BrokenJoins,
   type SoftStamp,
@@ -20,6 +23,7 @@ import type { FilledRegion, GridConfig, HoleMode, ShapeDef } from '@/lib/types'
 import { downloadBlob } from '@/lib/utils'
 
 export interface ExportPayload {
+  fontDesign?: FontDesign
   grid: GridConfig
   library: ShapeDef[]
   filledRegions: FilledRegion[]
@@ -30,6 +34,26 @@ export interface ExportPayload {
   /** Disabled Softness joins. */
   brokenJoins?: BrokenJoins
   holeMode?: HoleMode
+}
+
+// Finished polygons are immutable shared results, including offsets and cutouts.
+const glyphCache = new Map<string, MultiPolygon>()
+const GLYPH_CACHE_LIMIT = 256
+export function geometryPreferences(): Record<string, string | null> {
+  return Object.fromEntries([SHAPE_JOIN_STORAGE_KEY, JOIN_ENGINE_STORAGE_KEY, MELT_OFF_STORAGE_KEY].map(key => {
+    try { return [key, typeof window === 'undefined' ? null : window.localStorage.getItem(key)] }
+    catch { return [key, null] }
+  }))
+}
+export function glyphGeometryKey(payload: ExportPayload, storage = geometryPreferences()): string {
+  return JSON.stringify(['finished-glyph-v1', payload.grid, payload.library, payload.filledRegions,
+    payload.softness, payload.cornerRadius ?? 0, payload.holeMode ?? 'open',
+    [...payload.brokenJoins ?? []].sort(), payload.fontDesign ?? DEFAULT_FONT_DESIGN,
+    [SHAPE_JOIN_STORAGE_KEY, JOIN_ENGINE_STORAGE_KEY, MELT_OFF_STORAGE_KEY].map(key => storage[key] ?? null)])
+}
+export function rememberGlyphGeometry(key: string, polygons: MultiPolygon): void {
+  if (!glyphCache.has(key) && glyphCache.size >= GLYPH_CACHE_LIMIT) glyphCache.delete(glyphCache.keys().next().value!)
+  glyphCache.set(key, polygons)
 }
 
 const PAPER = '#ffffff'
@@ -44,7 +68,7 @@ function stampOrigin(fr: FilledRegion, grid: GridConfig) {
   return { ox: x + (grid.cellSize - fr.size) / 2, oy: y + (grid.cellSize - fr.size) / 2 }
 }
 
-function stampsFromFills(
+export function stampsFromFills(
   filledRegions: FilledRegion[],
   grid: GridConfig,
   library: ShapeDef[],
@@ -92,7 +116,7 @@ function ringHoleCutters(
  * The finished glyph as non-overlapping polygons (outer ring first, then holes).
  * One source for the fused SVG paths and for the OTF outlines.
  */
-export function glyphPolygons(payload: ExportPayload): MultiPolygon {
+function baseGlyphPolygons(payload: ExportPayload): MultiPolygon {
   const { grid, library, filledRegions, softness, cornerRadius = 0, brokenJoins, holeMode = 'open' } = payload
   const inkRegions = filledRegions.filter((fr) => fr.mode !== 'cutout')
   const cutoutRegions = filledRegions.filter((fr) => fr.mode === 'cutout')
@@ -122,18 +146,38 @@ export function glyphPolygons(payload: ExportPayload): MultiPolygon {
     : punched
 }
 
+export function glyphPolygons(payload: ExportPayload): MultiPolygon {
+ const key=glyphGeometryKey(payload), cached=glyphCache.get(key)
+ if(cached)return cached
+ const design=payload.fontDesign ?? DEFAULT_FONT_DESIGN
+ const visible=payload.filledRegions.filter(r=>r.col<payload.grid.cols && r.row<payload.grid.rows)
+ const broken=new Set(payload.brokenJoins)
+ for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++){
+  const a=visible[i],b=visible[j],dx=Math.abs(a.col-b.col),dy=Math.abs(a.row-b.row)
+  if(dx>1||dy>1)continue
+  if((dx&&dy&&!design.mergeDiagonal)||(dx&&!dy&&!design.mergeHorizontal)||(dy&&!dx&&!design.mergeVertical))broken.add(softEdgeKey(a.col,a.row,b.col,b.row))
+ }
+ const base=baseGlyphPolygons({...payload,filledRegions:visible,brokenJoins:broken})
+ const weighted=weightContours(base,design.thickness,design.outlineOnly)
+ const holes=ringHoleCutters(visible.filter(r=>r.mode!=='cutout'),payload.grid,payload.library,payload.cornerRadius??0)
+ const result=design.thickness&&holes.length?differencePolygons(weighted,holes):weighted
+ rememberGlyphGeometry(key,result)
+ return result
+}
+
 /** Softness fuse (one outline) or crisp module stamps. */
 export function buildGlyphBodyMarkup(payload: ExportPayload, fill: string): string[] {
   const { grid, library, filledRegions, softness, cornerRadius = 0, holeMode = 'open' } = payload
   const inkRegions = filledRegions.filter((fr) => fr.mode !== 'cutout')
 
-  if (inkRegions.length !== filledRegions.length || softness > 0.02 || holeMode !== 'open') {
+  if (payload.fontDesign || inkRegions.length !== filledRegions.length || softness > 0.02 || holeMode !== 'open') {
     try {
       return multiPolygonToPathList(glyphPolygons(payload)).map(
         (d) => `<path d="${d}" fill="${fill}" fill-rule="evenodd"/>`,
       )
     } catch (error) {
-      // Never lose a letter to a geometry edge case: fall back to the crisp stamps.
+      if(payload.fontDesign)throw error
+      // Never lose a legacy letter to a geometry edge case: fall back to crisp stamps.
       console.error('Glyph fuse failed; using crisp stamps instead.', error)
     }
   }
@@ -147,32 +191,37 @@ export function buildGlyphBodyMarkup(payload: ExportPayload, fill: string): stri
   })
 }
 
-export function glyphContentBounds(
+/** Conservative stage bounds; never computes finished geometry during dragging. */
+export function glyphContentBounds(payload: ExportPayload, pad = 16): {x:number;y:number;width:number;height:number} {
+  const {grid}=payload, full=canvasPixelSize(grid)
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity
+  for(const r of payload.filledRegions.filter(r=>r.col<grid.cols&&r.row<grid.rows)) {
+    const {cx:x,cy:y}=cellCenter(r.col,r.row,grid)
+    const angle=(r.rotation??0)*Math.PI/180
+    const half=r.size/2*(Math.abs(Math.cos(angle))+Math.abs(Math.sin(angle)))
+    const reach=half+r.size*.18+(payload.fontDesign?.thickness??0)/2
+    minX=Math.min(minX,x-reach);minY=Math.min(minY,y-reach)
+    maxX=Math.max(maxX,x+reach);maxY=Math.max(maxY,y+reach)
+  }
+  return Number.isFinite(minX)?{x:minX-pad,y:minY-pad,width:maxX-minX+pad*2,height:maxY-minY+pad*2}:{x:0,y:0,width:full.width,height:full.height}
+}
+
+export function exactGlyphContentBounds(
   payload: ExportPayload,
   pad = 16,
 ): { x: number; y: number; width: number; height: number } {
-  const { grid, filledRegions, softness } = payload
-  const { width: fullW, height: fullH } = canvasPixelSize(grid)
-  if (!filledRegions.length) {
-    return { x: 0, y: 0, width: fullW, height: fullH }
+  const { width: fullW, height: fullH } = canvasPixelSize(payload.grid)
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  // Bounds come from the same finished contours as preview and font export.
+  // Stamp-size estimates miss rotated corners and contour offsets.
+  for (const polygon of glyphPolygons(payload)) for (const ring of polygon) for (const [x, y] of ring) {
+    minX = Math.min(minX, x)
+    minY = Math.min(minY, y)
+    maxX = Math.max(maxX, x)
+    maxY = Math.max(maxY, y)
   }
 
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  for (const fr of filledRegions) {
-    const { x, y } = cellOrigin(fr.col, fr.row, grid)
-    const ox = x + (grid.cellSize - fr.size) / 2
-    const oy = y + (grid.cellSize - fr.size) / 2
-    const sw = softnessExpandStroke(fr.size, softness)
-    const grow = sw / 2 + fr.size * (0.06 + softness * 0.12)
-    minX = Math.min(minX, ox - grow)
-    minY = Math.min(minY, oy - grow)
-    maxX = Math.max(maxX, ox + fr.size + grow)
-    maxY = Math.max(maxY, oy + fr.size + grow)
-  }
-
+  if(!Number.isFinite(minX)) return {x:0,y:0,width:fullW,height:fullH}
   const x = minX - pad
   const y = minY - pad
   const width = maxX + pad - x
@@ -185,7 +234,9 @@ export function buildSvgMarkup(payload: ExportPayload, opts?: { fitContent?: boo
   const { width: fullW, height: fullH } = canvasPixelSize(grid)
   const parts = buildGlyphBodyMarkup(payload, INK)
   const fit = opts?.fitContent !== false
-  const box = fit ? glyphContentBounds(payload) : { x: 0, y: 0, width: fullW, height: fullH }
+  const content = exactGlyphContentBounds(payload, fit ? 16 : 0)
+  const left = Math.min(0, content.x), top = Math.min(0, content.y)
+  const box = fit ? content : {x:left,y:top,width:Math.max(fullW,content.x+content.width)-left,height:Math.max(fullH,content.y+content.height)-top}
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,

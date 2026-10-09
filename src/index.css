@@ -306,6 +306,9 @@
 .festival-versions select { display: block; border: 1px solid; padding: 8px; width: 100%; margin-top: 8px; }
 
 .festival-wall {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   height: 100dvh;
   background: white;
   color: black;
@@ -316,12 +319,13 @@
   gap: 1.2vh;
   overflow: hidden;
 }
-.festival-wall-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; }
+.festival-wall-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 24px; min-width: 0; }
 .festival-wall-heading p { font-size: clamp(12px, 1.1vw, 24px); color: #0000ee; }
 .festival-wall-heading h1 { font-size: clamp(24px, 3vw, 64px); font-weight: bold; }
 .festival-wall-heading > span { font-size: clamp(12px, 1.3vw, 28px); }
-.festival-wall-split { display: grid; grid-template-columns: 3fr 2fr; grid-template-rows: minmax(0, 1fr); min-height: 0; gap: 3vw; overflow: hidden; }
+.festival-wall-split { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: minmax(0, 1fr); min-height: 0; min-width: 0; gap: 3vw; overflow: hidden; }
 .festival-alphabet { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 1vh 1vw; }
+.festival-alphabet.has-extras { min-height: 0; overflow-y: auto; }
 .festival-letter { position: relative; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; border: 2px solid transparent; }
 .festival-letter.is-active { border-color: #0000ee; }
 .festival-letter img { min-height: 0; flex: 1; width: 100%; object-fit: contain; animation: rise .4s ease; }
@@ -338,8 +342,9 @@
   grid-template-columns: 1fr;
   gap: 1.2vh;
 }
-.festival-live-stack.is-multi { grid-template-columns: 1fr 1fr; }
+.festival-live-stack.is-multi { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .festival-live-pane {
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -353,10 +358,18 @@
 .festival-live-pane.is-idle .festival-waiting { font-size: 1.4vw; border: 1px dashed #0000ee55; }
 .festival-waiting { flex: 1; display: grid; place-items: center; color: #0000ee; font-size: 2vw; }
 .festival-phrase { border-top: 1px solid #000; padding-top: 1vh; display: flex; align-items: center; justify-content: center; min-height: 0; }
-.festival-phrase img { width: 3.6vw; height: 100%; object-fit: contain; }
-.festival-space { width: 2vw; }
-.festival-missing { width: 3.6vw; text-align: center; font-size: 3vw; color: #bbb; }
+.festival-phrase img { flex: 1 1 0; min-width: 0; height: 100%; object-fit: contain; }
+.festival-space { flex: .55 1 0; min-width: 0; }
+.festival-missing { flex: 1 1 0; min-width: 0; text-align: center; font-size: clamp(10px, 2.4vw, 48px); color: #bbb; }
 .festival-fullscreen { position: fixed; bottom: 4px; right: 8px; color: #0000ee; font-size: 12px; }
+@media (max-width: 600px) {
+  .festival-wall { height: auto; min-height: 100dvh; overflow: visible; grid-template-rows: auto auto auto 80px; }
+  .festival-wall-split { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; overflow: visible; }
+  .festival-alphabet { min-height: 320px; }
+  .festival-alphabet.has-extras { max-height: 420px; }
+  .festival-live { min-height: 240px; border-left: 0; border-top: 2px solid #0000ee; padding: 12px 0 0; }
+  .festival-live-pane.is-idle .festival-waiting, .festival-waiting { font-size: 14px; }
+}
 :fullscreen .festival-fullscreen { display: none; }
 @media (prefers-reduced-motion: reduce) { .festival-letter img { animation: none; } }
 
@@ -428,8 +441,8 @@ body.install-view {
 }
 /* Desk layout: canvas · tools · alphabet */
 .studio-body {
-  --studio-tools-w: 320px;
-  --studio-alpha-w: 200px;
+  --studio-tools-w: 280px;
+  --studio-alpha-w: 160px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--studio-tools-w) minmax(150px, var(--studio-alpha-w));
   min-height: 0;
@@ -999,7 +1012,7 @@ body.install-view {
 
 @media (min-width: 1200px) {
   .studio-body {
-    --studio-alpha-w: 220px;
+    --studio-alpha-w: 160px;
   }
 }
 
@@ -1199,3 +1212,64 @@ body.install-view {
     text-align: center;
   }
 }
+/* Compact sidebar controls share the paint tools' ink/paper treatment. */
+.font-design-tools { padding:8px; border:1px solid #ddd; font-size:11px; min-width:0; }
+.font-design-heading { margin:0 0 6px; font-size:11px; font-weight:600; }
+.font-design-tools fieldset { margin:8px 0; padding:6px; border:1px solid #ddd; min-width:0; }
+.font-design-tools legend { font-size:10px; color:#666; padding:0 3px; }
+.font-design-tools label { display:flex; flex-direction:column; gap:4px; margin:6px 0; color:#444; }
+.font-design-tools input:not([type=checkbox]):not([type=range]), .font-design-tools select {
+  box-sizing:border-box; max-width:100%; width:100%; min-height:28px;
+  border:1px solid #ddd; border-radius:0; padding:4px 6px; background:#f7f7f5; color:#000; font-size:11px;
+}
+.font-design-tools button { min-height:28px; border:1px solid #ddd; border-radius:0; padding:4px 6px; margin:2px; background:#f7f7f5; color:#000; font-size:11px; font-weight:600; }
+.font-design-tools label:has(> input[type=checkbox]) { flex-direction:row; align-items:center; gap:6px; min-height:28px; padding:3px 6px; border:1px solid #ddd; background:#f7f7f5; cursor:pointer; }
+.font-design-tools input[type=checkbox] { width:12px; height:12px; margin:0; accent-color:#000; }
+.font-character-picker { display:grid; grid-template-columns:repeat(auto-fit,minmax(26px,1fr)); gap:3px; max-height:136px; overflow:auto; }
+.font-character-picker button { margin:0; padding:2px; }
+.font-character-picker button[aria-pressed=true] { background:#000; color:#fff; border-color:#000; }
+.studio-toolbar { gap:9px; padding:8px; }
+.studio-toolbar .studio-tool, .studio-toolbar .studio-chip, .studio-toolbar .studio-seg .studio-tool, .studio-toolbar .studio-nudge .studio-tool { min-height:30px; font-size:11px; gap:5px; padding:0 6px; }
+.studio-toolbar .studio-nudge { min-height:30px; }
+.studio-toolbar .studio-softness, .studio-toolbar .studio-inline-slider { font-size:11px; gap:4px; }
+.studio-toolbar .studio-soft-presets button { min-height:28px; padding:4px; border-color:#ddd; background:#f7f7f5; font-weight:600; }
+.studio-toolbar .studio-soft-presets button.is-on { background:#000; color:#fff; border-color:#000; }
+.studio-toolbar .studio-shapes { grid-template-columns:repeat(5,minmax(0,1fr)); }
+/* Range inputs must never inherit text-field borders or padding. */
+.font-design-tools input[type=range], .studio-toolbar input[type=range] { width:100%; height:16px; margin:2px 0; padding:0; border:0; background:transparent; accent-color:#0000ee; }
+@media (pointer:coarse) {
+  .font-design-tools button, .font-design-tools label:has(> input[type=checkbox]), .studio-toolbar .studio-tool, .studio-toolbar .studio-chip, .studio-toolbar .studio-seg .studio-tool, .studio-toolbar .studio-nudge .studio-tool, .studio-toolbar .studio-soft-presets button { min-height:36px; }
+}
+.specimen-controls { display:flex; flex-wrap:wrap; gap:8px; font-size:11px; }
+.specimen-controls input { max-width:90px; border:1px solid #aaa; }
+.studio-canvas-pane { grid-template-rows:minmax(0,1fr) auto; }
+.studio-canvas-pane > [data-testid=word-tester] { max-height:260px; overflow:auto; }
+
+/* Character selection and symbol creation live together in the right rail. */
+.studio-alphabet > .font-design-tools { min-height:0; overflow:auto; border:0; padding:0; }
+.studio-alphabet .font-character-picker { grid-template-columns:repeat(3,minmax(0,1fr)); max-height:45vh; }
+.studio-alphabet .font-character-picker button { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:42px; min-width:0; padding:3px; gap:2px; }
+.studio-alphabet .font-character-picker img { width:100%; height:26px; object-fit:contain; }
+.studio-alphabet .font-character-picker small { font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+@media(max-width:900px) {
+ .studio-alphabet > .font-design-tools { max-height:240px; }
+ .studio-alphabet .font-character-picker { grid-template-columns:repeat(auto-fill,minmax(40px,1fr)); max-height:120px; }
+}
+
+.studio-alphabet .font-character-picker button.is-published { background:#fff; }
+.studio-alphabet .font-character-picker button.is-draft { border-color:#0000ee; }
+.studio-alphabet .font-character-picker button.is-active { outline:1px solid #0000ee; outline-offset:-2px; }
+
+/* Keep black glyph previews readable when their character is selected. */
+.studio-alphabet .font-character-picker button[aria-pressed=true] { background:#fff; color:#000; border-color:#0000ee; }
+.studio-alphabet .font-character-picker .studio-letter-dot { width:6px; height:6px; border-radius:50%; background:#0000ee; }
+
+/* An expanded specimen must not consume the Workshop drawing area. */
+.paint-screen [data-testid=word-tester] { flex-shrink:0; max-height:min(28vh,240px); overflow:auto; }
+
+.workshop-characters { border:1px solid #ddd; padding:8px; font-size:11px; }
+.workshop-characters .font-design-tools { border:0; padding:0; }
+.workshop-characters .font-character-picker button { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:38px; min-width:0; }
+.workshop-characters .font-character-picker img { width:100%; height:24px; object-fit:contain; }
+.workshop-characters .font-character-picker small { font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.workshop-characters .font-character-picker button[aria-pressed=true] { background:#fff; color:#000; border-color:#0000ee; }

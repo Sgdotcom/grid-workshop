@@ -1,3 +1,4 @@
+import type { FontDesign } from './fontDesign'
 export type OverlapLayer = 'a'
 
 export type PresetShapeId =
@@ -63,6 +64,7 @@ export type HoleMode = 'open' | 'no-gaps' | 'solid'
 
 /** One letter in a multi-glyph workshop session. */
 export interface GlyphDraft {
+  fontDesign?: FontDesign
   char: string
   filled: FilledRegion[]
   brokenJoins: string[]
@@ -119,5 +121,5 @@ export function shapeLabel(def: ShapeDef): string {
       ? `${def.sides}-gon · r${Math.round(def.cornerRadius)}`
       : `${def.sides}-gon`
   }
-  return `★${def.points} · ${Math.round(def.innerRatio * 100)}%`
+  return `Star ${def.points} · ${Math.round(def.innerRatio * 100)}%`
 }

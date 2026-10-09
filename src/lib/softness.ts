@@ -11,6 +11,8 @@
  */
 
 import { arcFlatBlend, usesArcFlatBlend } from './arcFlatBlend'
+import { diamondCornerJoin } from './diamondCornerJoin'
+import { flowBlend } from './flowBlend'
 import type { PresetShapeId, ShapeDef } from '@/lib/types'
 import {
   MELT_OFF_STORAGE_KEY,
@@ -19,6 +21,7 @@ import {
   getJoinEngineMode,
   getMixedPairJoinMethod,
   isPresetMeltOff,
+  loadShapePreferences,
 } from '@/lib/shapeJoinRegistry'
 import type { MixedPairMethod } from '@/lib/shapeJoinRegistry'
 import { fieldBlendRings } from '@/lib/fieldExperiments'
@@ -232,8 +235,9 @@ export function pairCanFuse(
 ): boolean {
   if (softness <= 0.02) return false
   const { gap } = closestOutlinePoints(a, b)
-  const meanSize = (a.size + b.size) * 0.5
-  if (gap > fuseMaxGap(meanSize, softness, diagonal)) return false
+  const rotatedSquare = a.preset === 'diamond' && b.preset === 'diamond' && getJoinEngineMode() === 'main'
+  const meanSize = (a.size + b.size) * 0.5 / (rotatedSquare ? Math.SQRT2 : 1)
+  if (gap > fuseMaxGap(meanSize, softness, rotatedSquare ? !diagonal : diagonal)) return false
   // Per-shape “Melt off”: no Softness neck across a gap (touch still unions below).
   if (isPresetMeltOff(a.preset) || isPresetMeltOff(b.preset)) {
     return gap <= meetGap(meanSize)
@@ -246,6 +250,7 @@ export function pairCanFuse(
   const mixed = getMixedPairJoinMethod(a.preset, b.preset)
   // `none` = no Softness melt across a gap (overlap still unions via meetGap above).
   if (mixed === 'none') return false
+  if (usesContourFlow(a, b)) return true
   if (mixed) return true
   return stampBlobs(a) && stampBlobs(b)
 }
@@ -1003,6 +1008,36 @@ function pairAxis(a: SoftStamp, b: SoftStamp): AxisId {
   return a.row === b.row ? 'h' : 'v'
 }
 
+/** Explicit lab preferences and the approved circular/diamond/arc-flat paths retain their engine. */
+function usesContourFlow(a: SoftStamp, b: SoftStamp): boolean {
+  if (getJoinEngineMode() !== 'main' || !a.preset || !b.preset || usesArcFlatBlend(a,b)) return false
+  // Keep the square reference used by the accepted 45° diamond transformation.
+  if (a.preset === b.preset && ['circle','ring','diamond','square','arc'].includes(a.preset)) return false
+  const preferences = loadShapePreferences()
+  return !preferences[a.preset] && !preferences[b.preset]
+}
+
+/** Evaluate diamond pairs in square-local coordinates, keeping their actual outlines. */
+function rotatedSquareJoin(a: SoftStamp, b: SoftStamp, softness: number, gap: number, safe: boolean): Polygon[] {
+  const turn = ([x, y]: [number, number]): [number, number] => [(x + y) / Math.SQRT2, (y - x) / Math.SQRT2]
+  const unturn = ([x, y]: [number, number]): [number, number] => [(x - y) / Math.SQRT2, (x + y) / Math.SQRT2]
+  const local = (s: SoftStamp): SoftStamp => {
+    const [cx, cy] = turn([s.cx, s.cy])
+    const size = s.size / Math.SQRT2
+    return { ...s, cx, cy, size, arm: size * 0.48, preset: 'square', family: 'square', capsule: false,
+      rotation: (s.rotation ?? 0) - 45, contacts: s.contacts.map(turn), rings: s.rings.map(r => r.map(turn)) }
+  }
+  const left = local(a), right = local(b)
+  const dx = right.cx - left.cx, dy = right.cy - left.cy
+  // These indices describe only this pair's direction, never its real Paint cell.
+  left.col = left.row = 0
+  right.col = Math.abs(dx) < 1e-6 ? 0 : Math.sign(dx)
+  right.row = Math.abs(dy) < 1e-6 ? 0 : Math.sign(dy)
+  const polygons = joinSamePreset('square', left, right, softness, gap, (left.size + right.size) / 2, safe)
+  const rotated = polygons.map(p => p.map(r => r.map(unturn)))
+  return softness >= 1 ? diamondCornerJoin(a, b, rotated) : rotated
+}
+
 function axisMelt(h: number, v: number, d: number, axis: AxisId) {
   return axis === 'h' ? h : axis === 'v' ? v : d
 }
@@ -1341,7 +1376,10 @@ function joinSamePreset(
   }
 
   // MAIN ENGINE (Default): Optimal per-shape joins (user's preferred methods)
-  const method = getActiveJoinMethod(preset, axis)
+  if (preset === 'diamond') return rotatedSquareJoin(a, b, softness, gap, safe)
+  const direction = axis === 'h' ? 'horizontal' : axis === 'v' ? 'vertical'
+    : (b.col-a.col)*(b.row-a.row)>0 ? 'diagonal-right' : 'diagonal-left'
+  const method = getActiveJoinMethod(preset, direction)
   if (method === 'weld') {
     return presetWeld(preset, a, b, softness, axis)
   }
@@ -1456,6 +1494,8 @@ function blendPairPolygons(
   if (isPresetMeltOff(a.preset) || isPresetMeltOff(b.preset)) return []
   if (usesArcFlatBlend(a,b) && getJoinEngineMode() !== 'fork-current') return arcFlatBlend(a,b,softness)
   if (!pairCanFuse(a, b, softness, diagonal)) return []
+
+  if (usesContourFlow(a,b)) return flowBlend([a,b], softness, 'contour-flow')
 
   if (a.preset && a.preset === b.preset) {
     return joinSamePreset(a.preset, a, b, softness, gap, meanSize, safe)
@@ -1758,7 +1798,7 @@ export function softnessFinishPathList(
 const finishCache = new Map<string, Polygon[]>()
 const FINISH_CACHE_MAX = 32
 
-function finishCacheKey(
+export function finishCacheKey(
   stamps: SoftStamp[],
   softness: number,
   brokenJoins: BrokenJoins | undefined,
@@ -1776,7 +1816,7 @@ function finishCacheKey(
     prefs = ''
     meltOff = ''
   }
-  const parts: string[] = [String(softness), holeMode, String(maxGapArea), getJoinEngineMode(), prefs, meltOff]
+  const parts: string[] = ['contour-flow-v2-diamond-corners-v2', String(softness), holeMode, String(maxGapArea), getJoinEngineMode(), prefs, meltOff]
   parts.push(brokenJoins?.size ? [...brokenJoins].sort().join(',') : '')
   for (const s of stamps) {
     // Outline checksum: any change of shape, size, rounding or rotation moves it.
@@ -1791,6 +1831,12 @@ function finishCacheKey(
     parts.push(`${s.id}|${s.col}|${s.row}|${s.cx}|${s.cy}|${s.size}|${s.rotation ?? 0}|${s.preset ?? s.family}|${s.roundness}|${count}|${sum}`)
   }
   return parts.join(';')
+}
+
+/** Adopt an exact worker result using the preferences captured when it was requested. */
+export function rememberSoftnessFinish(key: string, polygons: Polygon[]): void {
+  if (finishCache.size >= FINISH_CACHE_MAX) finishCache.delete(finishCache.keys().next().value!)
+  finishCache.set(key, polygons)
 }
 
 export function softnessFinishPolygons(

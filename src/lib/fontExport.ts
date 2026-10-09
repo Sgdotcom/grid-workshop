@@ -1,3 +1,4 @@
+import { glyphMetrics } from './specimen'
 import { Font, Glyph, Path } from 'opentype.js'
 import { glyphPolygons } from './export'
 import { canvasPixelSize, letterGuideMetrics } from './gridGeometry'
@@ -27,7 +28,7 @@ function signedArea(points: [number, number][]) {
   return area / 2
 }
 
-export function buildFestivalFont(contributions: Contribution[], library: ShapeDef[]) {
+export function buildFestivalFont(contributions: Contribution[], library: ShapeDef[], options: {fontName?:string;proportional?:boolean} = {}) {
   if (!contributions.length) throw new Error('Add a letter to the typeface first.')
   const grid = contributions[0].draft.grid!
   const { width, height } = canvasPixelSize(grid)
@@ -43,9 +44,9 @@ export function buildFestivalFont(contributions: Contribution[], library: ShapeD
   missing.close()
   const glyphs = [
     new Glyph({ name: '.notdef', advanceWidth, path: missing }),
-    new Glyph({ name: 'space', unicode: 32, advanceWidth: Math.round(advanceWidth * 0.55), path: new Path() }),
+    new Glyph({ name: 'space', unicode: 32, advanceWidth: 550, path: new Path() }),
   ]
-  const ordered = [...contributions].sort(
+  const ordered = [...new Map(contributions.map(c=>[c.draft.char,c])).values()].sort(
     (a, b) => a.draft.char.codePointAt(0)! - b.draft.char.codePointAt(0)!,
   )
   for (const { draft } of ordered) {
@@ -53,21 +54,21 @@ export function buildFestivalFont(contributions: Contribution[], library: ShapeD
     const own = canvasPixelSize(draft.grid ?? grid)
     const glyphScale = UNITS_PER_EM / own.height
     const glyphBaseline = letterGuideMetrics(own.width, own.height, 1).baseline
-    const glyphAdvance = Math.round(own.width * glyphScale + SIDE_BEARING * 2)
     const path = new Path()
     // Built from the unioned polygons, so contours never overlap and cannot cancel
     // each other under the font's non-zero winding rule.
     const polygons = glyphPolygons({
       grid: draft.grid!, library, glyphChar: draft.char, filledRegions: draft.filled,
       softness: draft.softness!, cornerRadius: draft.cornerRadius, brokenJoins: new Set(draft.brokenJoins),
-      holeMode: draft.holeMode,
+      holeMode: draft.holeMode, fontDesign: draft.fontDesign,
     })
+    const metrics=glyphMetrics(polygons,draft.grid??grid,options.proportional)
     for (const polygon of polygons) {
       polygon.forEach((ring, ringIndex) => {
         const last = ring[ring.length - 1]
         const open = ring.length > 1 && ring[0][0] === last[0] && ring[0][1] === last[1] ? ring.slice(0, -1) : ring
         const points = open.map(([x, y]): [number, number] => [
-          Math.round(x * glyphScale + SIDE_BEARING),
+          Math.round((x-metrics.left) * glyphScale + SIDE_BEARING),
           Math.round((glyphBaseline - y) * glyphScale),
         ]).filter((point, index, all) => {
           const previous = all[(index - 1 + all.length) % all.length]
@@ -83,15 +84,23 @@ export function buildFestivalFont(contributions: Contribution[], library: ShapeD
         path.close()
       })
     }
-    glyphs.push(new Glyph({ name: glyphName(draft.char), unicode: draft.char.codePointAt(0), advanceWidth: glyphAdvance, path }))
+    glyphs.push(new Glyph({ name: glyphName(draft.char), unicode: draft.char.codePointAt(0), advanceWidth: metrics.advance, path }))
   }
   return new Font({
-    familyName: 'Beckmans Together', styleName: 'Regular', unitsPerEm: UNITS_PER_EM,
-    ascender: Math.ceil(baseline * scale), descender: Math.floor((baseline - height) * scale), glyphs,
+    familyName: options.fontName?.trim() || 'Beckmans Together', postScriptName: ((options.fontName || 'Beckmans Together').replace(/[^A-Za-z0-9-]/g,'').slice(0,50)||'GridWorkshop')+'-Regular', styleName: 'Regular', unitsPerEm: UNITS_PER_EM,
+    ascender: Math.ceil(Math.max(baseline * scale,...glyphs.map(g=>g.path.getBoundingBox().y2))), descender: Math.floor(Math.min((baseline-height)*scale,...glyphs.map(g=>g.path.getBoundingBox().y1))), glyphs,
   })
 }
 
-export async function exportFestivalFont(contributions: Contribution[], library: ShapeDef[]) {
-  const font = buildFestivalFont(contributions, library)
-  downloadBlob(new Blob([font.toArrayBuffer()], { type: 'font/otf' }), 'beckmans-together.otf')
+export function toWoff(buffer:ArrayBuffer):ArrayBuffer {
+ const src=new DataView(buffer),count=src.getUint16(4),tables=[];let offset=44+count*20;
+ for(let i=0;i<count;i++){const at=12+i*16,start=src.getUint32(at+8),length=src.getUint32(at+12);tables.push({tag:src.getUint32(at),sum:src.getUint32(at+4),start,length,offset});offset+=(length+3)&~3}
+ const out=new ArrayBuffer(offset),view=new DataView(out),bytes=new Uint8Array(out);view.setUint32(0,0x774f4646);view.setUint32(4,src.getUint32(0));view.setUint32(8,offset);view.setUint16(12,count);view.setUint32(16,12+count*16+tables.reduce((n,t)=>n+((t.length+3)&~3),0));view.setUint16(20,1);
+ tables.forEach((t,i)=>{const at=44+i*20;view.setUint32(at,t.tag);view.setUint32(at+4,t.offset);view.setUint32(at+8,t.length);view.setUint32(at+12,t.length);view.setUint32(at+16,t.sum);bytes.set(new Uint8Array(buffer,t.start,t.length),t.offset)});return out
+}
+export function festivalFontFile(contributions:Contribution[],library:ShapeDef[],options:{fontName?:string;proportional?:boolean;format?:'otf'|'woff'}={}){
+ const font=buildFestivalFont(contributions,library,options),buffer=font.toArrayBuffer(),format=options.format??'otf',name=(options.fontName||'beckmans-together').replace(/[^A-Za-z0-9_-]/g,'-');return {blob:new Blob([format==='woff'?toWoff(buffer):buffer],{type:`font/${format}`}),filename:`${name}.${format}`}
+}
+export async function exportFestivalFont(contributions:Contribution[],library:ShapeDef[],options:{fontName?:string;proportional?:boolean;format?:'otf'|'woff'}={}){
+ const file=festivalFontFile(contributions,library,options);downloadBlob(file.blob,file.filename)
 }

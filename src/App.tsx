@@ -1,3 +1,9 @@
+import { resizeIdentity } from '@/lib/resizeGesture'
+import { DEFAULT_SPECIMEN, type SpecimenSettings } from '@/lib/specimen'
+import { FontDesignTools } from '@/components/FontDesignTools'
+import { DEFAULT_FONT_DESIGN, STANDARD_CHARACTERS, mergeSymbols, randomCells, resizeGlyph, symbolTime, symbolCharacter, type FontDesign, type CustomSymbol } from '@/lib/fontDesign'
+import { nextEmptyLetter } from '@/lib/festival'
+import { preparePaintGeometry } from '@/lib/paintGeometry'
 import {
   useCallback,
   useEffect,
@@ -86,6 +92,9 @@ const HISTORY_MAX = 60
 
 /** One undo step: the cells and the joins that were broken at that moment. */
 interface Snapshot {
+  settings?: {grid:GridConfig;softness:number;cornerRadius:number;holeMode:HoleMode;fontDesign:FontDesign}
+  symbols?: CustomSymbol[]
+  symbolChars?:string[]
   filled: FilledRegion[]
   brokenJoins: string[]
 }
@@ -143,8 +152,15 @@ export default function App() {
     return prefNumber(prefs.brushSize, cell * 0.4, cell * 2.2, (DEFAULT_BRUSH * cell) / DEFAULT_GRID.cellSize)
   })
   const [cornerRadius, setCornerRadius] = useState(restored?.active.cornerRadius ?? 0)
-  const [guideLetter, setGuideLetter] = useState(restored?.active.char.toLowerCase() ?? 'a')
-  const [guideUpper, setGuideUpper] = useState(!!restored && restored.active.char !== restored.active.char.toLowerCase())
+  const [fontDesign,setFontDesign]=useState<FontDesign>(restored?.active.fontDesign ?? DEFAULT_FONT_DESIGN)
+  const [customSymbols,setCustomSymbols]=useState<CustomSymbol[]>(restored?.customSymbols ?? [])
+  const symbolsRef=useRef(customSymbols); symbolsRef.current=customSymbols
+  const [specimen,setSpecimen]=useState<SpecimenSettings>(restored?.specimen ?? DEFAULT_SPECIMEN)
+  const specimenRef=useRef(specimen);specimenRef.current=specimen
+  const [specimenText,setSpecimenText]=useState(restored?.specimenText ?? 'Beckmans')
+  const specimenTextRef=useRef(specimenText);specimenTextRef.current=specimenText
+  const [guideLetter, setGuideLetter] = useState(restored?.active.char ? (STANDARD_CHARACTERS.includes(restored.active.char)?restored.active.char.toLowerCase():restored.active.char) : 'a')
+  const [guideUpper, setGuideUpper] = useState(!!restored && STANDARD_CHARACTERS.includes(restored.active.char) && restored.active.char !== restored.active.char.toLowerCase())
   const [showLetterGuide, setShowLetterGuide] = useState(() => prefBoolean(prefs.showLetterGuide, true))
   const [guideOpacity, setGuideOpacity] = useState(() => prefNumber(prefs.guideOpacity, 0.25, 1, 0.85))
   const [letterScale, setLetterScale] = useState(() => prefNumber(prefs.letterScale, 0.45, 1.35, 1))
@@ -165,15 +181,15 @@ export default function App() {
     return saved % 90 === 0 ? saved : 0
   })
   const [wordTesterOpen, setWordTesterOpen] = useState(() => prefBoolean(prefs.wordTesterOpen, window.innerHeight >= 860))
-  const [testString, setTestString] = useState(() => (typeof prefs.testString === 'string' ? prefs.testString.slice(0, 40) : 'HOH'))
+  const [testString] = useState(() => (typeof prefs.testString === 'string' ? prefs.testString.slice(0, 40) : 'HOH'))
   const [stampMode, setStampMode] = useState<'ink' | 'cutout'>('ink')
   const [symmetryMode, setSymmetryMode] = useState<'none' | 'horizontal' | 'vertical'>('none')
-  const [glyphs, setGlyphs] = useState<Map<string, GlyphDraft>>(() => new Map(restored?.drafts.filter(draft => draft.filled.length).map(draft => [draft.char, draft]) ?? []))
+  const [glyphs, setGlyphs] = useState<Map<string, GlyphDraft>>(() => new Map(restored?.drafts.map(draft => [draft.char, draft]) ?? []))
   const [contributions, setContributions] = useState<Contribution[]>(restored?.contributions ?? [])
   const [saveStatus, setSaveStatus] = useState(recovery.error || 'Ready')
   const [notice, setNotice] = useState('Choose a letter, draw, then add it to the typeface.')
-  const settingsRef = useRef({ grid, softness, cornerRadius, holeMode })
-  settingsRef.current = { grid, softness, cornerRadius, holeMode }
+  const settingsRef = useRef({ grid, softness, cornerRadius, holeMode, fontDesign })
+  settingsRef.current = { grid, softness, cornerRadius, holeMode, fontDesign }
   const sessionRef = useRef<FestivalSession | null>(restored)
   const importRef = useRef<HTMLInputElement>(null)
   const [exportStatus, setExportStatus] = useState<ExportStatus>({ state: 'idle' })
@@ -255,6 +271,8 @@ export default function App() {
   const draftTimesRef = useRef<Record<string, string>>({ ...(restored?.draftUpdatedAt ?? {}) })
   const applyingRemoteRef = useRef(false)
   /** False right after publishing: stay on the letter but release presence. */
+  const [publishing, setPublishing] = useState(false)
+  const [paintingStroke, setPaintingStroke] = useState(false)
   const [holding, setHolding] = useState(true)
   const contributionsRef = useRef(contributions)
   contributionsRef.current = contributions
@@ -262,13 +280,14 @@ export default function App() {
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
   const displayGuideLetter = guideUpper ? guideLetter.toUpperCase() : guideLetter
+  const displayGlyphName = customSymbols.find(symbol => symbol.char === displayGuideLetter && !symbol.deleted)?.name ?? displayGuideLetter
   filledRef.current = filled
   brokenRef.current = brokenJoins
   glyphsRef.current = glyphs
   letterRef.current = displayGuideLetter
   /** Open-letter state its clock was last stamped, loaded or adopted with (starts as the restored letter). */
   const clockBaseRef = useRef<LetterClockBase | null>({
-    char: displayGuideLetter, filled, brokenJoins, grid, softness, cornerRadius, holeMode,
+    char: displayGuideLetter, filled, brokenJoins, grid, softness, cornerRadius, holeMode, fontDesign,
   })
   const activeShape = library.find((s) => s.id === shapeId) ?? library[0]
   const activePreset = activeShape.kind === 'preset' ? activeShape.preset : null
@@ -288,8 +307,11 @@ export default function App() {
 
   const persistCurrent = useCallback(() => {
     const ch = letterRef.current
+    const state: LetterClockBase = { char: ch, filled: filledRef.current, brokenJoins: brokenRef.current, ...settingsRef.current }
+    if (!letterUnchanged(clockBaseRef.current, state)) draftTimesRef.current[ch] = new Date().toISOString()
+    clockBaseRef.current = state
     const store = new Map(glyphsRef.current)
-    if (filledRef.current.size) {
+    if (filledRef.current.size || settingsRef.current.fontDesign) {
       store.set(ch, {
         char: ch,
         filled: snapshotFilled(filledRef.current),
@@ -314,8 +336,11 @@ export default function App() {
   const loadDraft = useCallback(
     (store: Map<string, GlyphDraft>, ch: string) => {
       const slot = store.get(ch)
+      const previousCellSize = settingsRef.current.grid.cellSize
       const nextFilled: Map<string, FilledRegion> = slot ? restoreFilled(slot.filled) : new Map()
       const nextJoins = new Set(slot?.brokenJoins ?? [])
+      filledRef.current = nextFilled
+      brokenRef.current = nextJoins
       setFilled(nextFilled)
       setBrokenJoins(nextJoins)
       // Opening a letter is not an edit: it keeps its clock until this desk changes it.
@@ -327,10 +352,12 @@ export default function App() {
         softness: slot?.softness ?? 0.55,
         cornerRadius: slot?.cornerRadius ?? 0,
         holeMode: slot?.holeMode ?? 'open',
+        fontDesign: slot?.fontDesign ?? DEFAULT_FONT_DESIGN,
       }
+      settingsRef.current = { grid: clockBaseRef.current.grid, softness: clockBaseRef.current.softness, cornerRadius: clockBaseRef.current.cornerRadius, holeMode: clockBaseRef.current.holeMode, fontDesign: clockBaseRef.current.fontDesign ?? DEFAULT_FONT_DESIGN }
       // Each letter keeps its own lattice; empty letters inherit the current grid.
       if (slot?.grid) {
-        const prevCell = settingsRef.current.grid.cellSize
+        const prevCell = previousCellSize
         const nextGrid = slot.grid
         setGrid(nextGrid)
         setGridDetail(
@@ -343,6 +370,7 @@ export default function App() {
       setSoftness(slot?.softness ?? 0.55)
       setCornerRadius(slot?.cornerRadius ?? 0)
       setHoleMode(slot?.holeMode ?? 'open')
+      setFontDesign(slot?.fontDesign ?? DEFAULT_FONT_DESIGN)
       resetUndo()
       setExportStatus({ state: 'idle' })
     },
@@ -351,11 +379,14 @@ export default function App() {
 
   const switchToLetter = useCallback(
     (base: string, asUpper: boolean) => {
-      const nextChar = asUpper ? base.toUpperCase() : base.toLowerCase()
+      const isStandard=STANDARD_CHARACTERS.includes(base)
+      const nextChar = isStandard ? (asUpper ? base.toUpperCase() : base.toLowerCase()) : base
       if (nextChar === letterRef.current) return
+      setNotice('')
       persistCurrent()
-      setGuideLetter(base.toLowerCase())
-      setGuideUpper(asUpper)
+      letterRef.current = nextChar
+      setGuideLetter(isStandard ? base.toLowerCase() : base)
+      setGuideUpper(isStandard && asUpper)
       setHolding(true)
       loadDraft(glyphsRef.current, nextChar)
     },
@@ -370,10 +401,11 @@ export default function App() {
       glyphChar: char,
       softness: char === displayGuideLetter ? softness : glyphs.get(char)?.softness ?? softness,
       cornerRadius: char === displayGuideLetter ? cornerRadius : glyphs.get(char)?.cornerRadius ?? cornerRadius,
+      fontDesign: char===displayGuideLetter ? fontDesign : glyphs.get(char)?.fontDesign ?? DEFAULT_FONT_DESIGN,
       brokenJoins: new Set(joins),
       holeMode: char === displayGuideLetter ? holeMode : glyphs.get(char)?.holeMode ?? holeMode,
     }),
-    [grid, library, softness, cornerRadius, holeMode, displayGuideLetter, glyphs],
+    [fontDesign,grid, library, softness, cornerRadius, holeMode, displayGuideLetter, glyphs],
   )
 
   const sessionDrafts = (() => {
@@ -383,7 +415,7 @@ export default function App() {
         char: displayGuideLetter,
         filled: snapshotFilled(filled),
         brokenJoins: [...brokenJoins],
-        grid, softness, cornerRadius, holeMode,
+        grid, softness, cornerRadius, holeMode, fontDesign,
       })
     } else {
       store.delete(displayGuideLetter)
@@ -395,11 +427,13 @@ export default function App() {
 
   const activeDraft: GlyphDraft = {
     char: displayGuideLetter, filled: snapshotFilled(filled), brokenJoins: [...brokenJoins],
-    grid, softness, cornerRadius, holeMode,
+    grid, softness, cornerRadius, holeMode, fontDesign,
   }
   const activeRef = useRef(activeDraft)
+  const resizeSourceRef = useRef(activeDraft)
+  const resizeResultRef = useRef<string | null>(null)
   activeRef.current = activeDraft
-  const writeSession = useCallback(() => {
+  const writeSession = useCallback((includePreview = true) => {
     const active = activeRef.current
     const drafts = new Map(glyphsRef.current)
     drafts.set(active.char, active)
@@ -408,29 +442,29 @@ export default function App() {
       char: active.char, filled: filledRef.current, brokenJoins: brokenRef.current, ...settingsRef.current,
     }
     // Remote updates re-render this desk too; only an edit made here may move the letter clock.
-    if (!draftTimesRef.current[active.char] || !letterUnchanged(clockBaseRef.current, state)) {
+    if ((!draftTimesRef.current[active.char] && active.filled.length > 0) || !letterUnchanged(clockBaseRef.current, state)) {
       draftTimesRef.current[active.char] = updatedAt
     }
     clockBaseRef.current = state
     const session: FestivalSession = {
-      version: 1, updatedAt, active,
+      version: 2, customSymbols: symbolsRef.current, specimen:specimenRef.current,specimenText:specimenTextRef.current, updatedAt, active,
       // Letters that were only visited are not work: they must not come back as painted.
-      drafts: [...drafts.values()].filter((draft) => draft.filled.length),
+      drafts: [...drafts.values()],
       contributions: contributionsRef.current, library,
-      liveSvg: compactSvgMarkup(buildSvgMarkup({ ...active, grid: active.grid!, softness: active.softness!,
+      liveSvg: includePreview ? compactSvgMarkup(buildSvgMarkup({ ...active, grid: active.grid!, softness: active.softness!,
         library, filledRegions: active.filled, glyphChar: active.char,
-        brokenJoins: new Set(active.brokenJoins) }, { fitContent: false })),
+        brokenJoins: new Set(active.brokenJoins) }, { fitContent: false })) : (sessionRef.current?.liveSvg ?? ''),
       draftUpdatedAt: { ...draftTimesRef.current },
     }
     sessionRef.current = session
     try {
-      localStorage.setItem(FESTIVAL_KEY, JSON.stringify(session))
-      setSaveStatus('Saved on this computer')
+      if(!recovery.error)localStorage.setItem(FESTIVAL_KEY, JSON.stringify(session))
+      setSaveStatus(recovery.error ? 'Recovery needed — download an editable backup.' : 'Saved on this computer')
     } catch {
       setSaveStatus('Saving failed — download an editable backup now.')
     }
     return session
-  }, [library])
+  }, [library, recovery.error])
 
   const live = useLiveSession({
     activeChar: displayGuideLetter,
@@ -441,13 +475,16 @@ export default function App() {
       // Prefer live refs so empty-room polls do not persist a stale empty canvas.
       return {
         ...s,
+        customSymbols:symbolsRef.current, specimen:specimenRef.current,specimenText:specimenTextRef.current,
         active: activeRef.current,
         contributions: contributionsRef.current,
-        drafts: [...glyphsRef.current.values()].filter((d) => d.filled.length),
+        drafts: [...glyphsRef.current.values()],
       }
     },
     painting: () => strokeStarted.current,
     onRemoteSession: (session, liveRoom, meta) => {
+      const mergedSymbols=(meta?.sharedWipe || meta?.restore) ? session.customSymbols??[] : mergeSymbols(symbolsRef.current,session.customSymbols);
+      if(JSON.stringify(symbolsRef.current)!==JSON.stringify(mergedSymbols)){symbolsRef.current=mergedSymbols;setCustomSymbols(mergedSymbols);}
       const plan = planRemoteDeskApply({
         session,
         liveRoom,
@@ -482,6 +519,7 @@ export default function App() {
         activeRef.current = { ...activeRef.current, filled: [], brokenJoins: [] }
         sessionRef.current = {
           ...session,
+          customSymbols:symbolsRef.current,
           active: activeRef.current,
           contributions: [],
           drafts: [],
@@ -489,7 +527,7 @@ export default function App() {
           draftUpdatedAt: {},
         }
         try {
-          localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
+          if(!recovery.error)localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
         } catch {
           /* ignore */
         }
@@ -528,6 +566,7 @@ export default function App() {
           softness: typeof draft.softness === 'number' ? draft.softness : current.softness,
           cornerRadius: typeof draft.cornerRadius === 'number' ? draft.cornerRadius : current.cornerRadius,
           holeMode: draft.holeMode ?? current.holeMode,
+          fontDesign: draft.fontDesign ?? DEFAULT_FONT_DESIGN,
         }
         setFilled(nextFilled)
         setBrokenJoins(nextJoins)
@@ -535,6 +574,7 @@ export default function App() {
         if (typeof draft.softness === 'number') setSoftness(draft.softness)
         if (typeof draft.cornerRadius === 'number') setCornerRadius(draft.cornerRadius)
         if (draft.holeMode) setHoleMode(draft.holeMode)
+        setFontDesign(draft.fontDesign ?? DEFAULT_FONT_DESIGN)
         past.current = []
         future.current = []
         syncHistoryFlags()
@@ -544,15 +584,16 @@ export default function App() {
 
       sessionRef.current = {
         ...session,
+        customSymbols:symbolsRef.current, specimen:specimenRef.current,specimenText:specimenTextRef.current,
         active: activeRef.current,
         contributions: plan.contributions,
-        drafts: [...plan.glyphs.values()].filter((d) => d.filled.length),
+        drafts: [...plan.glyphs.values()],
         liveSvg: plan.liveSvg,
         draftUpdatedAt: { ...plan.draftTimes },
       }
       // UI owns localStorage — persist after applying the remote plan.
       try {
-        localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
+        if(!recovery.error)localStorage.setItem(FESTIVAL_KEY, JSON.stringify(sessionRef.current))
       } catch {
         /* ignore */
       }
@@ -561,18 +602,26 @@ export default function App() {
   const pushLive = live.pushSession
 
   useEffect(() => {
-    if (recovery.error) return
+    if (recovery.error || paintingStroke) return
     if (applyingRemoteRef.current) {
       applyingRemoteRef.current = false
       return
     }
+    let cancelled = false
     const timer = window.setTimeout(() => {
-      pushLive(writeSession())
+      writeSession(false)
+      const active = activeRef.current
+      void preparePaintGeometry({ ...active, grid: active.grid!, softness: active.softness!,
+        library, filledRegions: active.filled, glyphChar: active.char, brokenJoins: new Set(active.brokenJoins),
+      }).then(() => { if (!cancelled) pushLive(writeSession()) }).catch(error => {
+        console.error('Unable to prepare saved paint preview.', error)
+      })
     }, 250)
     return () => {
+      cancelled = true
       window.clearTimeout(timer)
     }
-  }, [filled, brokenJoins, grid, softness, cornerRadius, holeMode, displayGuideLetter, glyphs, contributions, writeSession, pushLive, recovery.error])
+  }, [specimen,specimenText,customSymbols,fontDesign,paintingStroke, library, filled, brokenJoins, grid, softness, cornerRadius, holeMode, fontDesign, displayGuideLetter, glyphs, contributions, writeSession, pushLive, recovery.error])
 
   useEffect(() => {
     writeUiPrefs({
@@ -584,8 +633,26 @@ export default function App() {
 
   const saveFailed = !!recovery.error || saveStatus.startsWith('Saving failed')
 
-  const publishGlyph = () => {
-    if (!filled.size) return
+  const updateSymbols=(next:CustomSymbol[])=>{symbolsRef.current=next;setCustomSymbols(next)}
+  const createCustom=(name:string,entered:string,random=false)=>{
+    if(symbolsRef.current.filter(s=>!s.deleted).length>=256)throw Error('Maximum 256 custom symbols.')
+    const char=symbolCharacter(symbolsRef.current,entered)
+    persistCurrent();switchToLetter(char,false)
+    const empty=new Map<string,FilledRegion>();filledRef.current=empty;setFilled(empty);const emptyJoins=new Set<string>();brokenRef.current=emptyJoins;setBrokenJoins(emptyJoins);setGrid(grid);setFontDesign(DEFAULT_FONT_DESIGN);setSoftness(.55);setCornerRadius(0)
+    settingsRef.current={grid,softness:.55,cornerRadius:0,holeMode:'open',fontDesign:DEFAULT_FONT_DESIGN}
+    setHoleMode('open')
+    // loadDraft resets glyph-local history; symbol creation remains one undoable action.
+    past.current.push({filled:[],brokenJoins:[],settings:{...settingsRef.current},symbols:[...symbolsRef.current],symbolChars:[char]});if(past.current.length>HISTORY_MAX)past.current.shift();future.current=[];syncHistoryFlags()
+    updateSymbols(mergeSymbols(symbolsRef.current,[{char,name:name.trim().slice(0,40)||'Custom symbol',updatedAt:symbolTime(symbolsRef.current)}]))
+    if(random){const cells=randomCells(grid),regions=cells.map(([col,row])=>({key:`a:${col}:${row}:shape`,col,row,layer:'a' as const,kind:'shape' as const,shapeId,size:brushSize,rotation:brushRotation,mode:'ink' as const}));const next=restoreFilled(regions);filledRef.current=next;setFilled(next)}
+  }
+  const designTools=<FontDesignTools section="geometry" activeChar={displayGuideLetter} design={fontDesign} onDesign={d=>{pushHistory();setFontDesign(d)}} grid={grid} onResize={(g,stretch,continuing)=>{if(!continuing || resizeResultRef.current !== resizeIdentity(activeRef.current)){pushHistory();resizeSourceRef.current=activeRef.current}const d=resizeGlyph(resizeSourceRef.current,g,stretch);resizeResultRef.current=resizeIdentity(d);const next=restoreFilled(d.filled);filledRef.current=next;activeRef.current=d;settingsRef.current={...settingsRef.current,grid:g};setFilled(next);setGrid(g);if(stretch){const joins=new Set<string>();brokenRef.current=joins;setBrokenJoins(joins)}}} symbols={customSymbols} onCreate={createCustom} onRandom={()=>createCustom('Random symbol','',true)} onRemove={char=>{past.current.push({...takeSnapshot(),symbols:[...symbolsRef.current],symbolChars:[char]});if(past.current.length>HISTORY_MAX)past.current.shift();future.current=[];syncHistoryFlags();updateSymbols(mergeSymbols(symbolsRef.current,[{char,name:symbolsRef.current.find(s=>s.char===char)?.name??'Symbol',updatedAt:symbolTime(symbolsRef.current),deleted:true}]))}} onSelect={ch=>switchToLetter(ch,ch!==ch.toLowerCase())}/>
+
+  const publishGlyph = async () => {
+    if (!filled.size || publishing) return
+    if(symbolsRef.current.some(s=>s.char===displayGuideLetter&&s.deleted)){setNotice('Choose a character or undo symbol removal before submitting.');return}
+    setPublishing(true)
+    try {
     persistCurrent()
     // Snapshot so Clear letter cannot empty the published entry via a shared object.
     const source = activeRef.current
@@ -595,16 +662,31 @@ export default function App() {
       brokenJoins: [...source.brokenJoins],
       grid: source.grid ? { ...source.grid } : source.grid,
     }
+    const publishPayload = makePayload(draft.char, draft.filled, draft.brokenJoins)
+    await preparePaintGeometry(publishPayload)
     const contribution: Contribution = {
       id: crypto.randomUUID(), createdAt: new Date().toISOString(), draft,
-      svg: compactSvgMarkup(buildSvgMarkup(makePayload(draft.char, draft.filled, draft.brokenJoins), { fitContent: false })),
+      svg: compactSvgMarkup(buildSvgMarkup(publishPayload, { fitContent: false })),
     }
     const next = [...contributionsRef.current, contribution]
     contributionsRef.current = next
     setContributions(next)
     pushLive(writeSession(), { immediate: true })
-    setHolding(false)
-    setNotice(`${draft.char} added to our typeface. Choose another letter or try another version.`)
+    const nextLetter = nextEmptyLetter(draft.char, guideUpper,
+      mergeContributions(next, live.liveRoom?.contributions ?? []),
+      [...glyphsRef.current.values(), ...(live.liveRoom?.drafts ?? [])],symbolsRef.current)
+    if (nextLetter && letterRef.current === draft.char) {
+      setPaintTool('stamp'); setStampMode('ink'); setBrushRotation(0); setSymmetryMode('none')
+      switchToLetter(nextLetter, guideUpper)
+      setNotice(`${draft.char} added. Your next letter is ${guideUpper ? nextLetter.toUpperCase() : nextLetter}.`)
+    } else {
+      setHolding(false)
+      setNotice(`${draft.char} added to our typeface. Every letter is started; choose one to make another version.`)
+    }
+    } catch (error) {
+      console.error('Unable to submit letter.', error)
+      setNotice('The letter could not be submitted. Your drawing is kept; try again.')
+    } finally { setPublishing(false) }
   }
 
   // Export / alphabet: prefer shared room publishes when live is on (wall source of truth).
@@ -616,8 +698,9 @@ export default function App() {
 
   const backupSession = () => {
     if (recovery.error) {
-      downloadBlob(new Blob([localStorage.getItem(FESTIVAL_KEY) ?? ''], { type: 'application/json' }), 'workshop-recovery.json')
-      return
+      let raw:string|null=null
+      try { raw=localStorage.getItem(FESTIVAL_KEY) } catch { /* Storage blocked: export the editable in-memory project below. */ }
+      if(raw){downloadBlob(new Blob([raw],{type:'application/json'}),'workshop-recovery.json');return}
     }
     const session = writeSession()
     downloadBlob(new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' }),
@@ -640,6 +723,7 @@ export default function App() {
 
   const restoreSession = async (file: File) => {
     try {
+      if(file.size>20_000_000)throw Error('Project exceeds the 20 MB safety limit.')
       const session = parseSession(await file.text())
       if (!window.confirm('Restore this backup? The current session will download first.')) return
       backupSession()
@@ -670,6 +754,7 @@ export default function App() {
     (): Snapshot => ({
       filled: snapshotFilled(filledRef.current),
       brokenJoins: [...brokenRef.current],
+      settings:{...settingsRef.current},
     }),
     [],
   )
@@ -698,7 +783,7 @@ export default function App() {
   const syncGlyphForActive = useCallback((nextFilled: Map<string, FilledRegion>, nextBroken: Set<string>) => {
     const ch = letterRef.current
     const store = new Map(glyphsRef.current)
-    if (nextFilled.size) {
+    if (nextFilled.size || settingsRef.current.fontDesign) {
       store.set(ch, {
         char: ch,
         filled: snapshotFilled(nextFilled),
@@ -720,6 +805,8 @@ export default function App() {
       brokenRef.current = nextBroken
       setFilled(nextFilled)
       setBrokenJoins(nextBroken)
+      if(snapshot.settings){settingsRef.current=snapshot.settings;setGrid(snapshot.settings.grid);setSoftness(snapshot.settings.softness);setCornerRadius(snapshot.settings.cornerRadius);setHoleMode(snapshot.settings.holeMode);setFontDesign(snapshot.settings.fontDesign)}
+      if(snapshot.symbols){const previous=snapshot.symbols,at=new Date(Math.max(Date.now(),...symbolsRef.current.map(s=>Date.parse(s.updatedAt)||0))+1).toISOString();const changes=(snapshot.symbolChars??[]).map(char=>({...previous.find(s=>s.char===char)??{char,name:symbolsRef.current.find(s=>s.char===char)?.name??'Symbol',deleted:true},updatedAt:at}));const next=mergeSymbols(symbolsRef.current,changes);symbolsRef.current=next;setCustomSymbols(next)}
       syncGlyphForActive(nextFilled, nextBroken)
       setExportStatus({ state: 'idle' })
     },
@@ -729,7 +816,7 @@ export default function App() {
   const undo = useCallback(() => {
     const previous = past.current.pop()
     if (!previous) return
-    future.current.push(takeSnapshot())
+    future.current.push({...takeSnapshot(),...(previous.symbols?{symbols:[...symbolsRef.current],symbolChars:previous.symbolChars}:{})})
     applySnapshot(previous)
     syncHistoryFlags()
   }, [applySnapshot, syncHistoryFlags, takeSnapshot])
@@ -737,7 +824,7 @@ export default function App() {
   const redo = useCallback(() => {
     const next = future.current.pop()
     if (!next) return
-    past.current.push(takeSnapshot())
+    past.current.push({...takeSnapshot(),...(next.symbols?{symbols:[...symbolsRef.current],symbolChars:next.symbolChars}:{})})
     applySnapshot(next)
     syncHistoryFlags()
   }, [applySnapshot, syncHistoryFlags, takeSnapshot])
@@ -782,7 +869,9 @@ export default function App() {
     (deltaCol: number, deltaRow: number) => {
       if (filled.size === 0) return
       pushHistory()
-      setFilled((prev) => nudgeFilled(prev, deltaCol, deltaRow, grid))
+      const next = nudgeFilled(filledRef.current, deltaCol, deltaRow, grid)
+      filledRef.current = next
+      setFilled(next)
     },
     [filled, grid, pushHistory],
   )
@@ -795,7 +884,10 @@ export default function App() {
       return
     }
     pushHistory()
+    filledRef.current = blueprint
+    brokenRef.current = new Set()
     setFilled(blueprint)
+    setBrokenJoins(brokenRef.current)
     setNotice(`Loaded blueprint for "${displayGuideLetter}". Edit or customize anytime!`)
   }, [displayGuideLetter, grid, shapeId, brushSize, filled, pushHistory])
 
@@ -875,13 +967,16 @@ export default function App() {
 
   /** Grid belongs to the open letter only; other drafts and published letters keep theirs. */
   const applySessionGrid = (next: GridConfig, opts?: { brushSize?: number; detail?: number }) => {
+    pushHistory()
     const prev = grid
-    if (filledRef.current.size) {
+    if (filledRef.current.size && (opts?.detail!==undefined || next.cellSize!==prev.cellSize)) {
       const nextFilled = remapFilledToGrid(filledRef.current, prev, next)
       filledRef.current = nextFilled
       setFilled(nextFilled)
+      const noJoins=new Set<string>();brokenRef.current=noJoins;setBrokenJoins(noJoins)
     }
     setCornerRadius((r) => {
+      if(next.cellSize===prev.cellSize)return r
       const scaled = r * (next.cellSize / prev.cellSize)
       const max = Math.max(4, Math.round(next.cellSize * 0.45))
       return Math.min(Math.round(scaled * 10) / 10, max)
@@ -911,8 +1006,15 @@ export default function App() {
     [library, cornerRadius, shapeId, brushRotation],
   )
 
+  const characterTools = <section className="workshop-characters" aria-label="Characters"><h3 className="font-design-heading">Characters</h3><FontDesignTools {...designTools.props} section="characters" renderCharacter={char => {
+    const contribution=publishedTypeface.get(char)
+    const name=customSymbols.find(symbol=>symbol.char===char && !symbol.deleted)?.name ?? char
+    return <>{contribution?.svg && <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(contribution.svg)}`} alt=""/>}<small>{name}</small></>
+  }}/></section>
+
   const wordTester = (
     <WordTester
+      strokeActive={paintingStroke}
       activeChar={displayGuideLetter}
       activeFilled={filled}
       drafts={glyphs}
@@ -922,18 +1024,22 @@ export default function App() {
       cornerRadius={cornerRadius}
       brokenJoins={brokenJoins}
       holeMode={holeMode}
-      value={testString}
-      onValueChange={setTestString}
-      collapsed={desktop ? !wordTesterOpen : false}
-      onToggleCollapsed={desktop ? () => setWordTesterOpen((open) => !open) : undefined}
+                  fontDesign={fontDesign}
+      value={specimenText}
+      settings={specimen}
+      onSettingsChange={setSpecimen}
+      customSymbols={customSymbols}
+      onValueChange={setSpecimenText}
+      collapsed={!wordTesterOpen}
+      onToggleCollapsed={() => setWordTesterOpen((open) => !open)}
       onSelectChar={(ch) => {
-        // Only letters of the workshop alphabet are drawable; digits and punctuation are not.
-        if (!LETTERS.includes(ch.toLowerCase())) {
+        // Character selection preserves custom Unicode mappings.
+        if (!ch) {
           setNotice(`"${ch}" is not part of this alphabet.`)
           return
         }
         const isUpper = ch === ch.toUpperCase() && ch !== ch.toLowerCase()
-        switchToLetter(ch.toLowerCase(), isUpper)
+        switchToLetter(ch, isUpper)
       }}
     />
   )
@@ -975,16 +1081,16 @@ export default function App() {
           <span role="status" className={cn('festival-save', saveFailed && 'is-error')}>{saveStatus}</span>
           <span role="status" className="festival-notice">{notice}</span>
           <span className="festival-links">
-            <span className="festival-room-group" aria-label="Room boom">
-              <strong>boom</strong>
-              <a href="?view=projection&room=boom" target="_blank" rel="noreferrer">
-                Projection ↗
+            <span className="festival-room-group" aria-label={`Room ${live.room}`}>
+              <strong>{live.room}</strong>
+              <a href={`?view=projection&room=${encodeURIComponent(live.room)}`} onClick={() => writeSession(false)}>
+                Projection →
               </a>
-              <a href="?view=studio&station=a&room=boom" target="_blank" rel="noreferrer">
-                Desk A ↗
+              <a href={`?view=studio&station=a&room=${encodeURIComponent(live.room)}`} onClick={() => writeSession(false)}>
+                Desk A →
               </a>
-              <a href="?view=studio&station=b&room=boom" target="_blank" rel="noreferrer">
-                Desk B ↗
+              <a href={`?view=studio&station=b&room=${encodeURIComponent(live.room)}`} onClick={() => writeSession(false)}>
+                Desk B →
               </a>
             </span>
           </span>
@@ -1013,7 +1119,7 @@ export default function App() {
 
               <div className="mt-4">
                 <Slider
-                  label={`Rounded corners · ${formatPx(cornerRadius)}px`}
+                  label={`Corner roundness · ${formatPx(cornerRadius)} px`}
                   min={0}
                   max={cornerMax}
                   step={0.5}
@@ -1093,7 +1199,7 @@ export default function App() {
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <div className="festival-contribute">
                 <p role="status">{notice}</p>
-                <button type="button" data-testid="publish-glyph" disabled={!filled.size} onClick={publishGlyph}>Add {displayGuideLetter} to the typeface</button>
+                <button type="button" data-testid="publish-glyph" disabled={!filled.size || publishing} onClick={publishGlyph}>Add {displayGlyphName} to the typeface</button>
                 <button type="button" data-testid="next-visitor" onClick={() => {
                   // A new visitor starts with plain tools, whatever the last one left on.
                   setPaintTool('stamp')
@@ -1101,7 +1207,7 @@ export default function App() {
                   setBrushRotation(0)
                   setSymmetryMode('none')
                   setShowJoinDots(false)
-                  const next = LETTERS.find(char => !publishedTypeface.has(guideUpper ? char.toUpperCase() : char) && char !== guideLetter)
+                  const next = nextEmptyLetter(displayGuideLetter, guideUpper, typefaceContributions, [...glyphsRef.current.values(), ...(live.liveRoom?.drafts ?? [])],symbolsRef.current)
                   if (next) {
                     switchToLetter(next, guideUpper)
                     setNotice(`Your letter is ${guideUpper ? next.toUpperCase() : next}. Draw it, then add it to the typeface.`)
@@ -1111,7 +1217,7 @@ export default function App() {
               <div className="relative z-20 flex shrink-0 items-center gap-1.5 border-b border-ink/10 px-2 py-1.5 lg:px-4 overflow-x-auto">
                 <ToolIcon label="Undo" disabled={!canUndo} onClick={undo} icon={<Undo2 className="h-4 w-4" />} />
                 <ToolIcon label="Redo" disabled={!canRedo} onClick={redo} icon={<Redo2 className="h-4 w-4" />} />
-                <ToolIcon label="Clear letter" disabled={!filled.size} onClick={clearCanvas} icon={<Trash2 className="h-4 w-4" />} />
+                <ToolIcon label="Clear letter" disabled={!filled.size || publishing} onClick={clearCanvas} icon={<Trash2 className="h-4 w-4" />} />
                 <div className="h-4 w-px bg-line shrink-0" />
                 {/* Guide toggle [G] */}
                 <ToolIcon
@@ -1137,7 +1243,7 @@ export default function App() {
                     type="button"
                     title="Nudge Left [Arrow Left]"
                     onClick={() => nudge(-1, 0)}
-                    disabled={!filled.size}
+                    disabled={!filled.size || publishing}
                     className="flex h-7 w-7 items-center justify-center rounded hover:bg-paper disabled:opacity-30 text-ink"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
@@ -1146,7 +1252,7 @@ export default function App() {
                     type="button"
                     title="Nudge Right [Arrow Right]"
                     onClick={() => nudge(1, 0)}
-                    disabled={!filled.size}
+                    disabled={!filled.size || publishing}
                     className="flex h-7 w-7 items-center justify-center rounded hover:bg-paper disabled:opacity-30 text-ink"
                   >
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -1155,7 +1261,7 @@ export default function App() {
                     type="button"
                     title="Nudge Up [Arrow Up]"
                     onClick={() => nudge(0, -1)}
-                    disabled={!filled.size}
+                    disabled={!filled.size || publishing}
                     className="flex h-7 w-7 items-center justify-center rounded hover:bg-paper disabled:opacity-30 text-ink"
                   >
                     <ArrowUp className="h-3.5 w-3.5" />
@@ -1164,7 +1270,7 @@ export default function App() {
                     type="button"
                     title="Nudge Down [Arrow Down]"
                     onClick={() => nudge(0, 1)}
-                    disabled={!filled.size}
+                    disabled={!filled.size || publishing}
                     className="flex h-7 w-7 items-center justify-center rounded hover:bg-paper disabled:opacity-30 text-ink"
                   >
                     <ArrowDown className="h-3.5 w-3.5" />
@@ -1331,13 +1437,14 @@ export default function App() {
                   shapeId={shapeId}
                   filled={filled}
                   onChange={commitFilled}
+                  onStrokeActive={setPaintingStroke}
                   brushSize={brushSize}
                   brushRotation={brushRotation}
                   stampMode={stampMode}
                   symmetryMode={symmetryMode}
                   cornerRadius={cornerRadius}
                   guideLetter={displayGuideLetter}
-                  showLetterGuide={showLetterGuide}
+                  showLetterGuide={showLetterGuide && STANDARD_CHARACTERS.includes(displayGuideLetter)}
                   letterScale={letterScale}
                   guideOpacity={guideOpacity}
                   softness={softness}
@@ -1349,6 +1456,7 @@ export default function App() {
                   showGridGuide={showGridGuide}
                   gridGuideOpacity={gridGuideOpacity}
                   holeMode={holeMode}
+                  fontDesign={fontDesign}
                   meltOffRevision={meltOffRevision}
                 />
               </div>
@@ -1526,7 +1634,7 @@ export default function App() {
                       </button>
                     </div>
                     <Slider
-                      label={`Fill size · ${formatPx(brushSize)}px`}
+                      label={`Shape size · ${formatPx(brushSize)} px`}
                       min={fillMin}
                       max={fillMax}
                       step={0.5}
@@ -1534,7 +1642,7 @@ export default function App() {
                       onChange={setBrushSize}
                     />
                     <Slider
-                      label={`Rounded corners · ${formatPx(cornerRadius)}px`}
+                      label={`Corner roundness · ${formatPx(cornerRadius)} px`}
                       min={0}
                       max={cornerMax}
                       step={0.5}
@@ -1651,6 +1759,8 @@ export default function App() {
                         className="h-5 w-5"
                       />
                     </label>
+                    {designTools}
+                    {characterTools}
                     {!desktop && <div className="-mx-3">{wordTester}</div>}
                   </div>
                 )}
@@ -1676,12 +1786,15 @@ export default function App() {
                   cornerRadius={cornerRadius}
                   brokenJoins={brokenJoins}
                   holeMode={holeMode}
-                  caption={displayGuideLetter}
+                  fontDesign={fontDesign}
+                  caption={displayGlyphName}
                 />
               </div>
               </div>
 
               <div>
+              {designTools}
+              {characterTools}
               <section className="festival-versions" data-testid="festival-collection">
                 <h2>The festival collection · {publishedTypeface.size} letters</h2>
                 <p>
@@ -1694,7 +1807,7 @@ export default function App() {
                   onClick={() => {
                   const payloads = [...publishedTypeface.values()].map(({ draft }) => ({
                     grid: draft.grid!, library, filledRegions: draft.filled, glyphChar: draft.char,
-                    softness: draft.softness!, cornerRadius: draft.cornerRadius,
+                    softness: draft.softness!, cornerRadius: draft.cornerRadius, fontDesign:draft.fontDesign,
                     brokenJoins: new Set(draft.brokenJoins),
                     holeMode: draft.holeMode,
                   }))
@@ -1868,8 +1981,8 @@ export default function App() {
                     onJoin={live.joinSession}
                   />
                   <div className="grid grid-cols-2 gap-2">
-                    <a className="options-link" href="?view=projection&room=boom" target="_blank" rel="noreferrer">Projection ↗</a>
-                    <a className="options-link" href="?view=join-lab" target="_blank" rel="noreferrer">Shape joins ↗</a>
+                    <a className="options-link" href={`?view=projection&room=${encodeURIComponent(live.room)}`} onClick={() => writeSession(false)}>Projection →</a>
+                    <a className="options-link" href={`?view=join-lab&room=${encodeURIComponent(live.room)}`} onClick={() => writeSession(false)}>Shape joins →</a>
                     <button type="button" className="options-link" onClick={() => void live.copyWallLink('projection')}>Copy projection link</button>
                     <button type="button" className="options-link" onClick={backupSession}>Editable backup</button>
                     <button type="button" className="options-link" onClick={() => importRef.current?.click()}>Restore backup</button>
@@ -2003,7 +2116,7 @@ export default function App() {
                 <div>
                   <SectionTitle>Corners</SectionTitle>
                   <Slider
-                    label={`Rounded corners · ${formatPx(cornerRadius)}px`}
+                    label={`Corner roundness · ${formatPx(cornerRadius)} px`}
                     min={0}
                     max={cornerMax}
                     step={0.5}

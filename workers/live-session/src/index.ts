@@ -1,7 +1,7 @@
 /**
  * Shared festival room for grid-workshop install desks + wall.
  * GET/WS public; PUT/DELETE require LIVE_WRITE_TOKEN when configured.
- * DELETE also requires CLEAR_ROOM_PASSWORD (X-Clear-Password header) when configured.
+ * DELETE / archive restore require a configured CLEAR_ROOM_PASSWORD (X-Clear-Password header).
  * WebSocket clients receive room broadcasts after each PUT/DELETE.
  */
 
@@ -22,6 +22,7 @@ export interface LiveCue {
 }
 
 export interface LiveRoomState {
+  customSymbols?: {char:string;name:string;updatedAt:string;deleted?:boolean}[]
   updatedAt: string
   /** Bumps on DELETE so stale pre-clear PUTs are ignored. */
   wipeEpoch?: number
@@ -31,6 +32,8 @@ export interface LiveRoomState {
   draftUpdatedAt: Record<string, string>
   /** Per-desk live previews keyed by station (a / b). */
   liveCues?: Record<string, LiveCue>
+  /** Station clocks survive empty-preview tombstones. */
+  liveCueUpdatedAt?: Record<string, string>
   /** Newest cue (compat); prefer liveCues for multi-desk walls. */
   liveCue?: LiveCue
   /** Letter ownership per desk station. */
@@ -45,7 +48,7 @@ export interface Env {
 
 const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Clear-Password',
   'Access-Control-Max-Age': '86400',
 }
@@ -165,7 +168,7 @@ function authorized(request: Request, env: Env): boolean {
 
 function clearAllowed(request: Request, env: Env): boolean {
   const expected = env.CLEAR_ROOM_PASSWORD
-  if (!expected) return true
+  if (!expected) return false
   return (request.headers.get('X-Clear-Password') ?? '') === expected
 }
 
@@ -185,6 +188,26 @@ function contributionId(item: unknown): string | null {
   return obj && typeof obj.id === 'string' ? obj.id : null
 }
 
+/** Keep symbol ordering identical to the client without depending on its UI modules. */
+function mergeCustomSymbols(a: NonNullable<LiveRoomState['customSymbols']>, b: NonNullable<LiveRoomState['customSymbols']>) {
+  const standard = 'abcdefghijklmnopqrstuvwxyzåäöABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ0123456789!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+  const symbols = new Map<string, NonNullable<LiveRoomState['customSymbols']>[number]>()
+  for (const symbol of [...a, ...b]) {
+    if (!symbol || typeof symbol.char !== 'string' || [...symbol.char].length !== 1 ||
+        /[\p{Cc}\p{Cf}\p{Cs}\p{M}\s]/u.test(symbol.char) || /[\uFDD0-\uFDEF]/u.test(symbol.char) ||
+        (symbol.char.codePointAt(0)! & 0xffff) >= 0xfffe || standard.includes(symbol.char) ||
+        typeof symbol.name !== 'string' || !symbol.name.trim() || symbol.name.length > 40 ||
+        typeof symbol.updatedAt !== 'string' || !Number.isFinite(Date.parse(symbol.updatedAt)) ||
+        (symbol.deleted !== undefined && typeof symbol.deleted !== 'boolean')) continue
+    const old = symbols.get(symbol.char)
+    const time = Date.parse(symbol.updatedAt), oldTime = old ? Date.parse(old.updatedAt) : -Infinity
+    if (!old || time > oldTime || (time === oldTime && (
+      symbol.deleted && !old.deleted || !!symbol.deleted === !!old.deleted && symbol.name > old.name
+    ))) symbols.set(symbol.char, { ...symbol, updatedAt: new Date(time).toISOString() })
+  }
+  return [...symbols.values()].sort((x, y) => x.char.codePointAt(0)! - y.char.codePointAt(0)!)
+}
+
 function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): LiveRoomState {
   const storedEpoch = typeof stored.wipeEpoch === 'number' ? stored.wipeEpoch : 0
   // Legacy clients omit wipeEpoch — treat as current epoch so post-clear painting still works.
@@ -196,7 +219,27 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
     return stored
   }
 
-  const liveCues: Record<string, LiveCue> = { ...(stored.liveCues ?? {}) }
+  const liveCues: Record<string, LiveCue> = {}
+  // Canonical station keys also repair rooms written by older clients.
+  for (const [rawKey, cue] of Object.entries(stored.liveCues ?? {})) {
+    const key = stationKey({ ...cue, station: rawKey })
+    if (!liveCues[key] || cue.updatedAt >= liveCues[key].updatedAt) {
+      liveCues[key] = { ...cue, station: key }
+    }
+  }
+  const liveCueUpdatedAt: Record<string, string> = {}
+  for (const [rawKey, at] of Object.entries(stored.liveCueUpdatedAt ?? {})) {
+    const key = stationKey({ station: rawKey } as LiveCue)
+    if (!liveCueUpdatedAt[key] || at >= liveCueUpdatedAt[key]) liveCueUpdatedAt[key] = at
+  }
+  for (const [key, cue] of Object.entries(liveCues)) {
+    if (!liveCueUpdatedAt[key] || cue.updatedAt >= liveCueUpdatedAt[key]) liveCueUpdatedAt[key] = cue.updatedAt
+  }
+  const desks: Record<string, DeskPresence> = {}
+  for (const [rawKey, presence] of Object.entries(stored.desks ?? {})) {
+    const key = stationKey({ station: rawKey } as LiveCue)
+    if (!desks[key] || presence.seenAt >= desks[key].seenAt) desks[key] = presence
+  }
   // Migrate legacy single cue into the map once.
   if (stored.liveCue?.liveSvg) {
     const key = stationKey(stored.liveCue)
@@ -205,14 +248,22 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
   const next: LiveRoomState = {
     updatedAt: new Date().toISOString(),
     wipeEpoch: storedEpoch,
+    customSymbols: [...(stored.customSymbols ?? [])],
     contributions: [...stored.contributions],
     drafts: [...stored.drafts],
     draftSvgs: { ...stored.draftSvgs },
     draftUpdatedAt: { ...stored.draftUpdatedAt },
     liveCues,
+    liveCueUpdatedAt,
     liveCue: stored.liveCue,
-    desks: { ...(stored.desks ?? {}) },
+    desks,
   }
+
+  const symbolMerge = mergeCustomSymbols(next.customSymbols ?? [], Array.isArray(incoming.customSymbols) ? incoming.customSymbols : [])
+  if (symbolMerge.length <= 512 && symbolMerge.filter(symbol => !symbol.deleted).length <= 256) {
+    next.customSymbols = symbolMerge
+  }
+
 
   if (incoming.desks && typeof incoming.desks === 'object') {
     for (const [rawKey, value] of Object.entries(incoming.desks)) {
@@ -259,7 +310,7 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
         const filled = asRecord(draft)?.filled
         const empty = Array.isArray(filled) && filled.length === 0
         if (empty) {
-          byChar.delete(ch)
+          if(asRecord(draft)?.fontDesign)byChar.set(ch,draft);else byChar.delete(ch)
           delete next.draftSvgs[ch]
         } else {
           byChar.set(ch, draft)
@@ -291,12 +342,21 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
   }
 
   if (incoming.liveCues && typeof incoming.liveCues === 'object') {
-    for (const [key, cue] of Object.entries(incoming.liveCues)) {
+    for (const [rawKey, cue] of Object.entries(incoming.liveCues)) {
       if (!cue || typeof cue !== 'object') continue
       const typed = cue as LiveCue
-      if (typeof typed.char !== 'string' || typeof typed.updatedAt !== 'string') continue
+      if (typeof typed.char !== 'string' || typeof typed.updatedAt !== 'string' ||
+          typeof typed.liveSvg !== 'string') continue
+      const key = stationKey({ ...typed, station: rawKey })
+      const existing = next.liveCues![key]
+      // Preview and letter geometry must follow the same clock. In particular a
+      // delayed pre-clear preview must not resurrect a cleared letter.
+      const letterAt = next.draftUpdatedAt[typed.char] ?? ''
+      if ((existing && typed.updatedAt < existing.updatedAt) ||
+          typed.updatedAt < (liveCueUpdatedAt[key] ?? '') || typed.updatedAt < letterAt) continue
+      liveCueUpdatedAt[key] = typed.updatedAt
       if (!typed.liveSvg) delete next.liveCues![key]
-      else next.liveCues![key] = { ...typed, station: typed.station || key }
+      else next.liveCues![key] = { ...typed, station: key }
     }
   }
 
@@ -309,16 +369,16 @@ function mergeRooms(stored: LiveRoomState, incoming: Partial<LiveRoomState>): Li
     ) {
       const key = stationKey(cue)
       const existing = next.liveCues![key]
-      if (!existing || cue.updatedAt >= existing.updatedAt) {
-        if (!cue.liveSvg) {
-          delete next.liveCues![key]
-        } else {
-          next.liveCues![key] = {
-            char: cue.char,
-            liveSvg: cue.liveSvg,
-            updatedAt: cue.updatedAt,
-            station: key,
-          }
+      if ((!existing || cue.updatedAt >= existing.updatedAt) &&
+          cue.updatedAt >= (liveCueUpdatedAt[key] ?? '') &&
+          cue.updatedAt >= (next.draftUpdatedAt[cue.char] ?? '')) {
+        liveCueUpdatedAt[key] = cue.updatedAt
+        if (!cue.liveSvg) delete next.liveCues![key]
+        else next.liveCues![key] = {
+          char: cue.char,
+          liveSvg: cue.liveSvg,
+          updatedAt: cue.updatedAt,
+          station: key,
         }
       }
     }
@@ -411,9 +471,10 @@ export class FestivalRoom implements DurableObject {
         const wipeEpoch = typeof current.wipeEpoch === 'number' ? current.wipeEpoch : 0
         const restored: LiveRoomState = {
           ...hit.room,
-          wipeEpoch,
+          wipeEpoch: wipeEpoch + 1,
           updatedAt: new Date().toISOString(),
           liveCues: {},
+          liveCueUpdatedAt: {},
           liveCue: undefined,
           desks: {},
         }
@@ -507,6 +568,9 @@ export default {
     // Clear and restore both rewrite the live room — same password gate.
     const needsClearPassword =
       request.method === 'DELETE' || (request.method === 'POST' && parsed.restore)
+    if (needsClearPassword && !env.CLEAR_ROOM_PASSWORD) {
+      return json({ error: 'Shared room administration is not configured' }, 503)
+    }
     if (needsClearPassword && !clearAllowed(request, env)) {
       return json({ error: 'Wrong password' }, 403)
     }

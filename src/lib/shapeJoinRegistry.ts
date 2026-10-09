@@ -55,8 +55,8 @@ export const DEFAULT_SHAPE_METHODS: Record<PresetShapeId, JoinMethod> = {
  */
 export const DEFAULT_DIRECTION_OVERRIDES: Partial<Record<PresetShapeId, Partial<Record<string, JoinMethod>>>> = {
   square: {
-    horizontal: 'current',
-    vertical: 'current',
+    horizontal: 'weld',
+    vertical: 'weld',
     'diagonal-right': 'weld',
     'diagonal-left': 'weld',
     elbow: 'weld',

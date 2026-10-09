@@ -4,11 +4,13 @@
  */
 import { useEffect, useState } from 'react'
 import { LiveSessionJoin } from '@/components/LiveSessionJoin'
-import { ALPHABET, FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
+import { FESTIVAL_KEY, latestContributions, svgImage, type FestivalSession } from '@/lib/festival'
+import { projectionLetters } from '@/lib/projectionAlphabet'
+import { STANDARD_CHARACTERS } from '@/lib/fontDesign'
 import {
-  activeLiveCues,
+  projectionLiveCues,
+  getLiveConfig,
   isPresenceFresh,
-  letterPreviewSvg,
   normalizeStation,
   readLocalSessionSafe,
   type LiveRoomState,
@@ -20,6 +22,7 @@ const WALL_DESKS = ['a', 'b'] as const
 export function Projection() {
   const [session, setSession] = useState<FestivalSession | null>(() => readLocalSessionSafe())
   const [roomBlob, setRoomBlob] = useState<LiveRoomState | null>(null)
+  const [now, setNow] = useState(Date.now)
   const [canFullscreen] = useState(() => typeof document.documentElement.requestFullscreen === 'function')
 
   const live = useLiveSession({
@@ -30,6 +33,11 @@ export function Projection() {
       setSession(nextSession)
     },
   })
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     document.title = 'Wall projection · grid workshop'
@@ -56,30 +64,25 @@ export function Projection() {
 
   const contributions = session?.contributions ?? []
   const published = latestContributions(contributions)
-  const draftSvgs = roomBlob?.draftSvgs ?? {}
-  const liveCues = activeLiveCues(roomBlob)
+  const symbolNames = new Map((session?.customSymbols ?? []).filter(symbol => !symbol.deleted).map(symbol => [symbol.char, symbol.name]))
+  const knownCharacters = new Set([...STANDARD_CHARACTERS, ...symbolNames.keys()])
+  const liveCues = projectionLiveCues(roomBlob, now).filter(cue => knownCharacters.has(cue.char))
+  const labelFor = (char: string) => symbolNames.get(char) || char
   const liveChars = new Set(liveCues.map((cue) => cue.char))
   const activeChar =
     liveCues[liveCues.length - 1]?.char ?? session?.active.char ?? 'a'
-  const drawingLabel = liveCues.length
-    ? [...new Set(liveCues.map((cue) => cue.char))].join(' · ')
-    : activeChar
+  const drawingLabel = [...new Set(liveCues.map((cue) => labelFor(cue.char)))].join(' · ')
   const upper = activeChar !== activeChar.toLowerCase()
-  const letters = ALPHABET.map((char) => (upper ? char.toUpperCase() : char))
+  const letters = projectionLetters(published.keys(), upper, session?.customSymbols)
+  const station = getLiveConfig().station
+  const navigationSuffix = `&room=${encodeURIComponent(live.room)}${station ? `&station=${encodeURIComponent(station)}` : ''}`
   const complete = letters.filter((char) => published.has(char)).length
   const localLiveSvg =
     session?.liveSvg && session.active.filled.length ? session.liveSvg : ''
-  // Desk A and B always have a pane; workshop / other stations only while presence is fresh
-  // (closing the tab releases presence so leftover cues do not pile up on the wall).
+  // The public wall always shows exactly the two installation desks.
   const cueByStation = new Map(liveCues.map((cue) => [normalizeStation(cue.station) || 'desk', cue]))
   const desks = roomBlob?.desks ?? {}
-  const fixedDesks = new Set<string>(WALL_DESKS)
-  const extras = new Set<string>()
-  for (const key of [...cueByStation.keys(), ...Object.keys(desks)]) {
-    if (fixedDesks.has(key)) continue
-    if (isPresenceFresh(desks[key])) extras.add(key)
-  }
-  const stations = [...WALL_DESKS, ...extras]
+  const stations = WALL_DESKS
   if (!roomBlob && localLiveSvg) {
     cueByStation.set('a', { char: activeChar, liveSvg: localLiveSvg, updatedAt: '', station: 'a' })
   }
@@ -88,7 +91,7 @@ export function Projection() {
     return {
       station,
       cue: cueByStation.get(station),
-      heldChar: isPresenceFresh(presence) ? presence!.char : '',
+      heldChar: isPresenceFresh(presence, now) && knownCharacters.has(presence!.char) ? presence!.char : '',
     }
   })
 
@@ -97,6 +100,10 @@ export function Projection() {
       <header className="festival-wall-heading">
         <div><p>BECKMANS · A TYPEFACE MADE TOGETHER</p><h1>Our letters, today.</h1></div>
         <span>{complete} / {letters.length} letters · {contributions.length} contributions</span>
+        <nav aria-label="App views" style={{ display: 'flex', gap: '1rem' }}>
+          <a href={`?view=studio${navigationSuffix}`}>Studio</a>
+          <a href={`?view=workshop${navigationSuffix}`}>Workshop</a>
+        </nav>
       </header>
       <LiveSessionJoin
         compact
@@ -108,29 +115,24 @@ export function Projection() {
         onJoin={live.joinSession}
       />
       <div className="festival-wall-split">
-        <section className="festival-alphabet" aria-label="Collective typeface">
+        <section className={`festival-alphabet${letters.length > 30 ? ' has-extras' : ''}`} aria-label="Collective typeface"
+          style={{ gridTemplateRows: `repeat(${Math.max(5, Math.ceil(letters.length / 6))}, minmax(${letters.length > 30 ? '64px' : '0'}, 1fr))` }}>
           {letters.map((char) => {
-            const preview = letterPreviewSvg(
-              char,
-              contributions,
-              draftSvgs,
-              roomBlob?.liveCues ?? roomBlob?.liveCue,
-            )
+            const preview = published.get(char)
             const isLive = liveChars.has(char)
             return (
               <div
                 key={char}
-                className={`festival-letter ${isLive || (liveCues.length === 0 && char === activeChar) ? 'is-active' : ''} ${preview.kind === 'draft' || preview.kind === 'live' ? 'is-draft' : ''}`}
+                className={`festival-letter ${isLive ? 'is-active' : ''}`}
               >
-                {preview.svg ? (
-                  <img src={svgImage(preview.svg)} alt={char} />
+                {preview?.svg ? (
+                  <img src={svgImage(preview.svg)} alt={labelFor(char)} />
                 ) : (
-                  <span className="festival-placeholder">{char}</span>
+                  <span className="festival-placeholder">{labelFor(char)}</span>
                 )}
                 <small>
-                  {char}
+                  {labelFor(char)}
                   {isLive ? ' · drawing now' : ''}
-                  {preview.kind === 'draft' ? ' · draft' : ''}
                 </small>
               </div>
             )
@@ -138,18 +140,11 @@ export function Projection() {
         </section>
         <section className="festival-live" aria-label="Current glyph">
           <p>
-            DRAWING NOW <strong>{drawingLabel}</strong>
+            {drawingLabel ? <>DRAWING NOW <strong>{drawingLabel}</strong></> : 'READY TO DRAW'}
           </p>
           <div className="festival-live-stack is-multi" data-testid="festival-live-stack">
             {panes.map(({ station, cue, heldChar }) => {
-              const desk =
-                station === 'a' || station === 'b'
-                  ? `Desk ${station.toUpperCase()}`
-                  : /^w_/i.test(station)
-                    ? 'Workshop'
-                    : station === 'desk'
-                      ? 'Desk'
-                      : `Desk ${station.toUpperCase()}`
+              const desk = `Desk ${station.toUpperCase()}`
               const char = cue?.char || heldChar
               return (
                 <div
@@ -158,12 +153,12 @@ export function Projection() {
                   data-testid={`festival-live-pane-${station}`}
                   data-drawing={cue ? cue.char : undefined}
                 >
-                  <small>{char ? `${desk} · ${char}` : desk}</small>
+                  <small>{char ? `${desk} · ${labelFor(char)}` : desk}</small>
                   {cue ? (
-                    <img src={svgImage(cue.liveSvg)} alt={`${desk} drawing ${cue.char}`} />
+                    <img src={svgImage(cue.liveSvg)} alt={`${desk} drawing ${labelFor(cue.char)}`} />
                   ) : (
                     <div className="festival-waiting">
-                      {heldChar ? `Starting ${heldChar}…` : 'Your letter starts here.'}
+                      {heldChar ? `Starting ${labelFor(heldChar)}…` : 'Your letter starts here.'}
                     </div>
                   )}
                 </div>
@@ -174,9 +169,10 @@ export function Projection() {
         </section>
       </div>
       <footer className="festival-phrase" aria-label="Collective lettering specimen">
-        {[...'vi formar tillsammans'].map((char, index) => {
-          const displayed = upper ? char.toUpperCase() : char
-          const contribution = published.get(displayed)
+        {[...'Beckmans New Fonts Festival 2026'].map((char, index) => {
+          const displayed = char
+          const oppositeCase = char === char.toLowerCase() ? char.toUpperCase() : char.toLowerCase()
+          const contribution = published.get(displayed) ?? published.get(oppositeCase)
           return char === ' ' ? <span key={index} className="festival-space" /> : contribution ?
             <img key={index} src={svgImage(contribution.svg)} alt={displayed} /> :
             <span key={index} className="festival-missing">{displayed}</span>

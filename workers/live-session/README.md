@@ -9,7 +9,7 @@ Cloudflare Worker + Durable Object that stores one shared festival room JSON per
 | `GET` | `/rooms/:room` | Public |
 | `GET` | `/rooms/:room/ws` | Public WebSocket — initial snapshot + push on PUT/DELETE |
 | `PUT` | `/rooms/:room` | Public unless `LIVE_WRITE_TOKEN` is set |
-| `DELETE` | `/rooms/:room` | Same as PUT, plus `X-Clear-Password` when `CLEAR_ROOM_PASSWORD` is set — archives the room, then clears it |
+| `DELETE` | `/rooms/:room` | Same as PUT, plus matching `X-Clear-Password`; requires configured `CLEAR_ROOM_PASSWORD` — archives the room, then clears it |
 | `GET` | `/rooms/:room/archives` | Public — list of archived (cleared) sessions |
 | `GET` | `/rooms/:room/archives/:id` | Public — one archived room |
 | `POST` | `/rooms/:room/archives/:id/restore` | Same as DELETE — replaces the room with the archive |
@@ -28,7 +28,7 @@ npx wrangler secret put CLEAR_ROOM_PASSWORD
 # optional lock: npx wrangler secret put LIVE_WRITE_TOKEN
 ```
 
-Until `CLEAR_ROOM_PASSWORD` is set, the Worker accepts any clear or restore; only the app's own password prompt stands in the way.
+Clear and restore are fail-closed: until `CLEAR_ROOM_PASSWORD` is configured, the Worker returns 503 for either action. A wrong or missing supplied password returns 403. Public reading and painting remain available unless a write token is configured.
 
 Copy the Worker URL into the app:
 

@@ -3,7 +3,7 @@
  * Field melts in `fieldExperiments.ts` build on these.
  */
 
-function distToSeg(
+function distSquaredToSeg(
   px: number,
   py: number,
   ax: number,
@@ -14,10 +14,10 @@ function distToSeg(
   const vx = bx - ax
   const vy = by - ay
   const len2 = vx * vx + vy * vy
-  if (len2 < 1e-12) return Math.hypot(px - ax, py - ay)
+  if (len2 < 1e-12) return (px-ax)**2+(py-ay)**2
   let t = ((px - ax) * vx + (py - ay) * vy) / len2
   t = Math.max(0, Math.min(1, t))
-  return Math.hypot(px - (ax + vx * t), py - (ay + vy * t))
+  return (px-ax-vx*t)**2+(py-ay-vy*t)**2
 }
 
 /** Even-odd inside test (matches ring holes). */
@@ -46,11 +46,12 @@ function minEdgeDist(x: number, y: number, rings: [number, number][][]): number 
     for (let i = 0; i < n; i++) {
       const a = ring[i]
       const b = ring[(i + 1) % n]
-      const d = distToSeg(x, y, a[0], a[1], b[0], b[1])
+      const d = distSquaredToSeg(x, y, a[0], a[1], b[0], b[1])
       if (d < best) best = d
     }
   }
-  return best
+  // Take one square root per outline, not one expensive hypot per edge/sample.
+  return Math.sqrt(best)
 }
 
 /** Signed distance: negative inside the filled silhouette (holes stay outside). */

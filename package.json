@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
+    "clipper-lib": "^6.4.2",
     "clsx": "^2.1.1",
     "lucide-react": "^1.46.0",
     "opentype.js": "^2.0.0",

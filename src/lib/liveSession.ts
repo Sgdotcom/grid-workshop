@@ -1,3 +1,4 @@
+import { mergeSymbols, type CustomSymbol, type FontDesign } from './fontDesign'
 /**
  * Cloudflare Worker live room — shared drafts, contributions, and wall cue.
  * When VITE_LIVE_SESSION_URL is unset, all helpers no-op (local-only).
@@ -51,6 +52,7 @@ const PRESENCE_HEARTBEAT_MS = 20_000
 const CLEAR_ROOM_PASSWORD_SHA256 = 'fc64ad09595e7739718c814b23ca6335906ef7916c20372cff02e046bad53d18'
 
 export interface LiveRoomState {
+  customSymbols?: CustomSymbol[]
   updatedAt: string
   /** Bumps on DELETE; clients echo this so stale pre-clear PUTs are ignored. */
   wipeEpoch?: number
@@ -333,23 +335,25 @@ export function buildLivePayload(
   const letterAt = session.draftUpdatedAt?.[ch] || roomAt
   const activeDraft =
     session.drafts.find((d) => d.char === ch) ??
-    (session.active.filled.length ? session.active : null)
+    session.active
   const hasInk = !!(activeDraft && activeDraft.filled.length)
   const stationRaw = (opts?.station ?? getLiveConfig().station ?? 'desk').slice(0, 8)
   const station = stationRaw.replace(/[^a-zA-Z0-9_-]/g, '') || 'desk'
   const draftSvgs: Record<string, string> = {}
-  const draftUpdatedAt: Record<string, string> = { [ch]: letterAt }
+  const writesLetter = hasInk || !!session.draftUpdatedAt?.[ch]
+  const draftUpdatedAt: Record<string, string> = writesLetter ? { [ch]: letterAt } : {}
   if (hasInk && session.liveSvg) {
     draftSvgs[ch] = session.liveSvg
-  } else if (!hasInk) {
+  } else if (!hasInk && writesLetter) {
     // Tombstone: Worker deletes this char's draft preview.
     draftSvgs[ch] = ''
   }
   const payload: Partial<LiveRoomState> = {
     updatedAt: roomAt,
+    customSymbols: session.customSymbols,
     wipeEpoch: typeof opts?.wipeEpoch === 'number' ? opts.wipeEpoch : 0,
     contributions: session.contributions,
-    drafts: hasInk && activeDraft
+    drafts: !writesLetter ? [] : hasInk && activeDraft
       ? [activeDraft]
       : [
           {
@@ -359,12 +363,20 @@ export function buildLivePayload(
             grid: session.active.grid,
             softness: session.active.softness,
             cornerRadius: session.active.cornerRadius,
+            fontDesign:session.active.fontDesign,
             holeMode: session.active.holeMode,
           },
         ],
     draftSvgs,
     draftUpdatedAt,
     ...(desks ? { desks } : {}),
+  }
+  // A quick letter switch must still deliver the departing letter's last edit.
+  for (const draft of session.drafts) {
+    const at = session.draftUpdatedAt?.[draft.char]
+    if (draft.char === ch || !at || (!draft.filled.length&&!draft.fontDesign)) continue
+    payload.drafts!.push(draft)
+    draftUpdatedAt[draft.char] = at
   }
   // Only tombstone live cues when the letter is actually empty. If we still have
   // ink but liveSvg is briefly missing (unload / race), leave the prior cue alone.
@@ -430,7 +442,7 @@ export function mergeDrafts(
 ): GlyphDraft[] {
   const byChar = new Map<string, GlyphDraft>()
   for (const draft of local) {
-    if (draft.filled.length) byChar.set(draft.char, draft)
+    if (draft.filled.length || draft.fontDesign) byChar.set(draft.char, draft)
   }
   for (const draft of remote) {
     const remoteAt = remoteTimes[draft.char] ?? ''
@@ -439,7 +451,7 @@ export function mergeDrafts(
     const remoteWins = !existing || !localAt || (remoteAt && remoteAt >= localAt) || (!localAt && remoteAt)
     if (!remoteWins) continue
     // Empty remote draft is a tombstone (clear letter).
-    if (!draft.filled.length) {
+    if (!draft.filled.length && !draft.fontDesign) {
       byChar.delete(draft.char)
       continue
     }
@@ -451,11 +463,12 @@ export function mergeDrafts(
 /** Drop local drafts the room has cleared (no draftSvg, but draftUpdatedAt set). */
 export function pruneClearedDrafts(
   drafts: GlyphDraft[],
-  room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'>,
+  room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'> & {drafts?:GlyphDraft[]},
 ): GlyphDraft[] {
   const times = room.draftUpdatedAt ?? {}
   const svgs = room.draftSvgs ?? {}
   return drafts.filter((draft) => {
+    if (draft.fontDesign) return true
     if (!times[draft.char]) return true
     if (svgs[draft.char]) return true
     return false
@@ -465,9 +478,9 @@ export function pruneClearedDrafts(
 /** True when the room has tombstoned this letter (shared clear). */
 export function isLetterClearedInRoom(
   char: string,
-  room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'>,
+  room: Pick<LiveRoomState, 'draftSvgs' | 'draftUpdatedAt'> & {drafts?:GlyphDraft[]},
 ): boolean {
-  return !!(room.draftUpdatedAt?.[char] && !room.draftSvgs?.[char])
+  return !!(room.draftUpdatedAt?.[char] && !room.draftSvgs?.[char] && !room.drafts?.some(d=>d.char===char&&d.fontDesign))
 }
 
 /**
@@ -490,6 +503,7 @@ export function remoteDraftIsNewer(
  * Compared by reference, so every local edit must replace at least one of them.
  */
 export interface LetterClockBase {
+  fontDesign?: FontDesign
   char: string
   filled: ReadonlyMap<string, FilledRegion>
   brokenJoins: ReadonlySet<string>
@@ -509,7 +523,8 @@ export function letterUnchanged(base: LetterClockBase | null, now: LetterClockBa
     base.grid === now.grid &&
     base.softness === now.softness &&
     base.cornerRadius === now.cornerRadius &&
-    base.holeMode === now.holeMode
+    base.holeMode === now.holeMode &&
+    JSON.stringify(base.fontDesign) === JSON.stringify(now.fontDesign)
   )
 }
 
@@ -562,14 +577,14 @@ export function planRemoteDeskApply(input: {
   if (meta?.restore) {
     const glyphs = new Map<string, GlyphDraft>()
     for (const draft of session.drafts) {
-      if (draft.filled.length) glyphs.set(draft.char, draft)
+      if (draft.filled.length || draft.fontDesign) glyphs.set(draft.char, draft)
     }
     const draftTimes = mergeDraftUpdatedAt(
       session.draftUpdatedAt ?? {},
       liveRoom.draftUpdatedAt ?? {},
     )
     const active = session.active
-    const activeChange: RemoteDeskActiveChange = active.filled.length
+    const activeChange: RemoteDeskActiveChange = (active.filled.length || active.fontDesign)
       ? { type: 'apply', draft: active }
       : { type: 'clear', remoteAt: draftTimes[active.char] ?? liveRoom.updatedAt }
     return {
@@ -591,7 +606,7 @@ export function planRemoteDeskApply(input: {
   let appliedActive: GlyphDraft | null = null
 
   for (const draft of session.drafts) {
-    if (!draft.filled.length) continue
+    if (!draft.filled.length && !draft.fontDesign) continue
     if (isLetterClearedInRoom(draft.char, liveRoom)) continue
     // Mid-stroke: keep our ink for the letter we are painting; push wins after.
     if (draft.char === activeChar && painting) continue
@@ -639,17 +654,17 @@ export function planRemoteDeskApply(input: {
 
 /** True after DELETE / full shared wipe — no publishes, drafts, or live cues. */
 export function isEmptyLiveRoom(room: LiveRoomState): boolean {
-  const hasDraftInk = (room.drafts ?? []).some((d) => Array.isArray(d.filled) && d.filled.length > 0)
+  const hasDraftInk = (room.drafts ?? []).some((d) => Array.isArray(d.filled) && (d.filled.length > 0 || !!d.fontDesign))
   const hasSvg = Object.keys(room.draftSvgs ?? {}).length > 0
   const hasLive = activeLiveCues(room).length > 0
-  return (room.contributions?.length ?? 0) === 0 && !hasDraftInk && !hasSvg && !hasLive
+  return !(room.customSymbols?.length) && (room.contributions?.length ?? 0) === 0 && !hasDraftInk && !hasSvg && !hasLive
 }
 
 /** Apply remote room into a FestivalSession for wall/projection display + localStorage. */
 export function applyRoomToSession(
   local: FestivalSession | null,
   room: LiveRoomState,
-  opts?: { keepLocalActive?: boolean; /** True after DELETE / Clear shared room (wipeEpoch bump). */ sharedWipe?: boolean },
+  opts?: { keepLocalActive?: boolean; /** True after DELETE / Clear shared room (wipeEpoch bump). */ sharedWipe?: boolean; restore?: boolean },
 ): FestivalSession {
   const base: FestivalSession = local ?? {
     version: 1,
@@ -667,6 +682,18 @@ export function applyRoomToSession(
     contributions: [],
     library: [...PRESET_SHAPES],
     liveSvg: '',
+  }
+
+  if (opts?.restore) {
+    const char = local?.active.char ?? room.drafts[0]?.char ?? base.active.char
+    const active = room.drafts.find((draft) => draft.char === char) ?? {
+      ...base.active, char, filled: [], brokenJoins: [], fontDesign: undefined,
+    }
+    return {
+      ...base, updatedAt: room.updatedAt, customSymbols: room.customSymbols ?? [],
+      contributions: room.contributions ?? [], drafts: room.drafts ?? [],
+      draftUpdatedAt: room.draftUpdatedAt ?? {}, active, liveSvg: room.draftSvgs[char] ?? '',
+    }
   }
 
   const keepActive = !!opts?.keepLocalActive && !!local
@@ -698,6 +725,7 @@ export function applyRoomToSession(
     const contributions = sharedWipe ? [] : keepActive ? (local?.contributions ?? []) : []
     return {
       ...base,
+      customSymbols: opts?.sharedWipe ? room.customSymbols ?? [] : mergeSymbols(base.customSymbols,room.customSymbols),
       updatedAt: room.updatedAt || base.updatedAt,
       contributions,
       // Keep this desk's other unpushed drafts too (only the active letter is ever pushed).
@@ -735,6 +763,7 @@ export function applyRoomToSession(
 
   return {
     ...base,
+      customSymbols: opts?.sharedWipe ? room.customSymbols ?? [] : mergeSymbols(base.customSymbols,room.customSymbols),
     updatedAt: room.updatedAt || base.updatedAt,
     contributions,
     drafts,
@@ -773,6 +802,27 @@ export function activeLiveCues(room: Pick<LiveRoomState, 'liveCues' | 'liveCue'>
   const fromMap = room.liveCues ? Object.values(room.liveCues).filter((c) => c?.liveSvg) : []
   if (fromMap.length) return fromMap.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
   return room.liveCue?.liveSvg ? [room.liveCue] : []
+}
+
+/** The public projection has two fixed desks; workshop tabs never add panes. */
+export function projectionLiveCues(room: LiveRoomState | null | undefined, now = Date.now()): LiveCue[] {
+  if (!room) return []
+  const newest = new Map<string, LiveCue>()
+  const entries = room.liveCues ? Object.entries(room.liveCues) : []
+  if (!entries.length && room.liveCue) entries.push([room.liveCue.station || 'desk', room.liveCue])
+  for (const [key, cue] of entries) {
+    if (!cue?.liveSvg) continue
+    const station = normalizeStation(cue.station || key)
+    if (station !== 'a' && station !== 'b') continue
+    const presence = Object.entries(room.desks ?? {})
+      .filter(([desk]) => normalizeStation(desk) === station)
+      .map(([, value]) => value)
+      .sort((a, b) => b.seenAt.localeCompare(a.seenAt))[0]
+    if (!isPresenceFresh(presence, now) || presence?.char !== cue.char) continue
+    const previous = newest.get(station)
+    if (!previous || cue.updatedAt > previous.updatedAt) newest.set(station, { ...cue, station })
+  }
+  return [...newest.values()].sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
 }
 
 function normalizeLiveInput(
@@ -912,10 +962,12 @@ export function createLiveSyncController(options: {
       return
     }
     const incomingEpoch = typeof room.wipeEpoch === 'number' ? room.wipeEpoch : 0
-    const sharedWipe = isEmptyLiveRoom(room) && incomingEpoch > wipeEpoch
+    const replaced = incomingEpoch > wipeEpoch
+    const sharedWipe = isEmptyLiveRoom(room) && replaced
+    const restore = replaced && !sharedWipe
     noteRoomMeta(room)
     // Shared wipe: drop any pending push that still holds pre-clear letters.
-    if (sharedWipe && pushTimer) {
+    if (replaced && pushTimer) {
       window.clearTimeout(pushTimer)
       pushTimer = null
     }
@@ -924,9 +976,10 @@ export function createLiveSyncController(options: {
     const session = applyRoomToSession(local, room, {
       keepLocalActive: options.keepLocalActive || painting,
       sharedWipe,
+      restore,
     })
     // UI owns localStorage — deliver the plan only; desks persist after they apply it.
-    options.onRoom?.(room, session, { sharedWipe })
+    options.onRoom?.(room, session, { sharedWipe, restore })
     setStatus({
       state: 'ok',
       message: source === 'ws' ? `Live · ${getLiveConfig().room}` : `Connected · ${getLiveConfig().room}`,

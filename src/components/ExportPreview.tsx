@@ -1,3 +1,4 @@
+import type { FontDesign } from '@/lib/fontDesign'
 /**
  * Export preview — finished glyph only (Softness joins baked in).
  * No blend brush / blur. Matches Download SVG.
@@ -15,6 +16,7 @@ export interface ExportPreviewProps {
   softness: number
   cornerRadius: number
   brokenJoins: BrokenJoins
+  fontDesign?: FontDesign
   holeMode?: HoleMode
 }
 
@@ -26,6 +28,7 @@ export function ExportPreview({
   cornerRadius,
   brokenJoins,
   holeMode = 'open',
+  fontDesign,
   compact = false,
   caption,
 }: ExportPreviewProps & { compact?: boolean; caption?: string }) {
@@ -40,9 +43,10 @@ export function ExportPreview({
       cornerRadius,
       brokenJoins,
       holeMode,
+      fontDesign,
     }
     return buildSvgMarkup(payload)
-  }, [grid, library, filled, softness, cornerRadius, brokenJoins, holeMode, caption])
+  }, [grid, library, filled, softness, cornerRadius, brokenJoins, holeMode, fontDesign, caption])
 
   if (!svg) {
     return (

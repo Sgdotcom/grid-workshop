@@ -1,3 +1,6 @@
+import { strokeCells } from '@/lib/paintInput'
+import { glyphContentBounds } from '@/lib/export'
+import type { FontDesign } from '@/lib/fontDesign'
 import {
   useDeferredValue,
   useEffect,
@@ -13,24 +16,14 @@ import {
   letterGuideMetricsForLetter,
   stepSize,
 } from '@/lib/gridGeometry'
-import { moduleShapeFillRule, moduleShapePath, shapeOutlineRings } from '@/lib/shapes'
+import { moduleShapeFillRule, moduleShapePath } from '@/lib/shapes'
 import {
   makeSoftStamp,
-  softnessFinishPathList,
-  softnessFinishPolygons,
   softnessJoinHints,
   type BrokenJoins,
   type SoftStamp,
 } from '@/lib/softness'
-import {
-  differencePolygons,
-  filterPolygonHolesPreserving,
-  intentionalHoleCutters,
-  multiPolygonToPathList,
-  toPolygon,
-  unionPolygons,
-} from '@/lib/polyBool'
-import type { Polygon } from 'polygon-clipping'
+import { usePaintGeometry } from '@/lib/paintGeometry'
 import type { FilledRegion, GridConfig, HoleMode, ShapeDef } from '@/lib/types'
 import { regionKey } from '@/lib/types'
 import { getMirroredCoord } from '@/lib/skeletons'
@@ -84,8 +77,10 @@ export interface ShapeGridCanvasProps {
   showJoinDots?: boolean
   showGridGuide?: boolean
   gridGuideOpacity?: number
+  fontDesign?: FontDesign
   holeMode?: HoleMode
   /** Bumps when per-shape melt-off prefs change so Softness re-fuses. */
+  onStrokeActive?: (active: boolean) => void
   meltOffRevision?: number
 }
 
@@ -113,25 +108,35 @@ export function ShapeGridCanvas({
   showGridGuide = false,
   gridGuideOpacity = 0.7,
   holeMode = 'open',
+  fontDesign,
   meltOffRevision = 0,
+  onStrokeActive,
 }: ShapeGridCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const painting = useRef(false)
+  const activePointer = useRef<number | null>(null)
+  const rightErase = useRef(false)
   const paintValue = useRef(true)
   const lastCell = useRef<{ col: number; row: number } | null>(null)
   const live = useRef(filled)
   live.current = filled
   const frozenFilled = useRef(filled)
+  const frozenStage = useRef({ x: 0, y: 0, width: 0, height: 0 })
   const [strokeLive, setStrokeLive] = useState(false)
   const [hover, setHover] = useState<{ col: number; row: number } | null>(null)
 
   if (!strokeLive) frozenFilled.current = filled
 
   useEffect(() => {
-    const stop = () => {
+    const stop = (event?: Event) => {
+      if (event && 'pointerId' in event && event.pointerId !== activePointer.current) return
       if (!painting.current) return
+      activePointer.current = null
+      rightErase.current = false
+      lastCell.current = null
       painting.current = false
       setStrokeLive(false)
+      onStrokeActive?.(false)
     }
     window.addEventListener('pointerup', stop)
     window.addEventListener('pointercancel', stop)
@@ -141,7 +146,20 @@ export function ShapeGridCanvas({
       window.removeEventListener('pointercancel', stop)
       window.removeEventListener('blur', stop)
     }
-  }, [])
+  }, [onStrokeActive])
+
+  // Selection/tool changes end the old stroke before another glyph can receive it.
+  useEffect(() => {
+    if (painting.current) {
+      painting.current = false
+      onStrokeActive?.(false)
+    }
+    activePointer.current = null
+    rightErase.current = false
+    lastCell.current = null
+    setStrokeLive(false)
+    setHover(null)
+  }, [guideLetter, grid.cols, grid.rows, paintTool, onStrokeActive])
 
   const { width, height } = canvasPixelSize(grid)
   const brushShape = resolveShape(library, shapeId)
@@ -168,7 +186,7 @@ export function ShapeGridCanvas({
     rotation: number,
     on: boolean,
   ) => {
-    if (erasing) {
+    if (erasing || rightErase.current) {
       const ink = regionKey(col, row, 'ink')
       const cutout = regionKey(col, row, 'cutout')
       if (!map.has(ink) && !map.has(cutout)) return map
@@ -228,10 +246,11 @@ export function ShapeGridCanvas({
       frozenFilled.current = live.current
       painting.current = true
       setStrokeLive(true)
+      onStrokeActive?.(true)
     }
     lastCell.current = { col, row }
     const existing = live.current.get(key)
-    if (erasing) {
+    if (erasing || rightErase.current) {
       paintValue.current = false
     } else if (!existing) {
       paintValue.current = true
@@ -258,26 +277,9 @@ export function ShapeGridCanvas({
       applyCell(col, row, paintValue.current)
       return
     }
-    // Fast drags skip cells between pointer events; walk the line so strokes stay continuous.
-    let c = from.col
-    let r = from.row
-    const dc = Math.abs(col - c)
-    const dr = Math.abs(row - r)
-    const sc = c < col ? 1 : -1
-    const sr = r < row ? 1 : -1
-    let err = dc - dr
-    for (let guard = 0; guard < 512; guard++) {
-      if (c !== from.col || r !== from.row) applyCell(c, r, paintValue.current)
-      if (c === col && r === row) break
-      const e2 = err * 2
-      if (e2 > -dr) {
-        err -= dr
-        c += sc
-      }
-      if (e2 < dc) {
-        err += dc
-        r += sr
-      }
+    // Walk every skipped cell, batching the stroke through the live map.
+    for (const cell of strokeCells(from, { col, row })) {
+      applyCell(cell.col, cell.row, paintValue.current)
     }
   }
 
@@ -288,7 +290,8 @@ export function ShapeGridCanvas({
     onBrokenJoinsChange(next)
   }
 
-  const fuseSource = strokeLive ? frozenFilled.current : filled
+  const allFuseSource = strokeLive ? frozenFilled.current : filled
+  const fuseSource = useMemo(()=>new Map([...allFuseSource].filter(([,r])=>r.col<grid.cols&&r.row<grid.rows)),[allFuseSource,grid])
   // Sliders stay responsive: the expensive fuse follows a beat behind the thumb.
   const fuseSoftness = useDeferredValue(softness)
   const fuseCorner = useDeferredValue(cornerRadius)
@@ -318,136 +321,31 @@ export function ShapeGridCanvas({
         }),
     [fuseSource, grid, library, fuseCorner],
   )
-  const maxGapArea = useMemo(() => {
-    const s = stepSize(grid)
-    return s * s * 0.6
-  }, [grid])
-
-  const finish = useMemo(
-    () => {
-      try {
-        return softnessFinishPathList(stamps, { softness: fuseSoftness, brokenJoins, holeMode, maxGapArea })
-      } catch (error) {
-        // A geometry edge case must never blank the canvas mid-workshop.
-        console.error('Softness fuse failed; showing crisp stamps.', error)
-        return []
-      }
-    },
-    [stamps, fuseSoftness, brokenJoins, holeMode, maxGapArea, meltOffRevision],
-  )
+  const finish = usePaintGeometry({
+    grid, library, filledRegions: [...fuseSource.values()], glyphChar: guideLetter,
+    softness: fuseSoftness, cornerRadius: fuseCorner, brokenJoins, holeMode, fontDesign,
+  }, meltOffRevision)
   const joinHints = useMemo(
-    () => (softness > 0.02 ? softnessJoinHints(stamps, softness, brokenJoins) : []),
-    [stamps, softness, brokenJoins, meltOffRevision],
+    () => (softness > 0.02 && (showJoinDots || paintTool === 'break-join') ? softnessJoinHints(stamps, softness, brokenJoins) : []),
+    [stamps, softness, brokenJoins, meltOffRevision, showJoinDots, paintTool],
   )
-  const fused = softness > 0.02 && fuseSoftness > 0.02 && finish.length > 0
-  const fuseEdges = joinHints.filter((h) => !h.broken).length
+  const fuseEdges = joinHints.filter(h => !h.broken).length
+  const fuseShowsDeleted = strokeLive && [...fuseSource.keys()].some(key => !filled.has(key))
+  const cutoutRegions = useMemo(() => [...filled.values()].filter(fr => fr.mode === 'cutout' && fr.col<grid.cols && fr.row<grid.rows), [filled,grid])
+  const hasPunch = [...fuseSource.values()].some(fr => fr.mode === 'cutout')
+  const showPunched = hasPunch && finish.length > 0 && !fuseShowsDeleted
+  const punchedPaths = showPunched ? finish : []
+  const showFuse = !hasPunch && finish.length > 0 && !fuseShowsDeleted
+  const showCrispFilter = false
+  const crispFilteredPaths: string[] = []
 
-  const crispFilteredPaths = useMemo(() => {
-    if (holeMode === 'open' || softness > 0.02 || stamps.length === 0) return []
-    const inkFills = [...fuseSource.values()].filter((fr) => fr.mode !== 'cutout')
-    const ringSets: [number, number][][][] = []
-    const rawPolys = inkFills
-      .map((fr) => {
-        const { x, y } = cellOrigin(fr.col, fr.row, grid)
-        const ox = x + (grid.cellSize - fr.size) / 2
-        const oy = y + (grid.cellSize - fr.size) / 2
-        const def = resolveShape(library, fr.shapeId)
-        const rings = shapeOutlineRings(def, ox, oy, fr.size, cornerRadius, fr.rotation ?? 0)
-        ringSets.push(rings)
-        return toPolygon(rings)
-      })
-      .filter((p): p is Polygon => p !== null)
-    if (rawPolys.length === 0) return []
-    try {
-      const unioned = unionPolygons(rawPolys)
-      const filtered = filterPolygonHolesPreserving(
-        unioned,
-        holeMode,
-        maxGapArea,
-        intentionalHoleCutters(ringSets),
-      )
-      return multiPolygonToPathList(filtered)
-    } catch (error) {
-      console.error('Gap fill failed; showing crisp stamps.', error)
-      return []
-    }
-  }, [holeMode, softness, stamps.length, fuseSource, grid, library, cornerRadius, maxGapArea])
-
-  const fuseShowsDeleted = strokeLive && [...fuseSource.keys()].some((key) => !filled.has(key))
-  const showFuse = fused && !fuseShowsDeleted
-  const showCrispFilter = !showFuse && crispFilteredPaths.length > 0
-
-  // Punch polys stay on the frozen fuse source (expensive). Live red outlines
-  // always follow `filled` so a cutout stroke is visible while dragging.
-  const punchCutoutRegions = useMemo(
-    () => [...fuseSource.values()].filter((fr) => fr.mode === 'cutout'),
-    [fuseSource],
-  )
-  const cutoutRegions = useMemo(
-    () => [...filled.values()].filter((fr) => fr.mode === 'cutout'),
-    [filled],
-  )
-
-  const cutoutPolys = useMemo(() => {
-    if (punchCutoutRegions.length === 0) return []
-    return punchCutoutRegions
-      .map((fr) => {
-        const { x, y } = cellOrigin(fr.col, fr.row, grid)
-        const ox = x + (grid.cellSize - fr.size) / 2
-        const oy = y + (grid.cellSize - fr.size) / 2
-        const def = resolveShape(library, fr.shapeId)
-        const rings = shapeOutlineRings(def, ox, oy, fr.size, cornerRadius, fr.rotation ?? 0)
-        return toPolygon(rings)
-      })
-      .filter((p): p is Polygon => p !== null)
-  }, [punchCutoutRegions, grid, library, cornerRadius])
-
-  const punchedPaths = useMemo(() => {
-    if (cutoutPolys.length === 0) return []
-    try {
-      const ringHoles = intentionalHoleCutters(stamps.map((s) => s.rings))
-      let subjectPolys: Polygon[] = []
-      if (fuseSoftness > 0.02) {
-        subjectPolys = softnessFinishPolygons(stamps, { softness: fuseSoftness, brokenJoins, holeMode, maxGapArea })
-      } else {
-        const rawPolys = [...fuseSource.values()]
-          .filter((fr) => fr.mode !== 'cutout')
-          .map((fr) => {
-            const { x, y } = cellOrigin(fr.col, fr.row, grid)
-            const ox = x + (grid.cellSize - fr.size) / 2
-            const oy = y + (grid.cellSize - fr.size) / 2
-            const def = resolveShape(library, fr.shapeId)
-            const rings = shapeOutlineRings(def, ox, oy, fr.size, fuseCorner, fr.rotation ?? 0)
-            return toPolygon(rings)
-          })
-          .filter((p): p is Polygon => p !== null)
-        subjectPolys =
-          holeMode !== 'open'
-            ? filterPolygonHolesPreserving(unionPolygons(rawPolys), holeMode, maxGapArea, ringHoles)
-            : rawPolys
-      }
-      if (subjectPolys.length === 0) return []
-      const diff = differencePolygons(subjectPolys, cutoutPolys)
-      const filtered =
-        holeMode !== 'open'
-          ? filterPolygonHolesPreserving(diff, holeMode, maxGapArea, ringHoles)
-          : diff
-      return multiPolygonToPathList(filtered)
-    } catch (error) {
-      console.error('Punch-out failed; showing the uncut shapes.', error)
-      return []
-    }
-  }, [cutoutPolys, fuseSoftness, stamps, brokenJoins, holeMode, maxGapArea, fuseSource, grid, library, fuseCorner, meltOffRevision])
-
-  // Same live-overlay trick as Softness: keep the expensive punched fuse frozen
-  // during a drag, and paint new / changed ink cells on top so strokes stay visible.
-  const showPunched = punchedPaths.length > 0 && !fuseShowsDeleted
   const overlayFills = (showFuse || showCrispFilter || showPunched)
     ? [...filled.values()].filter((fr) => {
+        if (fr.col < 0 || fr.row < 0 || fr.col >= grid.cols || fr.row >= grid.rows) return false
         const prev = fuseSource.get(fr.key)
-        return !prev || prev.shapeId !== fr.shapeId || Math.abs(prev.size - fr.size) > 0.5
+        return !prev || prev.shapeId !== fr.shapeId || Math.abs(prev.size - fr.size) > 0.5 || (prev.rotation ?? 0) !== (fr.rotation ?? 0)
       })
-    : [...filled.values()]
+    : [...filled.values()].filter(r=>r.col<grid.cols&&r.row<grid.rows)
 
   const renderInkOverlay = (regions: FilledRegion[]) =>
     regions
@@ -490,18 +388,21 @@ export function ShapeGridCanvas({
 
   const onCanvasPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (paintTool === 'break-join') return
-    // One finger / the main button paints; a second touch or a right-click does nothing.
-    if (!e.isPrimary || e.button !== 0) return
+    // Only the owning pointer paints; right-drag is a temporary erase tool.
+    if (!e.isPrimary || activePointer.current !== null || (e.button !== 0 && e.button !== 2)) return
     const svg = svgRef.current
     if (!svg) return
     const cell = pointerToCell(svg, e, grid)
     if (!cell) return
     e.preventDefault()
+    activePointer.current = e.pointerId
+    rightErase.current = e.button === 2
     svg.setPointerCapture(e.pointerId)
     beginStroke(cell.col, cell.row)
   }
 
   const onCanvasPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (!e.isPrimary || (activePointer.current !== null && e.pointerId !== activePointer.current)) return
     const svg = svgRef.current
     if (!svg) return
     const cell = pointerToCell(svg, e, grid)
@@ -514,11 +415,20 @@ export function ShapeGridCanvas({
     continueStroke(cell.col, cell.row)
   }
 
+  const contentBox=glyphContentBounds({grid,library,filledRegions:[...filled.values()],glyphChar:guideLetter,softness,cornerRadius,fontDesign},0)
+  const nextX = Math.min(0, contentBox.x), nextY = Math.min(0, contentBox.y)
+  if (!strokeLive) frozenStage.current = {
+    x: nextX, y: nextY,
+    width: Math.max(width, contentBox.x + contentBox.width) - nextX,
+    height: Math.max(height, contentBox.y + contentBox.height) - nextY,
+  }
+  // Expanding bounds mid-drag moves the grid under the pointer. Expand only on release.
+  const { x: stageX, y: stageY, width: stageW, height: stageH } = frozenStage.current
   return (
     <div className="relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden">
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${width} ${height}`}
+        viewBox={`${stageX} ${stageY} ${stageW} ${stageH}`}
         className={
           paintTool !== 'break-join'
             ? 'mx-auto block h-full max-h-full w-full max-w-full cursor-crosshair touch-none select-none'
@@ -541,6 +451,16 @@ export function ShapeGridCanvas({
           if (e.pointerType !== 'mouse') setHover(null)
         }}
         onPointerCancel={() => setHover(null)}
+        onLostPointerCapture={(e) => {
+          if (e.pointerId !== activePointer.current) return
+          painting.current = false
+          activePointer.current = null
+          rightErase.current = false
+          lastCell.current = null
+          setStrokeLive(false)
+          setHover(null)
+          onStrokeActive?.(false)
+        }}
         onPointerLeave={() => {
           if (!painting.current) setHover(null)
         }}
