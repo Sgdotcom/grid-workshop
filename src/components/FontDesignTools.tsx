@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { DEFAULT_FONT_DESIGN, DIGITS, LETTER_CHARACTERS, PUNCTUATION, type CustomSymbol, type FontDesign } from '@/lib/fontDesign';
 import type { GridConfig } from '@/lib/types';
 const characterCategory = (char: string) => LETTER_CHARACTERS.includes(char) ? 'letters' : DIGITS.includes(char) ? 'digits' : PUNCTUATION.includes(char) ? 'punctuation' : 'custom';
-export function FontDesignTools({ design = DEFAULT_FONT_DESIGN, onDesign, grid, onResize, symbols, onCreate, onRemove, onSelect, onRandom, activeChar, section = 'all', renderCharacter, characterClassName }: {
+export function FontDesignTools({ design = DEFAULT_FONT_DESIGN, onDesign, grid, onResize, symbols, onCreate, onRemove, onSelect, onRandom, activeChar, section = 'all', renderCharacter, characterClassName, completedCharacters = [] }: {
+    completedCharacters?: string[];
     section?: 'all' | 'geometry' | 'characters';
     renderCharacter?: (char:string) => ReactNode;
     characterClassName?: (char:string) => string;
@@ -19,8 +20,13 @@ export function FontDesignTools({ design = DEFAULT_FONT_DESIGN, onDesign, grid, 
 }) {
     const [category, setCategory] = useState(() => characterCategory(activeChar)), [name, setName] = useState(''), [character, setCharacter] = useState(''), [error, setError] = useState('');
     useEffect(() => { setCategory(characterCategory(activeChar)); }, [activeChar]);
+    const [letterCase,setLetterCase] = useState('all'), [unfinishedOnly,setUnfinishedOnly] = useState(false);
+    const completed = new Set(completedCharacters);
     const resizeGesture = useRef<string | null>(null);
-    const chars = category === 'letters' ? LETTER_CHARACTERS : category === 'digits' ? DIGITS : category === 'punctuation' ? PUNCTUATION : symbols.filter(s => !s.deleted).map(s => s.char);
+    const categoryChars = category === 'letters' ? LETTER_CHARACTERS : category === 'digits' ? DIGITS : category === 'punctuation' ? PUNCTUATION : symbols.filter(s => !s.deleted).map(s => s.char);
+    const available = categoryChars.filter(char => category !== 'letters' || letterCase === 'all' || (letterCase === 'upper' ? char === char.toUpperCase() : char === char.toLowerCase()));
+    const remaining = available.filter(char=>!completed.has(char)).length;
+    const chars = available.filter(char=>!unfinishedOnly || !completed.has(char)).sort((a,b)=>Number(completed.has(a))-Number(completed.has(b)) || (category === 'letters' ? Number(a===a.toLowerCase())-Number(b===b.toLowerCase()) : 0));
     const run = (f: () => void) => { try {
         f();
         setError('');
@@ -36,6 +42,6 @@ export function FontDesignTools({ design = DEFAULT_FONT_DESIGN, onDesign, grid, 
     else
         setError('Enter a thickness from 0 to 1000 px.'); }}/></label><label><input type="checkbox" checked={design.outlineOnly} onChange={e => onDesign({ ...design, outlineOnly: e.target.checked })}/>Outline only</label>
  <fieldset><legend>Grid · {grid.cols} × {grid.rows}</legend>{(['cols', 'rows'] as const).map(k => <label key={k}>{k === 'cols' ? 'Columns' : 'Rows'} · {grid[k]}<input aria-label={`Resize ${k}`} type="range" min="1" max="100" step="1" value={grid[k]} onPointerDown={() => {resizeGesture.current=null}} onPointerUp={() => {resizeGesture.current=null}} onPointerCancel={() => {resizeGesture.current=null}} onKeyUp={() => {resizeGesture.current=null}} onBlur={() => {resizeGesture.current=null}} onChange={e => run(() => {const n=Number(e.target.value); if(n===grid[k])return; const identity = `${activeChar}:${k}`; onResize({...grid,[k]:n},true,resizeGesture.current === identity); resizeGesture.current=identity;})}/></label>)}</fieldset>
- </>}{section !== 'geometry' && <><label>Characters<select aria-label="Character category" value={category} onChange={e => setCategory(e.target.value)}>{['letters', 'digits', 'punctuation', 'custom'].map(c => <option key={c}>{c}</option>)}</select></label><div className="font-character-picker">{chars.map(c => <button key={c} className={characterClassName?.(c)} data-testid={renderCharacter ? `studio-glyph-${c}` : undefined} aria-pressed={activeChar === c} title={symbols.find(s => s.char === c)?.name ?? c} onClick={() => onSelect(c)}>{renderCharacter ? renderCharacter(c) : c}</button>)}</div>
+ </>}{section !== 'geometry' && <><label>Characters<select aria-label="Character category" value={category} onChange={e => setCategory(e.target.value)}>{['letters', 'digits', 'punctuation', 'custom'].map(c => <option key={c} value={c}>{c}</option>)}</select></label>{category === 'letters' && <div className="character-case" role="group" aria-label="Letter case">{[['upper','ABC'],['lower','abc'],['all','Both']].map(([value,label])=><button key={value} aria-label={value==='upper'?'Uppercase letters':value==='lower'?'Lowercase letters':'All letters'} aria-pressed={letterCase===value} onClick={()=>setLetterCase(value)}>{label}</button>)}</div>}<label><input type="checkbox" checked={unfinishedOnly} onChange={e=>setUnfinishedOnly(e.target.checked)}/>Unfinished only</label><p className="character-progress">{remaining} left to make · {available.length-remaining} submitted</p><div className="font-character-picker">{chars.map(c => <button key={c} className={characterClassName?.(c)} data-testid={renderCharacter ? `studio-glyph-${c}` : undefined} aria-pressed={activeChar === c} title={`${symbols.find(s => s.char === c)?.name ?? c} · ${completed.has(c) ? 'Submitted' : 'Not submitted yet'}`} onClick={() => onSelect(c)}>{renderCharacter ? renderCharacter(c) : c}</button>)}</div>{!chars.length && <p className="character-progress">All characters in this selection are submitted.</p>}
  <label>Symbol name<input value={name} maxLength={40} onChange={e => setName(e.target.value)}/></label><label>Unicode character (optional)<input value={character} onChange={e => setCharacter(e.target.value)}/></label><button onClick={() => run(() => { onCreate(name, character); setCategory('custom'); setName(''); setCharacter(''); })}>Add symbol</button><button onClick={() => run(() => { onRandom(); setCategory('custom'); })}>Random symbol</button>{symbols.some(s => s.char === activeChar && !s.deleted) && <button onClick={() => onRemove(activeChar)}>Remove symbol</button>}</>}{error && <p role="alert">{error}</p>}</section>;
 }

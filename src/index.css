@@ -1273,3 +1273,8 @@ body.install-view {
 .workshop-characters .font-character-picker img { width:100%; height:24px; object-fit:contain; }
 .workshop-characters .font-character-picker small { font-size:10px; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 .workshop-characters .font-character-picker button[aria-pressed=true] { background:#fff; color:#000; border-color:#0000ee; }
+
+.character-case { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:3px; }
+.character-case button { margin:0; padding:3px; }
+.character-case button[aria-pressed=true] { background:#000; color:#fff; border-color:#000; }
+.character-progress { margin:6px 0; font-size:10px; color:#666; }

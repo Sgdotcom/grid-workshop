@@ -1006,7 +1006,7 @@ export default function App() {
     [library, cornerRadius, shapeId, brushRotation],
   )
 
-  const characterTools = <section className="workshop-characters" aria-label="Characters"><h3 className="font-design-heading">Characters</h3><FontDesignTools {...designTools.props} section="characters" renderCharacter={char => {
+  const characterTools = <section className="workshop-characters" aria-label="Characters"><h3 className="font-design-heading">Characters</h3><FontDesignTools {...designTools.props} section="characters" completedCharacters={[...publishedTypeface.keys()]} renderCharacter={char => {
     const contribution=publishedTypeface.get(char)
     const name=customSymbols.find(symbol=>symbol.char===char && !symbol.deleted)?.name ?? char
     return <>{contribution?.svg && <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(contribution.svg)}`} alt=""/>}<small>{name}</small></>

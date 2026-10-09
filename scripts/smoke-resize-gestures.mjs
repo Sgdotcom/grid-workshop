@@ -31,7 +31,7 @@ for(const file of ['src/App.tsx','src/components/StudioDesk.tsx']){
 }
 const noop=()=>{},props={design:DEFAULT_FONT_DESIGN,onDesign:noop,grid,onResize:noop,symbols:[],onCreate:noop,onRemove:noop,onSelect:noop,onRandom:noop,section:'characters'}
 for(const [activeChar,category]of [['a','letters'],['3','digits'],['!','punctuation'],['\ue000','custom']]){
- const html=renderToStaticMarkup(React.createElement(FontDesignTools,{...props,activeChar}));assert.match(html,new RegExp(`<option selected="">${category}</option>`))
+ const html=renderToStaticMarkup(React.createElement(FontDesignTools,{...props,activeChar}));assert.match(html,new RegExp(`<option value="${category}" selected="">${category}</option>`))
 }
 console.log('Resize callbacks passed in Workshop and desks: original-source multi-step drag, undo recovery, remote edits, letter switches, separate gestures; active character category initialization passed.')
 

@@ -1304,7 +1304,7 @@ export function StudioDesk() {
 
         <aside className="studio-alphabet" aria-label="Characters">
           <p className="studio-alphabet-title">Characters</p>
-          <FontDesignTools {...designTools.props} section="characters" characterClassName={shown => cn(shown===displayGuideLetter && 'is-active', published.has(shown) ? 'is-published' : glyphs.get(shown)?.filled.length ? 'is-draft' : '')} renderCharacter={shown => {
+          <FontDesignTools {...designTools.props} section="characters" completedCharacters={[...published.keys()]} characterClassName={shown => cn(shown===displayGuideLetter && 'is-active', published.has(shown) ? 'is-published' : glyphs.get(shown)?.filled.length ? 'is-draft' : '')} renderCharacter={shown => {
             const contribution=published.get(shown)
             const preview=letterPreviewSvg(shown,typefaceContributions,live.draftSvgs)
             const svg=contribution?.svg || (preview.kind !== 'empty' ? preview.svg : null)
